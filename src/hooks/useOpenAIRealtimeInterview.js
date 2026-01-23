@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/customSupabaseClient";
+import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
 
 export const useOpenAIRealtimeInterview = ({
@@ -26,8 +26,8 @@ export const useOpenAIRealtimeInterview = ({
   const analyserRef = useRef(null);
   const audioLevelFrameRef = useRef(null);
 
-  const REALTIME_URL = import.meta.env.VITE_OPENAI_REALTIME_URL || "wss://api.openai.com/v1/realtime";
-  const REALTIME_MODEL = import.meta.env.VITE_OPENAI_REALTIME_MODEL || "gpt-4o-realtime-preview-2024-10-01";
+  const REALTIME_URL = process.env.NEXT_PUBLIC_OPENAI_REALTIME_URL || "wss://api.openai.com/v1/realtime";
+  const REALTIME_MODEL = process.env.NEXT_PUBLIC_OPENAI_REALTIME_MODEL || "gpt-4o-realtime-preview-2024-10-01";
 
   // Logging Helper
   const log = useCallback((step, message, data) => {

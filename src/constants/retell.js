@@ -1,18 +1,19 @@
 /**
  * Retell AI Configuration Constants
  * SDK Version: 2.x
+ * Next.js compatible - uses process.env instead of import.meta.env
  */
 
 // Retell Agent Configuration
-export const RETELL_AGENT_ID = import.meta.env.VITE_RETELL_AGENT_ID;
+export const RETELL_AGENT_ID = process.env.NEXT_PUBLIC_RETELL_AGENT_ID || '';
 
 // Supabase Function URLs
-export const RETELL_CREATE_WEB_CALL_URL = import.meta.env.VITE_CREATE_WEB_CALL_URL;
+export const RETELL_CREATE_WEB_CALL_URL = process.env.NEXT_PUBLIC_CREATE_WEB_CALL_URL || '';
 
 // Feature Flags
 export const USE_RETELL = 
-  import.meta.env.VITE_USE_RETELL === 'true' || 
-  !!import.meta.env.VITE_RETELL_AGENT_ID;
+  process.env.NEXT_PUBLIC_USE_RETELL === 'true' || 
+  !!process.env.NEXT_PUBLIC_RETELL_AGENT_ID;
 
 // Call States (Retell SDK v2)
 export const CALL_STATES = {

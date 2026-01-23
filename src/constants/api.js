@@ -1,5 +1,6 @@
 /**
  * API Endpoints and URLs
+ * Next.js compatible - uses process.env instead of import.meta.env
  */
 
 // Retell API
@@ -14,6 +15,6 @@ export const RETELL_API = {
 
 // OpenAI API
 export const OPENAI_API = {
-  REALTIME_URL: import.meta.env.VITE_OPENAI_REALTIME_URL || 'wss://api.openai.com/v1/realtime',
-  MODEL: import.meta.env.VITE_OPENAI_REALTIME_MODEL || 'gpt-4o-mini-realtime-preview-2024-12-17',
+  REALTIME_URL: process.env.NEXT_PUBLIC_OPENAI_REALTIME_URL || 'wss://api.openai.com/v1/realtime',
+  MODEL: process.env.NEXT_PUBLIC_OPENAI_REALTIME_MODEL || 'gpt-4o-mini-realtime-preview-2024-12-17',
 };
