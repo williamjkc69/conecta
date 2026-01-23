@@ -1,10 +1,20 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { RetellWebClient } from "retell-client-js-sdk";
 import { supabase } from '@/lib/customSupabaseClient';
+import {
+  CALL_STATES,
+  RETELL_EVENTS,
+  AUDIO_CONFIG,
+  TIMEOUTS,
+  ERROR_MESSAGES,
+  TABLES,
+  SUPABASE_FUNCTIONS,
+  APPLICATION_STATUS,
+} from '@/constants';
 
 // 👇 AGREGAMOS "job" AQUÍ
 export const useRetellConnection = ({ onInterviewCompleted, application, user, job }) => {
-  const [callState, setCallState] = useState("idle");
+  const [callState, setCallState] = useState(CALL_STATES.IDLE);
   const [transcript, setTranscript] = useState([]);
   const [isAgentSpeaking, setIsAgentSpeaking] = useState(false);
   const [error, setError] = useState(null);
@@ -42,13 +52,13 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
       audioContextRef.current = audioContext;
       const source = audioContext.createMediaStreamSource(stream);
       const analyser = audioContext.createAnalyser();
-      analyser.fftSize = 512;
+      analyser.fftSize = AUDIO_CONFIG.FFT_SIZE;
       source.connect(analyser);
       analyserRef.current = analyser;
     } catch (err) {
       console.error("Failed to get user media for visualizer:", err);
-      setError("No se pudo acceder al micrófono. Revisa los permisos.");
-      setCallState("error");
+      setError(ERROR_MESSAGES.NO_MICROPHONE);
+      setCallState(CALL_STATES.ERROR);
     }
   }, []);
 
@@ -62,52 +72,53 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
 
 
   const startInterview = async () => {
-    if (callState !== 'idle' && callState !== 'error' && callState !== 'ended') return;
+    if (callState !== CALL_STATES.IDLE && callState !== CALL_STATES.ERROR && callState !== CALL_STATES.ENDED) return;
 
-    setCallState("connecting");
+    setCallState(CALL_STATES.CONNECTING);
     setError(null);
     setTranscript([]);
 
     try {
+      console.log("[Retell] Updating application status to interviewing...");
       const { error: updateError } = await supabase
-        .from('applications')
-        .update({ status: 'interviewing' })
+        .from(TABLES.APPLICATIONS)
+        .update({ status: APPLICATION_STATUS.INTERVIEWING })
         .eq('id', application.id);
 
-      if (updateError) throw new Error(`DB Error: ${updateError.message}`);
+      if (updateError) throw new Error(`[Retell] DB Error: ${updateError.message}`);
 
-      console.log("Initializing Retell client...");
+      console.log("[Retell] Initializing Retell client...");
       const client = new RetellWebClient();
       retellClientRef.current = client;
 
-      client.on("conversationStarted", () => {
-        console.log("Event: conversationStarted");
+      client.on(RETELL_EVENTS.CONVERSATION_STARTED, () => {
+        console.log("[Retell] Event: conversationStarted");
         clearTimeout(connectionTimeoutRef.current);
-        setCallState("connected");
+        setCallState(CALL_STATES.CONNECTED);
       });
 
-      client.on("conversationEnded", ({ code, reason, call }) => {
-        console.log(`Event: conversationEnded - Code: ${code}, Reason: ${reason}`);
-        console.log("Full call details:", call);
-        setCallState("ended");
+      client.on(RETELL_EVENTS.CONVERSATION_ENDED, ({ code, reason, call }) => {
+        console.log(`[Retell] Event: conversationEnded - Code: ${code}, Reason: ${reason}`);
+        console.log("[Retell] Full call details:", call);
+        setCallState(CALL_STATES.ENDED);
         stopInterview(true, call);
       });
 
-      client.on("error", (error) => {
-        console.error("Retell Client Error:", error);
-        setError(error.message || "Ocurrió un error en la llamada.");
-        setCallState("error");
+      client.on(RETELL_EVENTS.ERROR, (error) => {
+        console.error("[Retell] Retell Client Error:", error);
+        setError(error.message || ERROR_MESSAGES.CALL_FAILED);
+        setCallState(CALL_STATES.ERROR);
         cleanup();
       });
 
-      client.on("update", (update) => {
+      client.on(RETELL_EVENTS.UPDATE, (update) => {
         if (update.transcript && update.transcript.length > 0) {
           setTranscript(prev => [...prev, ...update.transcript]);
         }
         setIsAgentSpeaking(update.turntaking === "agent");
       });
 
-      console.log("Requesting access token from Supabase function...");
+      console.log("[Retell] Requesting access token from Supabase function create-web-call...");
 
       // 👇 AQUI ENVIAMOS NOMBRE DEL CANDIDATO Y REQUISITOS
       const candidateName =
@@ -118,7 +129,7 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
       const jobTitle = job?.title || "";
       const jobRequirements = job?.requirements || [];
 
-      const { data, error: funcError } = await supabase.functions.invoke('create-web-call', {
+      const { data, error: funcError } = await supabase.functions.invoke(SUPABASE_FUNCTIONS.CREATE_WEB_CALL, {
         body: {
           metadata: {
             userId: user?.id,
@@ -130,28 +141,31 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
         }
       });
 
-      if (funcError) throw new Error(`Supabase Error: ${funcError.message}`);
-      if (data.error) throw new Error(`Server Error: ${data.error}`);
-
-      console.log("Token received. Starting Retell call...");
+      console.log("[Retell] Supabase function response:", data);
+      if (funcError) throw new Error(`[Retell] Supabase Error: ${funcError.message}`);
+      if (data.error) throw new Error(`[Retell] Server Error: ${data.error}`);
 
       const { access_token } = data;
       if (!access_token) {
-        throw new Error("Did not receive access_token from server.");
+        console.error("[Retell] Did not receive access_token from server. Full response:", data);
+        throw new Error(ERROR_MESSAGES.NO_ACCESS_TOKEN);
       }
 
+      console.log("[Retell] Token received. Starting Retell call with access_token:", access_token);
+
       connectionTimeoutRef.current = setTimeout(() => {
-        setError("La conexión tardó demasiado. Inténtalo de nuevo.");
-        setCallState("error");
+        setError(ERROR_MESSAGES.CONNECTION_TIMEOUT);
+        setCallState(CALL_STATES.ERROR);
         cleanup();
-      }, 180000);
+      }, TIMEOUTS.CONNECTION_TIMEOUT);
 
       await client.startCall({ accessToken: access_token });
+      console.log("[Retell] startCall invoked.");
 
     } catch (err) {
-      console.error("Failed to start interview:", err);
+      console.error("[Retell] Failed to start interview:", err);
       setError(err.message);
-      setCallState("error");
+      setCallState(CALL_STATES.ERROR);
       cleanup();
     }
   };
@@ -166,7 +180,7 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
       console.log("Saving full interview data to Supabase...");
       try {
         const updatePayload = {
-          status: 'reviewed',
+          status: APPLICATION_STATUS.REVIEWED,
           call_id: callDetails.call_id,
           duration: callDetails.duration,
           recording_url: callDetails.recording_url,
@@ -174,7 +188,7 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
         };
 
         const { error: updateError } = await supabase
-          .from('applications')
+          .from(TABLES.APPLICATIONS)
           .update(updatePayload)
           .eq('id', application.id);
 
@@ -186,7 +200,7 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
     }
 
     cleanup();
-    setCallState("ended");
+    setCallState(CALL_STATES.ENDED);
     onInterviewCompleted({ transcript: callDetails?.transcript });
   }, [application, cleanup, onInterviewCompleted]);
 
