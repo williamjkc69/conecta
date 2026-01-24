@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Mic,
@@ -6,9 +6,12 @@ import {
   Loader2,
   RotateCcw,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  Home
 } from "lucide-react";
 import { motion } from "framer-motion";
+import AudioSetup from "./AudioSetup";
+import { useRouter } from "next/navigation";
 
 interface InterviewControlsProps {
   callState: "idle" | "connecting" | "connected" | "ended" | "error";
@@ -16,6 +19,7 @@ interface InterviewControlsProps {
   stopInterview: (confirmed?: boolean) => void;
   interviewStatus: string;
   canInterview: boolean;
+  setSelectedMicId?: (deviceId: string) => void;
 }
 
 const InterviewControls: React.FC<InterviewControlsProps> = ({
@@ -23,16 +27,76 @@ const InterviewControls: React.FC<InterviewControlsProps> = ({
   startInterview,
   stopInterview,
   interviewStatus,
-  canInterview
+  canInterview,
+  setSelectedMicId
 }) => {
+  const router = useRouter();
+  const [showSetup, setShowSetup] = useState(false);
+  const [hasPermission, setHasPermission] = useState(true);
+
   const isIdle = callState === "idle";
   const isEnded = callState === "ended";
   const isError = callState === "error";
   const isConnecting = callState === "connecting";
   const isConnected = callState === "connected";
 
+  // Handle audio setup completion
+  const handleAudioReady = (deviceId: string) => {
+    console.log("Audio setup complete, device:", deviceId);
+    // Set the selected microphone device ID
+    if (setSelectedMicId) {
+      setSelectedMicId(deviceId);
+    }
+    setShowSetup(false);
+    startInterview();
+  };
+
+  const handlePermissionDenied = () => {
+    setHasPermission(false);
+    setShowSetup(false);
+  };
+
+  // If showing audio setup
+  if (showSetup) {
+    return (
+      <AudioSetup
+        onReady={handleAudioReady}
+        onPermissionDenied={handlePermissionDenied}
+      />
+    );
+  }
+
+  // Show "Interview Ended" state with back to dashboard button
+  if (isEnded) {
+    return (
+      <div className="flex flex-col items-center space-y-4 w-full">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center p-6 bg-slate-800/50 rounded-lg border border-slate-700"
+        >
+          <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
+          <h3 className="text-xl font-semibold text-white mb-2">
+            ¡Entrevista Completada!
+          </h3>
+          <p className="text-slate-400 text-sm mb-4">
+            Gracias por completar la entrevista. Tus respuestas han sido
+            guardadas y serán revisadas pronto.
+          </p>
+          <Button
+            onClick={() => router.push("/candidate-dashboard")}
+            size="lg"
+            className="w-full max-w-xs mx-auto font-semibold bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 shadow-lg shadow-cyan-500/20"
+          >
+            <Home className="mr-2 h-4 w-4" /> Volver al Panel
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
+
   // 3) Ensure button "Realizar entrevista" ONLY appears when canInterview === true.
-  if (isIdle || isEnded || isError) {
+  if (isIdle || isError) {
     if (!canInterview) {
       // If cannot interview, show status message instead of button
       if (interviewStatus === "completed" || interviewStatus === "reviewed") {
@@ -78,28 +142,31 @@ const InterviewControls: React.FC<InterviewControlsProps> = ({
           </motion.div>
         )}
 
-        {isEnded && (
+        {!hasPermission && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-green-400 mb-2 font-medium flex items-center gap-2"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-2 text-orange-400 bg-orange-900/20 px-4 py-2 rounded-lg border border-orange-900/50 mb-2"
           >
-            <span>Sesión finalizada.</span>
+            <AlertTriangle className="w-4 h-4" />
+            <span className="text-sm">
+              Necesitas dar permiso al micrófono para continuar.
+            </span>
           </motion.div>
         )}
 
         <p className="text-slate-400 text-sm max-w-sm text-center">
-          {isEnded
-            ? "Puedes reanudar la entrevista si fue interrumpida."
-            : "Se solicitarán permisos de micrófono. La sesión será grabada."}
+          Se solicitarán permisos de micrófono. La sesión será grabada.
         </p>
 
         <Button
-          onClick={startInterview}
+          onClick={() => setShowSetup(true)}
+          disabled={!hasPermission}
           size="lg"
           className={`
             w-full max-w-xs mx-auto font-semibold transition-all shadow-lg
             ${isError ? "bg-red-600 hover:bg-red-700 shadow-red-500/20" : "bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 shadow-cyan-500/20"}
+            ${!hasPermission ? "opacity-50 cursor-not-allowed" : ""}
           `}
         >
           {isError ? (

@@ -16,6 +16,7 @@ import AgentAvatar from "@/components/interview/AgentAvatar";
 import Waveform from "@/components/interview/Waveform";
 import ConnectionStatus from "@/components/interview/ConnectionStatus";
 import InterviewControls from "@/components/interview/InterviewControls";
+import AudioLevelDisplay from "@/components/interview/AudioLevelDisplay";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { INTERVIEW_STATUS, CALL_STATES, APPLICATION_STATUS } from "@/constants";
@@ -131,7 +132,8 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
     stopInterview,
     canInterview,
     isSaving,
-    audioLevel
+    audioLevel,
+    setSelectedMicId
     // @ts-ignore
   } = useInterviewState({
     applicationId,
@@ -173,7 +175,19 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
     return result;
   }, [transcript]);
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, currentCallState?: string) => {
+    // If the call has ended locally, show completed immediately
+    if (currentCallState === CALL_STATES.ENDED) {
+      return (
+        <Badge
+          variant="secondary"
+          className="bg-green-900 text-green-200 border-green-700"
+        >
+          Finalizado
+        </Badge>
+      );
+    }
+
     switch (status) {
       case INTERVIEW_STATUS.INVITED:
         return (
@@ -210,7 +224,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
             variant="secondary"
             className="bg-green-900 text-green-200 border-green-700"
           >
-            Completada
+            Finalizado
           </Badge>
         );
       default:
@@ -266,7 +280,21 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
         <Button
           variant="ghost"
           className="absolute left-0 top-0 text-slate-400 hover:text-white hidden md:flex"
-          onClick={() => router.push("/candidate-dashboard")}
+          onClick={() => {
+            // If call is active, show confirmation
+            if (callState === "connected" || callState === "connecting") {
+              const confirmed = window.confirm(
+                "Tienes una entrevista en curso. Si sales ahora, perderás todo el progreso. ¿Estás seguro?"
+              );
+              if (!confirmed) return;
+
+              // End the call before leaving
+              if (stopInterview) {
+                stopInterview(false);
+              }
+            }
+            router.push("/candidate-dashboard");
+          }}
         >
           <ArrowLeft className="w-4 h-4 mr-2" /> Salir
         </Button>
@@ -281,7 +309,8 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
           <span className="text-sm text-slate-400">Estado:</span>
           {getStatusBadge(
             (application as any)?.interview_status ||
-              (application as any)?.status
+              (application as any)?.status,
+            callState
           )}
         </div>
       </header>
@@ -290,6 +319,11 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
         <AgentAvatar isSpeaking={isAgentSpeaking} />
         <Waveform isSpeaking={isAgentSpeaking} />
         <ConnectionStatus state={callState as any} />
+
+        {/* Show audio level during call */}
+        {callState === "connected" && (
+          <AudioLevelDisplay audioLevel={audioLevel || 0} />
+        )}
 
         <div className="w-full max-w-md pt-4">
           {isSaving ? (
@@ -309,6 +343,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
               stopInterview={stopInterview}
               interviewStatus={(application as any)?.interview_status}
               canInterview={canInterview}
+              setSelectedMicId={setSelectedMicId}
             />
           )}
         </div>

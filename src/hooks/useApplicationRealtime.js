@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabase';
 
 export const useApplicationRealtime = (applicationId) => {
   const [application, setApplication] = useState(null);
@@ -43,6 +43,7 @@ export const useApplicationRealtime = (applicationId) => {
 
     fetchApplication();
 
+    // Try to set up realtime subscription, but don't fail if it doesn't work
     const channel = supabase
       .channel(`application-${applicationId}`)
       .on(
@@ -60,7 +61,13 @@ export const useApplicationRealtime = (applicationId) => {
             
             setApplication((prev) => {
               if (!prev) return null;
-              return { ...prev, ...payload.new };
+              // Preserve the jobs relation when merging updates
+              // Realtime updates don't include relations, so we need to keep them
+              return { 
+                ...prev, 
+                ...payload.new,
+                jobs: prev.jobs // Explicitly preserve jobs relation
+              };
             });
           }
         }
@@ -69,8 +76,9 @@ export const useApplicationRealtime = (applicationId) => {
         if (status === 'SUBSCRIBED') {
           console.log(`[${new Date().toISOString()}] [useApplicationRealtime] Subscribed to updates.`);
         } else if (status === 'CHANNEL_ERROR') {
-          console.error(`[${new Date().toISOString()}] [useApplicationRealtime] Subscription error:`, err);
-          if (isMounted) setError(new Error("Realtime subscription failed"));
+          console.warn(`[${new Date().toISOString()}] [useApplicationRealtime] Subscription error (non-critical):`, err);
+          // Don't set error state - this is not critical for the interview to work
+          // The app will work fine with just the initial data fetch
         }
       });
 

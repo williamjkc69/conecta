@@ -53,10 +53,12 @@ export const APPLICATION_STATUS = {
 
 // Retell Event Names (SDK v2)
 export const RETELL_EVENTS = {
-  CONVERSATION_STARTED: 'conversationStarted',
-  CONVERSATION_ENDED: 'conversationEnded',
+  CALL_STARTED: 'call_started',
+  CALL_ENDED: 'call_ended',
   UPDATE: 'update',
   ERROR: 'error',
+  METADATA: 'metadata',
+  AUDIO: 'audio',
   AGENT_START_TALKING: 'agent_start_talking',
   AGENT_STOP_TALKING: 'agent_stop_talking',
 };

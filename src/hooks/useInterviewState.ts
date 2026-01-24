@@ -66,7 +66,8 @@ export const useInterviewState = ({
     startInterview: startSocket,
     stopInterview: stopSocket,
     isSaving,
-    audioLevel
+    audioLevel,
+    setSelectedMicId
   } = USE_RETELL ? retellHook : openaiHook;
 
   // 3. Computed Properties
@@ -150,6 +151,7 @@ export const useInterviewState = ({
     canInterview,
     isSaving,
     audioLevel,
+    setSelectedMicId,
     interviewStatus: application?.interview_status
   };
 };

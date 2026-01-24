@@ -246,9 +246,22 @@ export const useOpenAIRealtimeInterview = ({
       }).eq('id', application?.id);
 
       log('AUTH', 'Creating OpenAI session');
-      const { data, error: funcError } = await supabase.functions.invoke("create-openai-session");
       
-      if (funcError) throw funcError;
+      // Call Next.js API route instead of Supabase Edge Function
+      const response = await fetch('/api/create-openai-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create OpenAI session');
+      }
+
+      const data = await response.json();
+      
       if (!data || !data.client_secret || !data.client_secret.value) {
         throw new Error("No se pudo obtener el token de sesión.");
       }

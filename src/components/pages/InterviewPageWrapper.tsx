@@ -19,7 +19,7 @@ export default function InterviewPageWrapper({
 
   const handleCompletion = (reportData: any) => {
     setReportData(reportData);
-    router.push("/interview-summary");
+    // Don't redirect - let user stay on interview page with "ended" state
   };
 
   // If loading or no user (and auth middleware hasn't redirected yet - though we don't have middleware yet)
