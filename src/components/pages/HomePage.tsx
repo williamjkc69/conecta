@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Sparkles,
@@ -17,6 +17,7 @@ import {
   UserCircle
 } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import LoginModal from "@/components/features/LoginModal";
 import { useToast } from "@/components/ui/use-toast";
@@ -31,6 +32,28 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
   const [loginType, setLoginType] = useState<"company" | "candidate" | "admin">(
     "company"
   );
+  const [initialEmail, setInitialEmail] = useState("");
+  const [inviteJobId, setInviteJobId] = useState("");
+  const [inviteToken, setInviteToken] = useState("");
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const register = searchParams.get("register");
+    if (register) {
+      const emailParam = searchParams.get("email");
+      const roleParam = searchParams.get("role");
+      const jobIdParam = searchParams.get("jobId");
+      const tokenParam = searchParams.get("token");
+
+      if (emailParam) setInitialEmail(emailParam);
+      if (jobIdParam) setInviteJobId(jobIdParam);
+      if (tokenParam) setInviteToken(tokenParam);
+      if (roleParam === "candidate" || roleParam === "company") {
+        setLoginType(roleParam);
+      }
+      setShowLoginModal(true);
+    }
+  }, [searchParams]);
 
   const handleGetStarted = (type: "company" | "candidate") => {
     setLoginType(type);
@@ -596,6 +619,9 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
         type={loginType}
+        initialEmail={initialEmail}
+        jobId={inviteJobId}
+        token={inviteToken}
       />
     </div>
   );

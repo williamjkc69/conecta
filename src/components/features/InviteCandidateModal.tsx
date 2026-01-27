@@ -121,64 +121,185 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
     }
   };
 
+  const checkUserExists = async (email: string) => {
+    try {
+      const response = await fetch("/api/check-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+      const data = await response.json();
+      return data.exists;
+    } catch (error) {
+      console.error("Error checking user:", error);
+      return false; // Assume false or handle error
+    }
+  };
+
   const handleInvite = async () => {
-    if (!foundCandidate || !selectedJobId) {
+    if (!selectedJobId) {
       toast({
         variant: "destructive",
         title: "Campos incompletos",
-        description: "Debes seleccionar un candidato y una vacante."
+        description: "Debes seleccionar una vacante."
       });
       return;
     }
 
-    const selectedJob = jobs.find((j) => j.id === selectedJobId);
-    if (!selectedJob) return;
-
-    setLoading(true);
-    console.log(
-      `[InviteCandidateModal] Inviting ${foundCandidate.email} to job ${selectedJob.title}`
-    );
-
-    try {
-      // 1) Verify when admin invites candidate, Supabase function sets interview_status = "invited"
-      const { data, error } = await supabase.rpc("assign_candidate_to_job", {
-        p_candidate_id: foundCandidate.id,
-        p_job_id: selectedJobId,
-        p_company_id: selectedJob.company_id
-      });
-
-      if (error) throw error;
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      // 5) Add logging to show when invitation is sent and what interview_status is set to
-      console.log("[InviteCandidateModal] Invitation successful:", data);
-      console.log("[InviteCandidateModal] Interview Status set to: invited");
-
-      toast({
-        title: "Invitación enviada",
-        description:
-          "El candidato ha sido invitado exitosamente. El estado es ahora 'Invitado'."
-      });
-
-      // 2) Ensure onSuccess callback is called after successful invitation
-      if (onSuccess) {
-        onSuccess();
-      }
-      if (onInviteSent) {
-        onInviteSent();
-      }
-      onClose();
-    } catch (error: any) {
-      // 6) Verify error handling if invitation fails
-      console.error("[InviteCandidateModal] Invitation failed:", error);
+    const emailToInvite = foundCandidate ? foundCandidate.email : emailSearch;
+    if (!emailToInvite) {
       toast({
         variant: "destructive",
-        title: "Error al invitar",
-        description:
-          error.message || "Hubo un problema al procesar la invitación."
+        title: "Email requerido",
+        description: "No se ha especificado un email."
+      });
+      return;
+    }
+
+    setLoading(true);
+    const selectedJob = jobs.find((j) => j.id === selectedJobId);
+
+    try {
+      // Check if user exists first (if we didn't search properly or it's a new email input)
+      // If we foundCandidate via search, we know they exist.
+      const userExists = foundCandidate
+        ? true
+        : await checkUserExists(emailToInvite);
+
+      if (userExists) {
+        // --- EXISTING USER FLOW ---
+        // 1. Assign in DB
+        // Fetch candidate ID (if we don't have it yet, we might need another fetch or just fail if not found in open search)
+        // Ideally 'foundCandidate' is populated. If 'userExists' is true but 'foundCandidate' is null (from manual check-user),
+        // we'd need to get the ID. For now, let's assume if it exists we need the ID to call the RPC.
+
+        let candidateId = foundCandidate?.id;
+        if (!candidateId && userExists) {
+          // Retrieve ID via a restricted query? Or just rely on invitation flow?
+          // Since we can't easily get ID of arbitrary user client-side,
+          // the 'check-user' API *could* return the ID if we allow it or we create a new 'invite-existing' API.
+          // For safety, let's rely on the RPC function 'assign_candidate_to_job' which takes ID.
+          // If we don't have ID, we can't use that RPC.
+          // We might need to invite by email in a new backend function.
+          // SIMPLIFICATION: If foundCandidate is null but checking returns true, we'll treat as "New" for now
+          // because we can't get their ID to link them easily without admin rights on client.
+          // OR: Update 'check-user' to return basic public info if exists.
+          // Let's assume for this plan: We send an invitation link anyway if we can't link them directly.
+          // BUT implementation requested: "if exist ... send notification"
+          // We will TRY to link if we have candidate object.
+        }
+
+        if (foundCandidate) {
+          const { data, error } = await supabase.rpc(
+            "assign_candidate_to_job",
+            {
+              p_candidate_id: foundCandidate.id,
+              p_job_id: selectedJobId,
+              p_company_id: selectedJob.company_id
+            }
+          );
+
+          if (error) throw error;
+          if (data.error) throw new Error(data.error);
+
+          // Send Notification Email
+          await fetch("/api/send-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "invitation_existing",
+              to: emailToInvite,
+              payload: {
+                link: `${window.location.origin}/candidate-dashboard`, // Direct them to dashboard
+                dashboardUrl: `${window.location.origin}/candidate-dashboard`
+              }
+            })
+          });
+
+          toast({
+            title: "Invitación enviada",
+            description: "El candidato ha sido notificado."
+          });
+        } else {
+          // Exists but we don't have the object (maybe hidden profile?). Rare case if 'check-user' returns true.
+          // Fallback to sending email
+          await fetch("/api/send-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "invitation_existing", // Prompt them to login
+              to: emailToInvite,
+              payload: {
+                link: `${window.location.origin}/login`,
+                dashboardUrl: `${window.location.origin}/candidate-dashboard`
+              }
+            })
+          });
+          toast({
+            title: "Aviso enviado",
+            description: "El usuario ya existe, se le ha notificado."
+          });
+        }
+      } else {
+        // --- NEW USER FLOW ---
+        // Create invitation record in DB (TODO: Create API for this or just send email with token signed)
+        // For simplicity, we send email with a register link containing the ref.
+
+        const token = crypto.randomUUID();
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7);
+
+        // Create invitation record in DB
+        const { error: inviteError } = await supabase
+          .from("invitations")
+          .insert({
+            email: emailToInvite,
+            role: "candidate",
+            job_id: selectedJobId,
+            company_id: selectedJob.company_id,
+            token: token,
+            // unix timestamp or ISO string? Supabase uses ISO string for timestamptz
+            expires_at: expiresAt.toISOString(),
+            status: "pending"
+          });
+
+        if (inviteError) {
+          console.error("Error creating invitation:", inviteError);
+          // We continue to send email? or fail?
+          // If DB insert fails (e.g. duplicate token), we should probably fail.
+          throw new Error("Error al guardar la invitación.");
+        }
+
+        await fetch("/api/send-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "invitation_new",
+            to: emailToInvite,
+            payload: {
+              role: "candidate",
+              link: `${window.location.origin}/register?email=${encodeURIComponent(
+                emailToInvite
+              )}&jobId=${selectedJobId}&token=${token}`
+            }
+          })
+        });
+
+        toast({
+          title: "Invitación enviada",
+          description: "Se ha enviado un correo de registro al nuevo usuario."
+        });
+      }
+
+      if (onSuccess) onSuccess();
+      if (onInviteSent) onInviteSent();
+      onClose();
+    } catch (error: any) {
+      console.error("Invitation error:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "No se pudo enviar la invitación."
       });
     } finally {
       setLoading(false);

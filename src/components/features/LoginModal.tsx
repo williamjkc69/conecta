@@ -10,30 +10,47 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/lib/supabase";
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   type: "company" | "candidate" | "admin";
+  initialEmail?: string;
+  jobId?: string;
+  token?: string;
 }
 
-const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, type }) => {
+const LoginModal: React.FC<LoginModalProps> = ({
+  isOpen,
+  onClose,
+  type,
+  initialEmail,
+  jobId,
+  token
+}) => {
   const { signIn, signUp } = useAuthStore();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("signin");
+  const [activeTab, setActiveTab] = useState(
+    initialEmail ? "signup" : "signin"
+  );
   const [formData, setFormData] = useState({
-    email: "",
+    email: initialEmail || "",
     password: "",
+    confirm_password: "",
     full_name: "",
     company_name: "",
     document_number: ""
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -75,6 +92,16 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, type }) => {
       return;
     }
 
+    if (formData.password !== formData.confirm_password) {
+      toast({
+        variant: "destructive",
+        title: "Las contraseñas no coinciden",
+        description: "Por favor verifica que ambas contraseñas sean iguales."
+      });
+      setLoading(false);
+      return;
+    }
+
     const metaData = {
       type: type,
       full_name: formData.full_name,
@@ -85,12 +112,59 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, type }) => {
     const options = { data: metaData };
 
     // @ts-ignore - Supabase options type matching
-    const { error } = await signUp(formData.email, formData.password, options);
+    const { data: authData, error } = await signUp(
+      formData.email,
+      formData.password,
+      options
+    );
 
-    if (!error) {
+    if (!error && authData?.user) {
+      const user = authData.user;
+
+      // Logic to accept invitation if token is present
+      if (token && jobId && type === "candidate") {
+        try {
+          await fetch("/api/accept-invite", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: formData.email,
+              token,
+              jobId,
+              userId: user.id
+            })
+          });
+        } catch (inviteProcessError) {
+          console.error("Error processing invitation:", inviteProcessError);
+        }
+      }
+      // Send verification email
+      try {
+        await fetch("/api/send-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "verification",
+            to: formData.email,
+            payload: {
+              // In a real Supabase flow, we'd use the link Supabase generates or our own verify page
+              // For now, we'll point to our custom verify page.
+              // Note: Supabase sends its own email if 'Enable Email Confirmations' is on.
+              // If you want to use YOUR system entirely, you might disable Supabase emails
+              // or ignore this if Supabase handles it.
+              // Assuming user wants custom system:
+              link: `${window.location.origin}/verify-email?email=${encodeURIComponent(formData.email)}`
+            }
+          })
+        });
+      } catch (emailErr) {
+        console.error("Failed to send verification email", emailErr);
+      }
+
       toast({
         title: "🎉 ¡Registro exitoso!",
-        description: "Revisa tu correo para confirmar tu cuenta."
+        description:
+          "Revisa tu correo para verificar tu cuenta antes de iniciar sesión."
       });
       onClose();
     } else if (error?.message?.includes("User already registered")) {
@@ -146,15 +220,30 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, type }) => {
                 <Label htmlFor="password-signin" className="text-slate-300">
                   Contraseña
                 </Label>
-                <Input
-                  id="password-signin"
-                  name="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="bg-blue-950/20 border-blue-400/20 text-slate-100"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="password-signin"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="bg-blue-950/20 border-blue-400/20 text-slate-100 pr-10"
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-slate-400 hover:text-slate-200"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
               </div>
               <Button
                 type="submit"
@@ -247,15 +336,62 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, type }) => {
                 <Label htmlFor="password-signup" className="text-slate-300">
                   Contraseña
                 </Label>
-                <Input
-                  id="password-signup"
-                  name="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="bg-blue-950/20 border-blue-400/20 text-slate-100"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="password-signup"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="bg-blue-950/20 border-blue-400/20 text-slate-100 pr-10"
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-slate-400 hover:text-slate-200"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label
+                  htmlFor="confirm_password-signup"
+                  className="text-slate-300"
+                >
+                  Confirmar Contraseña
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="confirm_password-signup"
+                    name="confirm_password"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={formData.confirm_password}
+                    onChange={handleChange}
+                    className="bg-blue-950/20 border-blue-400/20 text-slate-100 pr-10"
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-slate-400 hover:text-slate-200"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
               </div>
               <Button
                 type="submit"

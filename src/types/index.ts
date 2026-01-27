@@ -21,6 +21,7 @@ export interface Profile {
   email?: string;
   avatar_url?: string;
   role?: "admin" | "candidate" | "recruiter";
+  verified_at?: string;
   [key: string]: any;
 }
 

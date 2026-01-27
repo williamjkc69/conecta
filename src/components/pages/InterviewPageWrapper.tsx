@@ -7,6 +7,7 @@ import { useInterviewStore } from "@/store/interviewStore";
 import InterviewPage from "./InterviewPage";
 import { Loader2 } from "lucide-react";
 import React from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function InterviewPageWrapper({
   applicationId
@@ -16,9 +17,36 @@ export default function InterviewPageWrapper({
   const router = useRouter();
   const { user, loading } = useAuthStore();
   const { setReportData } = useInterviewStore();
+  const { toast } = useToast();
 
-  const handleCompletion = (reportData: any) => {
+  const handleCompletion = async (reportData: any) => {
     setReportData(reportData);
+
+    if (user?.email) {
+      try {
+        await fetch("/api/send-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "interview_completed",
+            to: user.email,
+            payload: {
+              candidateName:
+                user.user_metadata?.full_name ||
+                user.app_metadata?.full_name ||
+                "Candidato",
+              dashboardUrl: `${window.location.origin}/candidate-dashboard`
+            }
+          })
+        });
+        toast({
+          title: "Entrevista completada",
+          description: "Se ha enviado un correo de confirmación."
+        });
+      } catch (error) {
+        console.error("Error sending completion email:", error);
+      }
+    }
     // Don't redirect - let user stay on interview page with "ended" state
   };
 

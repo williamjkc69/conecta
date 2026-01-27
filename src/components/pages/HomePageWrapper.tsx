@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import HomePage from "./HomePage";
@@ -57,5 +57,15 @@ export default function HomePageWrapper() {
     );
   }
 
-  return <HomePage onNavigate={handleNavigate} />;
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen bg-slate-900">
+          <Loader2 className="w-12 h-12 text-cyan-400 animate-spin" />
+        </div>
+      }
+    >
+      <HomePage onNavigate={handleNavigate} />
+    </Suspense>
+  );
 }
