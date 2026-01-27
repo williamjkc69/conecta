@@ -1,5 +1,6 @@
+'use server';
 const nodemailer = require("nodemailer");
-require("dotenv").config(); // Load .env by default if .env.local fails or is empty
+require("dotenv").config({ path: ".env.local" }); // Load .env by default if .env.local fails or is empty
 
 async function testEmail() {
   console.log("Testing email configuration...");

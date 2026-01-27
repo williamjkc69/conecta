@@ -122,9 +122,9 @@ function VerifyEmailContent() {
           title: "Correo enviado",
           description: "Se ha enviado un nuevo enlace de verificación."
         });
-        // 60s for production (simulated), 5s for dev/test as requested
+        // 60s for production (simulated), 10s for dev/test as requested
         const isProduction = process.env.NODE_ENV === "production";
-        setCooldown(isProduction ? 60 : 5);
+        setCooldown(isProduction ? 60 : 10);
       }
     } catch (error) {
       toast({

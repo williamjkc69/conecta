@@ -62,3 +62,19 @@ export const interviewCompletedTemplate = (
   </div>
 </div>
 `;
+
+export const inviteAcceptedTemplate = (
+  candidateEmail: string,
+  jobTitle: string,
+  companyName: string
+) => `
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+  <h2 style="color: #0f172a; text-align: center;">¡Invitación Aceptada!</h2>
+  <p style="color: #475569; font-size: 16px;">Hola,</p>
+  <p style="color: #475569; font-size: 16px;">El candidato <strong>${candidateEmail}</strong> ha aceptado tu invitación para la posición de <strong>${jobTitle}</strong> en <strong>${companyName}</strong>.</p>
+  <p style="color: #475569; font-size: 16px;">El candidato ha sido añadido a tu lista de aplicaciones y está listo para continuar con el proceso de selección.</p>
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="${process.env.NEXT_PUBLIC_APP_URL}/company-dashboard" style="background-color: #0f172a; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">Ver Candidato</a>
+  </div>
+</div>
+`;

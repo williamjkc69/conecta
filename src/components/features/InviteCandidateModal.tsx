@@ -208,7 +208,7 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               type: "invitation_existing",
-              to: emailToInvite,
+              to: foundCandidate ? foundCandidate.email : emailToInvite,
               payload: {
                 link: `${window.location.origin}/candidate-dashboard`, // Direct them to dashboard
                 dashboardUrl: `${window.location.origin}/candidate-dashboard`
@@ -404,7 +404,10 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
           </Button>
           <Button
             onClick={handleInvite}
-            disabled={loading || !foundCandidate || !selectedJobId}
+            // Allow invite even if not found (new user flow), just need a valid email if searching manually
+            disabled={
+              loading || !selectedJobId || (!foundCandidate && !emailSearch)
+            }
             className="bg-cyan-600 hover:bg-cyan-500 text-white"
           >
             {loading ? (

@@ -5,7 +5,8 @@ import {
   inviteNewUserTemplate,
   inviteExistingUserTemplate,
   resetPasswordTemplate,
-  interviewCompletedTemplate
+  interviewCompletedTemplate,
+  inviteAcceptedTemplate
 } from "@/lib/email-templates";
 
 export async function POST(req: NextRequest) {
@@ -43,6 +44,14 @@ export async function POST(req: NextRequest) {
       case "notification_completed":
         subject = "Entrevista Completada";
         html = interviewCompletedTemplate(payload.candidateName, payload.date);
+        break;
+      case "notification_invite_accepted":
+        subject = "¡Candidato ha aceptado la invitación!";
+        html = inviteAcceptedTemplate(
+          payload.candidateEmail,
+          payload.jobTitle,
+          payload.companyName
+        );
         break;
       default:
         return NextResponse.json(

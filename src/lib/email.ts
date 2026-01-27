@@ -6,29 +6,13 @@ if (!process.env.NEXT_PUBLIC_EMAIL_SERVER_HOST) {
   // console.warn("Email environment variables might be missing!");
 }
 
-console.log("Initializing Email Transporter with:", {
-  host: process.env.NEXT_PUBLIC_EMAIL_SERVER_HOST,
-  port: process.env.NEXT_PUBLIC_EMAIL_SERVER_PORT,
-  user: process.env.NEXT_PUBLIC_EMAIL_SERVER_USER,
-  // Redact password for security in logs
-  pass: process.env.NEXT_PUBLIC_EMAIL_SERVER_PASSWORD ? "***" : "MISSING"
-});
-
 const transporter = nodemailer.createTransport({
   host: process.env.NEXT_PUBLIC_EMAIL_SERVER_HOST,
   port: Number(process.env.NEXT_PUBLIC_EMAIL_SERVER_PORT),
-  secure: true, // Force true since we know port 465 works
+  secure: true,
   auth: {
     user: process.env.NEXT_PUBLIC_EMAIL_SERVER_USER,
     pass: process.env.NEXT_PUBLIC_EMAIL_SERVER_PASSWORD
-  },
-  debug: true,
-  logger: true,
-  // User's manual additions
-  authMethod: "LOGIN",
-  tls: {
-    rejectUnauthorized: false,
-    minVersion: "TLSv1.2"
   }
 });
 

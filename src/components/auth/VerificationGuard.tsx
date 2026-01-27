@@ -42,7 +42,16 @@ export default function VerificationGuard({
       }
 
       if (!verifiedAt) {
-        router.push("/verify-email");
+        // Double check auth user metadata just in case store is stale
+        const {
+          data: { user: currentUser }
+        } = await supabase.auth.getUser();
+        if (currentUser?.email_confirmed_at) {
+          // If actually confirmed, we don't redirect to verify-email
+          setChecking(false);
+        } else {
+          router.push("/verify-email");
+        }
       } else {
         setChecking(false);
       }

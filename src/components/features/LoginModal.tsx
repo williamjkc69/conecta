@@ -65,7 +65,31 @@ const LoginModal: React.FC<LoginModalProps> = ({
         title: "✅ ¡Bienvenido de vuelta!",
         description: "Has iniciado sesión correctamente."
       });
-      onClose();
+      const {
+        data: { user }
+      } = await supabase.auth.getUser();
+
+      if (user?.email_confirmed_at) {
+        // Fetch actual role from profile to ensure correct redirect
+        // irrespective of which modal tab they used.
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+
+        const userRole =
+          profile?.role || (type === "company" ? "company" : "candidate");
+        const dashboard =
+          userRole === "company"
+            ? "/company-dashboard"
+            : "/candidate-dashboard";
+
+        window.location.href = dashboard;
+      } else {
+        // Should not happen if sign in was successful but let's just close modal
+        onClose();
+      }
     } else {
       toast({
         variant: "destructive",
@@ -139,6 +163,20 @@ const LoginModal: React.FC<LoginModalProps> = ({
         }
       }
       // Send verification email
+      // Check if email already verified (rare on signup unless auto-confirm enabled)
+      // Check if email already verified (rare on signup unless auto-confirm enabled)
+      if (user.email_confirmed_at) {
+        // Because it's a new signup, we can reasonably trust the 'type' prop (metadata),
+        // but consistent behavior is better.
+        const userRole = type === "company" ? "company" : "candidate"; // Metadata set during signup
+        const dashboard =
+          userRole === "company"
+            ? "/company-dashboard"
+            : "/candidate-dashboard";
+        window.location.href = dashboard;
+        return;
+      }
+
       try {
         await fetch("/api/send-email", {
           method: "POST",
