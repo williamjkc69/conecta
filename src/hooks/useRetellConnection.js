@@ -29,6 +29,7 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
   const connectionTimeoutRef = useRef(null);
   const audioLevelIntervalRef = useRef(null);
   const callStateRef = useRef(CALL_STATES.IDLE); // Track call state for event handlers
+  const selectedMicIdRef = useRef(null); // Ref to access mic ID in async callbacks
 
   const cleanup = useCallback(() => {
     console.log("Cleanup: Stopping call and media tracks.");
@@ -55,8 +56,18 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
     // Only initialize if we don't already have a stream
     if (mediaStreamRef.current) return;
     
+    
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Use ref to get latest value even if state update is lagging
+      const micId = selectedMicIdRef.current || selectedMicId;
+      console.log("[Retell] Selected mic ID (Visualizer):", micId);
+      
+      const constraints = micId 
+         ? { audio: { deviceId: { exact: micId } } } 
+         : { audio: true };
+         
+      console.log("[Retell] Initializing visualizer with constraints:", constraints);
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       mediaStreamRef.current = stream;
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
       audioContextRef.current = audioContext;
@@ -127,9 +138,14 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
     callStateRef.current = callState;
   }, [callState]);
 
+  // Keep mic ref in sync
+  useEffect(() => {
+    selectedMicIdRef.current = selectedMicId;
+  }, [selectedMicId]);
 
 
-  const startInterview = async () => {
+
+  const startInterview = async (deviceId = null) => {
     if (callState !== CALL_STATES.IDLE && callState !== CALL_STATES.ERROR && callState !== CALL_STATES.ENDED) {
       console.log(`[Retell] ⚠️ Cannot start - current state: ${callState}`);
       return;
@@ -165,8 +181,13 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
         
         // Initialize audio visualizer AFTER Retell has mic access
         setTimeout(() => {
-          console.log("[Retell] Initializing audio visualizer...");
-          initializeAudioVisualizer();
+          // Guard: Only initialize visualizer if the call is still connected
+          if (callStateRef.current === CALL_STATES.CONNECTED) {
+             console.log("[Retell] Initializing audio visualizer...");
+             initializeAudioVisualizer();
+          } else {
+             console.log("[Retell] Call ended before visualizer init. Skipping.");
+          }
         }, 1000);
       });
 
@@ -252,6 +273,7 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
 
       const jobTitle = job?.title || "";
       const jobRequirements = job?.requirements || [];
+      const jobQuestions = job?.questions || [];
 
       // Call Next.js API route
       const response = await fetch('/api/create-web-call', {
@@ -265,7 +287,9 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
             applicationId: application?.id,
             candidateName,
             jobTitle,
-            jobRequirements
+            language: application?.language || "es",
+            jobRequirements: jobRequirements?.join(", "),
+            jobQuestions: jobQuestions?.join(", ")
           }
         })
       });
@@ -298,17 +322,40 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
         setCallState(CALL_STATES.ERROR);
         cleanup();
       }, TIMEOUTS.CONNECTION_TIMEOUT);
+      
+      // CRITICAL FIX: Stop local media stream before starting the call
+      // unique ownership of the microphone is often required, or at least preferred to avoid conflicts.
+      // We will re-acquire the stream for visualization AFTER the call is connected.
+      if (mediaStreamRef.current) {
+        console.log("[Retell] Releasing local mic stream for SDK usage...");
+        mediaStreamRef.current.getTracks().forEach(track => track.stop());
+        mediaStreamRef.current = null;
+        if (audioContextRef.current) {
+             audioContextRef.current.close();
+             audioContextRef.current = null;
+        }
+      }
 
       // Start call with selected microphone device
       const callOptions = { accessToken: access_token };
       
+      // Use the passed deviceId (priority) or the stored state
+      const targetMicId = deviceId || selectedMicId;
+      
+      // Update ref immediately for subsequent async calls (like visualizer init)
+      if (deviceId) {
+         selectedMicIdRef.current = deviceId;
+      }
+
       // If a specific microphone was selected, pass it as audio constraints
-      if (selectedMicId) {
-        console.log("[Retell] Using selected audio device:", selectedMicId);
+      if (targetMicId) {
+        console.log("[Retell] Using selected audio device:", targetMicId);
         // Set audio constraints to use the exact device
         callOptions.audio = {
-          deviceId: { exact: selectedMicId }
+          deviceId: { exact: targetMicId }
         };
+        // Also ensure state is consistent if passed via arg
+        if (deviceId) setSelectedMicId(deviceId);
       }
 
       console.log("[Retell] Starting call with options:", callOptions);

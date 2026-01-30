@@ -61,7 +61,31 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
         console.error("Error fetching profile:", error.message);
         set({ profile: null });
       } else {
-        set({ profile: data });
+        set((state) => {
+          // Improve: Sync profile data into user.user_metadata to avoid stale UI if components use user.user_metadata
+          const updatedUser = state.user
+            ? {
+                ...state.user,
+                user_metadata: {
+                  ...state.user.user_metadata,
+                  full_name: data.full_name,
+                  document_number: data.document_number
+                  // Add other synced fields here
+                }
+              }
+            : state.user;
+          return { profile: data, user: updatedUser };
+        });
+
+        // 🟢 FIX: Explicitly update Supabase Auth User Metadata to keep it in sync with DB
+        // This prevents the "stale local storage" issue on next login
+        await supabase.auth.updateUser({
+          data: {
+            full_name: data.full_name,
+            document_number: data.document_number,
+            company_name: data.company_name
+          }
+        });
       }
     } catch (error) {
       console.error("Error in fetchProfile:", error);

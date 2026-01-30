@@ -79,13 +79,7 @@ export async function POST(req: NextRequest) {
     };
 
     // Optional: Add custom data to pass to the agent
-    if (metadata.candidateName || metadata.jobTitle) {
-      requestBody.retell_llm_dynamic_variables = {
-        candidate_name: metadata.candidateName,
-        job_title: metadata.jobTitle,
-        job_requirements: metadata.jobRequirements?.join(", ") || ""
-      };
-    }
+    requestBody.retell_llm_dynamic_variables = metadata;
 
     console.log("[create-web-call] Request body:", JSON.stringify(requestBody));
 

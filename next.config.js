@@ -1,6 +1,3 @@
-// Force load env vars for debugging
-require('dotenv').config();
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,

@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 
 interface InterviewControlsProps {
   callState: "idle" | "connecting" | "connected" | "ended" | "error";
-  startInterview: () => void;
+  startInterview: (deviceId?: string) => void;
   stopInterview: (confirmed?: boolean) => void;
   interviewStatus: string;
   canInterview: boolean;
@@ -48,7 +48,7 @@ const InterviewControls: React.FC<InterviewControlsProps> = ({
       setSelectedMicId(deviceId);
     }
     setShowSetup(false);
-    startInterview();
+    startInterview(deviceId); // Pass directly to avoid race condition with state update
   };
 
   const handlePermissionDenied = () => {
@@ -160,18 +160,25 @@ const InterviewControls: React.FC<InterviewControlsProps> = ({
         </p>
 
         <Button
-          onClick={() => setShowSetup(true)}
-          disabled={!hasPermission}
+          onClick={() => {
+            // Retry setup logic
+            setShowSetup(true);
+          }}
+          disabled={false}
           size="lg"
           className={`
             w-full max-w-xs mx-auto font-semibold transition-all shadow-lg
             ${isError ? "bg-red-600 hover:bg-red-700 shadow-red-500/20" : "bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 shadow-cyan-500/20"}
-            ${!hasPermission ? "opacity-50 cursor-not-allowed" : ""}
           `}
         >
           {isError ? (
             <>
               <RotateCcw className="mr-2 h-4 w-4" /> Reintentar Conexión
+            </>
+          ) : !hasPermission ? (
+            <>
+              <Mic className="mr-2 h-4 w-4" />
+              Habilitar Micrófono
             </>
           ) : (
             <>
@@ -191,7 +198,7 @@ const InterviewControls: React.FC<InterviewControlsProps> = ({
       <div className="text-center py-8">
         <Loader2 className="w-12 h-12 text-cyan-400 animate-spin mx-auto mb-4" />
         <h3 className="text-lg font-semibold text-slate-200">
-          Conectando con Alex...
+          Conectando con Jennifer...
         </h3>
         <p className="text-slate-500 text-sm mt-2">
           Configurando entorno de entrevista seguro

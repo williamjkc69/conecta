@@ -348,7 +348,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
           )}
         </div>
 
-        <AnimatePresence>
+        {/* <AnimatePresence>
           {mergedTranscript.length > 0 &&
             callState === CALL_STATES.CONNECTED && (
               <motion.div
@@ -364,7 +364,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
                   >
                     {entry.role === "assistant" && (
                       <span className="text-cyan-400 font-bold text-sm">
-                        Alex:
+                        Jennifer:
                       </span>
                     )}
                     <p
@@ -381,7 +381,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
                 ))}
               </motion.div>
             )}
-        </AnimatePresence>
+        </AnimatePresence> */}
       </main>
     </div>
   );

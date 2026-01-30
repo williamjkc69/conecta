@@ -59,15 +59,13 @@ const LoginModal: React.FC<LoginModalProps> = ({
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await signIn(formData.email, formData.password);
+    const { data, error } = await signIn(formData.email, formData.password);
     if (!error) {
       toast({
         title: "✅ ¡Bienvenido de vuelta!",
         description: "Has iniciado sesión correctamente."
       });
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
+      const { user } = data;
 
       if (user?.email_confirmed_at) {
         // Fetch actual role from profile to ensure correct redirect

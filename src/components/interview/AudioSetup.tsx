@@ -16,6 +16,7 @@ const AudioSetup: React.FC<AudioSetupProps> = ({
   const [audioLevel, setAudioLevel] = useState(0);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const streamRef = useRef<MediaStream | null>(null); // Ref for robust cleanup
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -29,6 +30,7 @@ const AudioSetup: React.FC<AudioSetupProps> = ({
           audio: true
         });
         setStream(mediaStream);
+        streamRef.current = mediaStream;
         setHasPermission(true);
 
         // Get available audio devices
@@ -38,8 +40,16 @@ const AudioSetup: React.FC<AudioSetupProps> = ({
         );
         setDevices(audioDevices);
 
-        // Set default device
-        if (audioDevices.length > 0) {
+        // Identify the actual device ID being used by the initial stream
+        const initialTrack = mediaStream.getAudioTracks()[0];
+        const initialSettings = initialTrack?.getSettings();
+        const activeDeviceId = initialSettings?.deviceId;
+
+        // Set default device selection to the one actively being used
+        // This fixes the mismatch where 'default' might not map to the visualizer
+        if (activeDeviceId) {
+          setSelectedDevice(activeDeviceId);
+        } else if (audioDevices.length > 0) {
           const defaultDevice =
             audioDevices.find((d) => d.deviceId === "default") ||
             audioDevices[0];
@@ -58,9 +68,9 @@ const AudioSetup: React.FC<AudioSetupProps> = ({
     requestMicPermission();
 
     return () => {
-      // Cleanup
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
+      // Cleanup using ref to ensure we capture the latest stream
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
       }
       if (audioContextRef.current) {
         audioContextRef.current.close();
@@ -72,7 +82,13 @@ const AudioSetup: React.FC<AudioSetupProps> = ({
   }, []);
 
   const setupAudioAnalyzer = (mediaStream: MediaStream) => {
-    const audioContext = new AudioContext();
+    const audioContext = new (
+      window.AudioContext || (window as any).webkitAudioContext
+    )();
+    // Ensure context is running (browsers sometimes start suspended)
+    if (audioContext.state === "suspended") {
+      audioContext.resume();
+    }
     const analyser = audioContext.createAnalyser();
     analyser.fftSize = 256;
 
@@ -113,6 +129,7 @@ const AudioSetup: React.FC<AudioSetupProps> = ({
         audio: { deviceId: { exact: deviceId } }
       });
       setStream(newStream);
+      streamRef.current = newStream;
       setupAudioAnalyzer(newStream);
     } catch (err) {
       console.error("Failed to switch device:", err);
@@ -125,6 +142,7 @@ const AudioSetup: React.FC<AudioSetupProps> = ({
     if (stream) {
       stream.getTracks().forEach((track) => track.stop());
       setStream(null);
+      streamRef.current = null;
     }
     if (audioContextRef.current) {
       audioContextRef.current.close();

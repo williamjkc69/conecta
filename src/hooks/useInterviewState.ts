@@ -103,41 +103,44 @@ export const useInterviewState = ({
   }, [application, callState, canInterview]);
 
   // 4. Wrapper Actions
-  const startInterview = useCallback(async () => {
-    if (!application) return;
+  const startInterview = useCallback(
+    async (deviceId?: string) => {
+      if (!application) return;
 
-    console.log(
-      `[${new Date().toISOString()}] [useInterviewState] Attempting to start interview...`
-    );
-
-    if (application.interview_status === INTERVIEW_STATUS.INVITED) {
       console.log(
-        `[${new Date().toISOString()}] [useInterviewState] Updating status from 'invited' to 'in_progress'`
+        `[${new Date().toISOString()}] [useInterviewState] Attempting to start interview...`
       );
-      const { error } = await supabase
-        .from(TABLES.APPLICATIONS)
-        .update({
-          interview_status: INTERVIEW_STATUS.IN_PROGRESS,
-          status: APPLICATION_STATUS.INTERVIEWING
-        })
-        .eq("id", application.id);
 
-      if (error) {
-        console.error(
-          `[${new Date().toISOString()}] [useInterviewState] Error updating status:`,
-          error
+      if (application.interview_status === INTERVIEW_STATUS.INVITED) {
+        console.log(
+          `[${new Date().toISOString()}] [useInterviewState] Updating status from 'invited' to 'in_progress'`
         );
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "No se pudo iniciar la entrevista."
-        });
-        return;
-      }
-    }
+        const { error } = await supabase
+          .from(TABLES.APPLICATIONS)
+          .update({
+            interview_status: INTERVIEW_STATUS.IN_PROGRESS,
+            status: APPLICATION_STATUS.INTERVIEWING
+          })
+          .eq("id", application.id);
 
-    await startSocket();
-  }, [application, startSocket, toast]);
+        if (error) {
+          console.error(
+            `[${new Date().toISOString()}] [useInterviewState] Error updating status:`,
+            error
+          );
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "No se pudo iniciar la entrevista."
+          });
+          return;
+        }
+      }
+
+      await startSocket(deviceId);
+    },
+    [application, startSocket, toast]
+  );
 
   return {
     application,
