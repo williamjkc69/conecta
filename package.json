@@ -1,12 +1,12 @@
 {
   "name": "web-app",
-  "type": "module",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "vite --host :: --port 3000",
-    "build": "node tools/generate-llms.js || true && vite build",
-    "preview": "vite preview --host :: --port 3000"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "^1.3.1",
@@ -28,37 +28,30 @@
     "clsx": "^2.0.0",
     "framer-motion": "^10.16.4",
     "lucide-react": "^0.292.0",
+    "next": "14.1.0",
     "nodemailer": "^6.9.14",
+    "openai": "^6.17.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-helmet": "^6.1.0",
-    "react-router-dom": "6.16.0",
     "recharts": "^2.10.1",
     "retell-client-js-sdk": "^2.0.5",
     "tailwind-merge": "^1.14.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zustand": "^4.5.0"
   },
   "devDependencies": {
-    "@babel/generator": "^7.27.0",
-    "@babel/parser": "^7.27.0",
-    "@babel/traverse": "^7.27.0",
-    "@babel/types": "^7.27.0",
     "@tailwindcss/typography": "^0.5.13",
-    "@types/node": "^20.8.3",
-    "@types/react": "^18.2.15",
-    "@types/react-dom": "^18.2.7",
-    "@vitejs/plugin-react": "^4.0.3",
+    "@types/node": "^20.11.0",
+    "@types/nodemailer": "^7.0.5",
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
     "autoprefixer": "^10.4.16",
-    "eslint": "^8.57.1",
-    "eslint-config-react-app": "^7.0.1",
-    "eslint-import-resolver-alias": "^1.1.2",
-    "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-react": "^7.37.3",
-    "eslint-plugin-react-hooks": "^5.1.0",
-    "globals": "^15.14.0",
+    "dotenv": "^17.2.3",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "14.1.0",
     "postcss": "^8.4.31",
+    "supabase": "^2.72.8",
     "tailwindcss": "^3.3.3",
-    "terser": "^5.39.0",
-    "vite": "^4.4.5"
+    "typescript": "^5.3.3"
   }
 }
