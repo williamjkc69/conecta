@@ -42,57 +42,70 @@ export async function POST(request: NextRequest) {
       score: analysis.overall_assessment.technical_competency_score
     });
 
-    // Save to database using HYBRID APPROACH
-    // - Core metrics in indexed columns for fast querying
-    // - Detailed analysis in JSONB for flexibility
-    // - No data duplication (references existing columns)
-    const { error } = await supabase
+    // 1. Fetch Request Status ID for 'completed'
+    // In a real scenario, cache this or use a constant if IDs are static.
+    // For now, we query.
+    const { data: statusData } = await supabase
+      .from("application_statuses")
+      .select("id")
+      .eq("name", "completed")
+      .single();
+
+    const completedStatusId = statusData?.id;
+
+    // 2. Update Application (Summary Data)
+    const { error: appError } = await supabase
       .from("applications")
       .update({
-        // Existing metadata columns
+        // Link fields
+        status_id: completedStatusId,
+        completed_at: new Date().toISOString(),
+
+        // Call info
         call_id: call.call_id,
         recording_url: call.recording_url,
-        duration: Math.round((call.duration_ms || 0) / 60000),
-        transcript: transcript,
-        interview_status: "completed",
-        status: "reviewed",
+        interview_duration: Math.round((call.duration_ms || 0) / 60000), // minutes
 
-        // NEW: Hot fields for fast querying (indexed)
-        interview_duration_minutes: Math.round((call.duration_ms || 0) / 60000),
-        technical_competency_score:
-          analysis.overall_assessment.technical_competency_score,
+        // High-level feedback
         interview_decision: analysis.recommendation.decision,
-        interview_confidence: analysis.recommendation.confidence,
-
-        // NEW: Detailed analysis in JSONB (no duplication of DB data)
-        interview_analysis: {
-          technical_skills_evaluation: analysis.technical_skills_evaluation,
-          ...(analysis.custom_questions_evaluation && {
-            custom_questions_evaluation: analysis.custom_questions_evaluation
-          }),
-          overall_assessment: {
-            communication_quality:
-              analysis.overall_assessment.communication_quality,
-            language_proficiency:
-              analysis.overall_assessment.language_proficiency,
-            strengths: analysis.overall_assessment.strengths,
-            weaknesses: analysis.overall_assessment.weaknesses,
-            behavioral_observations:
-              analysis.overall_assessment.behavioral_observations
-          },
-          recommendation: {
-            reasoning: analysis.recommendation.reasoning,
-            suggested_next_steps: analysis.recommendation.suggested_next_steps
-          }
-        },
+        feedback: analysis.recommendation.reasoning, // Short summary or reasoning
 
         updated_at: new Date().toISOString()
       })
-      .eq("id", applicationId);
+      .eq("id", applicationId); // Postgres casts string "123" to int 123 if needed
 
-    if (error) {
-      console.error("[retell-webhook] DB error:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (appError) {
+      console.error("[retell-webhook] DB error (applications):", appError);
+      return NextResponse.json({ error: appError.message }, { status: 500 });
+    }
+
+    // 3. Insert/Upsert Detailed Report
+    const reportData = {
+      application_id: Number(applicationId), // Ensure number
+      json_data: {
+        transcript: transcript, // Store transcript here
+        technical_competency_score:
+          analysis.overall_assessment.technical_competency_score,
+        interview_confidence: analysis.recommendation.confidence,
+        formatted_analysis: {
+          technical_skills_evaluation: analysis.technical_skills_evaluation,
+          custom_questions_evaluation: analysis.custom_questions_evaluation,
+          overall_assessment: analysis.overall_assessment,
+          recommendation: analysis.recommendation
+        }
+      },
+      created_at: new Date().toISOString()
+    };
+
+    const { error: reportError } = await supabase
+      .from("reports")
+      .upsert(reportData, { onConflict: "application_id" }); // overwrite if exists
+
+    if (reportError) {
+      console.error("[retell-webhook] DB error (reports):", reportError);
+      // We don't fail the whole request if report fails, but we should log it.
+      // Or maybe we should return error?
+      return NextResponse.json({ error: reportError.message }, { status: 500 });
     }
 
     console.log(

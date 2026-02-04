@@ -13,14 +13,13 @@ export default function HomePageWrapper() {
 
   useEffect(() => {
     if (!loading && user) {
-      const userRole = profile?.role;
-      const userType = user?.user_metadata?.type;
+      const userRoleName = profile?.role?.name || user?.user_metadata?.type;
 
-      if (userRole === "admin") {
+      if (userRoleName === "admin") {
         router.push("/admin-dashboard/overview");
-      } else if (userType === "company") {
+      } else if (userRoleName === "company") {
         router.push("/company-dashboard");
-      } else if (userType === "candidate") {
+      } else if (userRoleName === "candidate") {
         router.push("/candidate-dashboard");
       }
     }

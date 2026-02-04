@@ -34,6 +34,7 @@ import {
 import CandidateJobDetailModal from "@/components/features/CandidateJobDetailModal";
 import { useCandidateApplications } from "@/hooks/useCandidateApplications";
 import ApplicationCard from "@/components/features/ApplicationCard";
+import CandidateOnboardingModal from "@/components/features/CandidateOnboardingModal";
 
 /*
   TEST CHECKLIST:
@@ -160,13 +161,18 @@ const InterviewSchedule = ({
 };
 
 const CandidateDashboard = () => {
-  const { user, profile, signOut } = useAuthStore();
+  const { user, profile, signOut, fetchProfile } = useAuthStore();
   const router = useRouter();
 
   const { applications, loading } = useCandidateApplications(user?.id);
 
   const [selectedApplication, setSelectedApplication] = useState<any>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+  // Check if candidate needs to complete onboarding
+  const needsOnboarding = Boolean(
+    profile && profile.id && !profile.document_number
+  );
 
   useEffect(() => {
     if (applications.length > 0) {
@@ -496,6 +502,18 @@ const CandidateDashboard = () => {
         onClose={() => setIsDetailModalOpen(false)}
         application={selectedApplication}
       />
+
+      {needsOnboarding && profile && (
+        <CandidateOnboardingModal
+          userId={profile.id}
+          userName={profile.full_name || profile.name || "Usuario"}
+          onSuccess={() => {
+            if (user?.id) {
+              fetchProfile(user.id); // Refresh profile after onboarding
+            }
+          }}
+        />
+      )}
     </div>
   );
 };

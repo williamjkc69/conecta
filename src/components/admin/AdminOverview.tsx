@@ -42,24 +42,44 @@ const AdminOverview = () => {
     setLoading(true);
     try {
       const { count: totalUsers } = await supabase
-        .from("profiles")
+        .from("users")
         .select("*", { count: "exact", head: true });
+
       const { count: companies } = await supabase
-        .from("profiles")
-        .select("*", { count: "exact", head: true })
-        .eq("role", "company");
-      const { count: candidates } = await supabase
-        .from("profiles")
-        .select("*", { count: "exact", head: true })
-        .eq("role", "candidate");
-      const { count: jobs } = await supabase
-        .from("jobs")
+        .from("companies")
         .select("*", { count: "exact", head: true });
+
+      // Fetch candidate role ID first
+      const { data: candidateRole } = await supabase
+        .from("roles")
+        .select("id")
+        .eq("name", "candidate")
+        .single();
+
+      let candidates = 0;
+      if (candidateRole) {
+        const { count } = await supabase
+          .from("users")
+          .select("*", { count: "exact", head: true })
+          .eq("role_id", candidateRole.id);
+        candidates = count || 0;
+      }
+
+      const { count: jobs } = await supabase
+        .from("listings")
+        .select("*", { count: "exact", head: true });
+
       const { count: applications } = await supabase
         .from("applications")
         .select("*", { count: "exact", head: true });
 
-      setStats({ totalUsers, companies, candidates, jobs, applications });
+      setStats({
+        totalUsers: totalUsers || 0,
+        companies: companies || 0,
+        candidates,
+        jobs: jobs || 0,
+        applications: applications || 0
+      });
     } catch (error) {
       console.error("Error fetching stats:", error);
     }

@@ -36,7 +36,8 @@ const roleIcons: RoleIcons = {
 };
 
 interface AdminUser {
-  id: string;
+  id: number;
+  auth_user_id: string;
   email: string;
   full_name?: string;
   company_name?: string;
@@ -56,14 +57,30 @@ const AdminUsers = () => {
   const fetchUsers = useCallback(
     async (search?: string) => {
       setLoading(true);
+      // Query users with joined tables
       let query = supabase
-        .from("profiles")
-        .select("*")
+        .from("users")
+        .select(
+          `
+          id,
+          auth_user_id,
+          email,
+          name,
+          lastname,
+          created_at,
+          role:roles!inner(name),
+          company:companies(name)
+        `
+        )
         .order("created_at", { ascending: false });
 
       if (search) {
+        // Search is tricky with joined tables in Supabase JS without text search setup or view.
+        // We'll search local fields. For deep search, we might need a stored proc or view.
+        // Trying simple text search on top level users + company name if possible.
+        // Simplification: search on user fields.
         query = query.or(
-          `full_name.ilike.%${search}%,email.ilike.%${search}%,company_name.ilike.%${search}%`
+          `name.ilike.%${search}%,lastname.ilike.%${search}%,email.ilike.%${search}%`
         );
       }
 
@@ -76,7 +93,16 @@ const AdminUsers = () => {
           variant: "destructive"
         });
       } else {
-        setUsers(data);
+        const mappedUsers: AdminUser[] = data.map((u: any) => ({
+          id: u.id,
+          auth_user_id: u.auth_user_id,
+          email: u.email,
+          full_name: `${u.name || ""} ${u.lastname || ""}`.trim(),
+          company_name: u.company?.name,
+          role: u.role?.name,
+          created_at: u.created_at
+        }));
+        setUsers(mappedUsers);
       }
       setLoading(false);
     },
@@ -93,12 +119,17 @@ const AdminUsers = () => {
     fetchUsers();
   }, [fetchUsers]);
 
-  const handleDeleteUser = async (userId: string, userEmail: string) => {
-    setDeletingId(userId);
+  const handleDeleteUser = async (
+    userId: number,
+    authId: string,
+    userEmail: string
+  ) => {
+    setDeletingId(String(userId));
 
     // Supabase Admin client is needed for this. This requires an edge function.
+    // Ensure the edge function expects "userId" to be the Auth UUID.
     const { error } = await supabase.functions.invoke("delete-user", {
-      body: { userId }
+      body: { userId: authId }
     });
 
     if (error) {
@@ -206,10 +237,11 @@ const AdminUsers = () => {
                             variant="outline"
                             className="border-red-500 text-red-400 hover:bg-red-500/10 hover:text-red-300"
                             disabled={
-                              deletingId === user.id || user.role === "admin"
+                              deletingId === String(user.id) ||
+                              user.role === "admin"
                             }
                           >
-                            {deletingId === user.id ? (
+                            {deletingId === String(user.id) ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
                               <Trash2 className="w-4 h-4" />
@@ -230,7 +262,11 @@ const AdminUsers = () => {
                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() =>
-                                handleDeleteUser(user.id, user.email)
+                                handleDeleteUser(
+                                  user.id,
+                                  user.auth_user_id,
+                                  user.email
+                                )
                               }
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >

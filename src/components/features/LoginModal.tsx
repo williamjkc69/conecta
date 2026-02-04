@@ -45,8 +45,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
     password: "",
     confirm_password: "",
     full_name: "",
-    company_name: "",
-    document_number: ""
+    lastname: ""
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -68,16 +67,18 @@ const LoginModal: React.FC<LoginModalProps> = ({
       const { user } = data;
 
       if (user?.email_confirmed_at) {
-        // Fetch actual role from profile to ensure correct redirect
-        // irrespective of which modal tab they used.
+        // Fetch actual role from users table
         const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
+          .from("users")
+          .select("role:roles(name)")
+          .eq("auth_user_id", user.id)
           .single();
+        const profileData = profile as any;
+        const roleData = profileData?.role;
+        const userRole = Array.isArray(roleData)
+          ? roleData[0]?.name
+          : roleData?.name || (type === "company" ? "company" : "candidate");
 
-        const userRole =
-          profile?.role || (type === "company" ? "company" : "candidate");
         const dashboard =
           userRole === "company"
             ? "/company-dashboard"
@@ -85,8 +86,33 @@ const LoginModal: React.FC<LoginModalProps> = ({
 
         window.location.href = dashboard;
       } else {
-        // Should not happen if sign in was successful but let's just close modal
-        onClose();
+        // Even if not confirmed, we might want to check if they are manually verified in DB
+        const { data: profile } = await supabase
+          .from("users")
+          .select("verified_at, role:roles(name)")
+          .eq("auth_user_id", user.id)
+          .single();
+
+        if (profile?.verified_at) {
+          const profileData = profile as any;
+          const roleData = profileData?.role;
+          const userRole = Array.isArray(roleData)
+            ? roleData[0]?.name
+            : roleData?.name || (type === "company" ? "company" : "candidate");
+
+          const dashboard =
+            userRole === "company"
+              ? "/company-dashboard"
+              : "/candidate-dashboard";
+          window.location.href = dashboard;
+        } else {
+          onClose();
+          toast({
+            title: "Verificación requerida",
+            description:
+              "Por favor, verifica tu correo electrónico para continuar."
+          });
+        }
       }
     } else {
       toast({
@@ -127,8 +153,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
     const metaData = {
       type: type,
       full_name: formData.full_name,
-      ...(type === "company" && { company_name: formData.company_name }),
-      ...(type === "candidate" && { document_number: formData.document_number })
+      lastname: formData.lastname
     };
 
     const options = { data: metaData };
@@ -142,6 +167,18 @@ const LoginModal: React.FC<LoginModalProps> = ({
 
     if (!error && authData?.user) {
       const user = authData.user;
+
+      // Wait a moment for trigger to create user record
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Fetch verification token
+      const { data: userRecord } = await supabase
+        .from("users")
+        .select("verification_token")
+        .eq("auth_user_id", user.id)
+        .single();
+
+      const verificationToken = userRecord?.verification_token;
 
       // Logic to accept invitation if token is present
       if (token && jobId && type === "candidate") {
@@ -160,49 +197,48 @@ const LoginModal: React.FC<LoginModalProps> = ({
           console.error("Error processing invitation:", inviteProcessError);
         }
       }
-      // Send verification email
-      // Check if email already verified (rare on signup unless auto-confirm enabled)
-      // Check if email already verified (rare on signup unless auto-confirm enabled)
-      if (user.email_confirmed_at) {
-        // Because it's a new signup, we can reasonably trust the 'type' prop (metadata),
-        // but consistent behavior is better.
-        const userRole = type === "company" ? "company" : "candidate"; // Metadata set during signup
-        const dashboard =
-          userRole === "company"
-            ? "/company-dashboard"
-            : "/candidate-dashboard";
-        window.location.href = dashboard;
-        return;
-      }
 
+      // Send verification email
       try {
-        await fetch("/api/send-email", {
+        const emailResponse = await fetch("/api/send-email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type: "verification",
             to: formData.email,
             payload: {
-              // In a real Supabase flow, we'd use the link Supabase generates or our own verify page
-              // For now, we'll point to our custom verify page.
-              // Note: Supabase sends its own email if 'Enable Email Confirmations' is on.
-              // If you want to use YOUR system entirely, you might disable Supabase emails
-              // or ignore this if Supabase handles it.
-              // Assuming user wants custom system:
-              link: `${window.location.origin}/verify-email?email=${encodeURIComponent(formData.email)}`
+              link: `${window.location.origin}/verify-email?token=${verificationToken || ""}`
             }
           })
         });
+
+        if (!emailResponse.ok) {
+          throw new Error("Failed to send verification email");
+        }
       } catch (emailErr) {
         console.error("Failed to send verification email", emailErr);
+        toast({
+          variant: "destructive",
+          title: "Error al enviar email",
+          description:
+            "No se pudo enviar el correo de verificación. Por favor contacta soporte."
+        });
+        setLoading(false);
+        return;
       }
 
       toast({
         title: "🎉 ¡Registro exitoso!",
         description:
-          "Revisa tu correo para verificar tu cuenta antes de iniciar sesión."
+          "Revisa tu correo para verificar tu cuenta. Serás redirigido a la página de verificación."
       });
+
       onClose();
+
+      // Redirect to verify-email page where middleware will catch them
+      setTimeout(() => {
+        window.location.href = "/verify-email";
+      }, 1500);
     } else if (error?.message?.includes("User already registered")) {
       toast({
         variant: "destructive",
@@ -315,44 +351,20 @@ const LoginModal: React.FC<LoginModalProps> = ({
                   required
                 />
               </div>
-              {type === "company" && (
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="company_name-signup"
-                    className="text-slate-300"
-                  >
-                    Nombre de la Empresa
-                  </Label>
-                  <Input
-                    id="company_name-signup"
-                    name="company_name"
-                    placeholder="Tu Empresa"
-                    value={formData.company_name}
-                    onChange={handleChange}
-                    className="bg-blue-950/20 border-blue-400/20 text-slate-100"
-                    required
-                  />
-                </div>
-              )}
-              {type === "candidate" && (
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="document_number-signup"
-                    className="text-slate-300"
-                  >
-                    Número de Documento
-                  </Label>
-                  <Input
-                    id="document_number-signup"
-                    name="document_number"
-                    placeholder="Tu número de identidad"
-                    value={formData.document_number}
-                    onChange={handleChange}
-                    className="bg-blue-950/20 border-blue-400/20 text-slate-100"
-                    required
-                  />
-                </div>
-              )}
+              <div className="space-y-2">
+                <Label htmlFor="lastname-signup" className="text-slate-300">
+                  Apellido
+                </Label>
+                <Input
+                  id="lastname-signup"
+                  name="lastname"
+                  placeholder="Tu Apellido"
+                  value={formData.lastname}
+                  onChange={handleChange}
+                  className="bg-blue-950/20 border-blue-400/20 text-slate-100"
+                  required
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="email-signup" className="text-slate-300">
                   Email

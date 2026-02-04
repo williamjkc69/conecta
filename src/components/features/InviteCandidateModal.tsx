@@ -70,10 +70,8 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
   const fetchJobs = async () => {
     try {
       const { data, error } = await supabase
-        .from("jobs")
-        .select(
-          "id, title, company_id, companies:profiles!jobs_company_id_fkey(company_name)"
-        )
+        .from("listings")
+        .select("id, title, company_id, company:companies(name)")
         .eq("status", "active");
 
       if (error) throw error;
@@ -94,10 +92,15 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
     setSearching(true);
     try {
       const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
+        .from("users")
+        .select(
+          `
+            id, name, lastname, email, auth_user_id,
+            role:roles!inner(name)
+        `
+        )
         .eq("email", emailSearch.trim())
-        .eq("role", "candidate")
+        .eq("role.name", "candidate")
         .single();
 
       if (error) {
@@ -108,10 +111,14 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
           description: "No se encontró un candidato con ese correo electrónico."
         });
       } else {
-        setFoundCandidate(data);
+        const candidate = {
+          ...data,
+          full_name: `${data.name || ""} ${data.lastname || ""}`.trim()
+        };
+        setFoundCandidate(candidate);
         toast({
           title: "Candidato encontrado",
-          description: `${data.full_name} está disponible para invitación.`
+          description: `${candidate.full_name} está disponible para invitación.`
         });
       }
     } catch (error) {
@@ -160,47 +167,57 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
     const selectedJob = jobs.find((j) => j.id === selectedJobId);
 
     try {
-      // Check if user exists first (if we didn't search properly or it's a new email input)
-      // If we foundCandidate via search, we know they exist.
       const userExists = foundCandidate
         ? true
         : await checkUserExists(emailToInvite);
 
       if (userExists) {
         // --- EXISTING USER FLOW ---
-        // 1. Assign in DB
-        // Fetch candidate ID (if we don't have it yet, we might need another fetch or just fail if not found in open search)
-        // Ideally 'foundCandidate' is populated. If 'userExists' is true but 'foundCandidate' is null (from manual check-user),
-        // we'd need to get the ID. For now, let's assume if it exists we need the ID to call the RPC.
-
         let candidateId = foundCandidate?.id;
-        if (!candidateId && userExists) {
-          // Retrieve ID via a restricted query? Or just rely on invitation flow?
-          // Since we can't easily get ID of arbitrary user client-side,
-          // the 'check-user' API *could* return the ID if we allow it or we create a new 'invite-existing' API.
-          // For safety, let's rely on the RPC function 'assign_candidate_to_job' which takes ID.
-          // If we don't have ID, we can't use that RPC.
-          // We might need to invite by email in a new backend function.
-          // SIMPLIFICATION: If foundCandidate is null but checking returns true, we'll treat as "New" for now
-          // because we can't get their ID to link them easily without admin rights on client.
-          // OR: Update 'check-user' to return basic public info if exists.
-          // Let's assume for this plan: We send an invitation link anyway if we can't link them directly.
-          // BUT implementation requested: "if exist ... send notification"
-          // We will TRY to link if we have candidate object.
-        }
 
-        if (foundCandidate) {
-          const { data, error } = await supabase.rpc(
-            "assign_candidate_to_job",
-            {
-              p_candidate_id: foundCandidate.id,
-              p_job_id: selectedJobId,
-              p_company_id: selectedJob.company_id
-            }
-          );
+        // If we found candidate object, we have ID.
+        // If userExists is true but no object (check-user flow), we can't create application without ID
+        // unless check-user returns ID (which we fixed check-user to query users, but API returns bool currently).
+        // Since we are moving to Normalized ID, we really need the ID.
+        // For now, if we don't have candidate object, we fall back to "Invite existing via email" (notification only).
+        // But if we have candidate object:
+
+        if (foundCandidate && candidateId) {
+          // Check existing
+          const { data: existingApp } = await supabase
+            .from("applications")
+            .select("id")
+            .eq("user_id", candidateId)
+            .eq("listing_id", selectedJobId)
+            .single();
+
+          if (existingApp) {
+            toast({
+              variant: "destructive",
+              title: "Ya invitado",
+              description:
+                "Este candidato ya tiene una aplicación para esta vacante."
+            });
+            setLoading(false);
+            return;
+          }
+
+          // Get 'invited' status ID
+          const { data: statusData } = await supabase
+            .from("application_statuses")
+            .select("id")
+            .eq("name", "invited")
+            .single();
+          const invitedStatusId = statusData?.id;
+
+          const { error } = await supabase.from("applications").insert({
+            user_id: candidateId,
+            listing_id: selectedJobId,
+            status_id: invitedStatusId
+            // created_at defaults to now
+          });
 
           if (error) throw error;
-          if (data.error) throw new Error(data.error);
 
           // Send Notification Email
           await fetch("/api/send-email", {
@@ -208,9 +225,9 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               type: "invitation_existing",
-              to: foundCandidate ? foundCandidate.email : emailToInvite,
+              to: foundCandidate.email,
               payload: {
-                link: `${window.location.origin}/candidate-dashboard`, // Direct them to dashboard
+                link: `${window.location.origin}/candidate-dashboard`,
                 dashboardUrl: `${window.location.origin}/candidate-dashboard`
               }
             })
@@ -221,13 +238,12 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
             description: "El candidato ha sido notificado."
           });
         } else {
-          // Exists but we don't have the object (maybe hidden profile?). Rare case if 'check-user' returns true.
-          // Fallback to sending email
+          // Exists but we don't have object. Just notify.
           await fetch("/api/send-email", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              type: "invitation_existing", // Prompt them to login
+              type: "invitation_existing",
               to: emailToInvite,
               payload: {
                 link: `${window.location.origin}/login`,
@@ -242,9 +258,6 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
         }
       } else {
         // --- NEW USER FLOW ---
-        // Create invitation record in DB (TODO: Create API for this or just send email with token signed)
-        // For simplicity, we send email with a register link containing the ref.
-
         const token = crypto.randomUUID();
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + 7);
@@ -255,18 +268,15 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
           .insert({
             email: emailToInvite,
             role: "candidate",
-            job_id: selectedJobId,
+            listing_id: selectedJobId,
             company_id: selectedJob.company_id,
             token: token,
-            // unix timestamp or ISO string? Supabase uses ISO string for timestamptz
             expires_at: expiresAt.toISOString(),
             status: "pending"
           });
 
         if (inviteError) {
           console.error("Error creating invitation:", inviteError);
-          // We continue to send email? or fail?
-          // If DB insert fails (e.g. duplicate token), we should probably fail.
           throw new Error("Error al guardar la invitación.");
         }
 
@@ -280,7 +290,7 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
               role: "candidate",
               link: `${window.location.origin}/register?email=${encodeURIComponent(
                 emailToInvite
-              )}&jobId=${selectedJobId}&token=${token}`
+              )}&listingId=${selectedJobId}&token=${token}`
             }
           })
         });
@@ -373,8 +383,8 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
           <div className="space-y-2">
             <Label className="text-slate-200">Vacante</Label>
             <Select
-              value={selectedJobId}
-              onValueChange={setSelectedJobId}
+              value={String(selectedJobId)} // ensure string for Select
+              onValueChange={(val) => setSelectedJobId(Number(val) || val)} // handle number
               disabled={!!initialJob}
             >
               <SelectTrigger className="bg-slate-800 border-slate-700 text-slate-100">
@@ -382,10 +392,10 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-700 text-slate-100">
                 {jobs.map((job) => (
-                  <SelectItem key={job.id} value={job.id}>
+                  <SelectItem key={job.id} value={String(job.id)}>
                     {job.title}{" "}
                     <span className="text-slate-500 text-xs">
-                      ({job.companies?.company_name})
+                      ({job.company?.name})
                     </span>
                   </SelectItem>
                 ))}

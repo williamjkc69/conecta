@@ -39,6 +39,8 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
 
   useEffect(() => {
     const register = searchParams.get("register");
+    const login = searchParams.get("login");
+
     if (register) {
       const emailParam = searchParams.get("email");
       const roleParam = searchParams.get("role");
@@ -51,6 +53,8 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
       if (roleParam === "candidate" || roleParam === "company") {
         setLoginType(roleParam);
       }
+      setShowLoginModal(true);
+    } else if (login) {
       setShowLoginModal(true);
     }
   }, [searchParams]);

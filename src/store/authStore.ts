@@ -1,10 +1,10 @@
 import { create } from "zustand";
 import { supabase } from "@/lib/supabase";
-import { AuthState, User, Profile, Session } from "@/types";
+import { AuthState, User, AppUser, Session } from "@/types";
 
 interface AuthActions {
   setUser: (user: User | null) => void;
-  setProfile: (profile: Profile | null) => void;
+  setProfile: (profile: AppUser | null) => void;
   setSession: (session: Session | null) => void;
   setLoading: (loading: boolean) => void;
   initializeAuth: () => Promise<() => void>;
@@ -52,38 +52,48 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
   fetchProfile: async (userId) => {
     try {
       const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
+        .from("users")
+        .select(
+          `
+          *,
+          role:roles(name),
+          company:companies(*)
+        `
+        )
+        .eq("auth_user_id", userId)
         .single();
 
       if (error) {
         console.error("Error fetching profile:", error.message);
         set({ profile: null });
       } else {
+        const appUser: AppUser = {
+          ...data,
+          full_name: `${data.name || ""} ${data.lastname || ""}`.trim(),
+          role: data.role, // {name: string}
+          company: data.company
+        };
+
         set((state) => {
-          // Improve: Sync profile data into user.user_metadata to avoid stale UI if components use user.user_metadata
+          // Sync profile data into user.user_metadata
           const updatedUser = state.user
             ? {
                 ...state.user,
                 user_metadata: {
                   ...state.user.user_metadata,
-                  full_name: data.full_name,
-                  document_number: data.document_number
-                  // Add other synced fields here
+                  full_name: appUser.full_name,
+                  company_name: appUser.company?.name
                 }
               }
             : state.user;
-          return { profile: data, user: updatedUser };
+          return { profile: appUser, user: updatedUser };
         });
 
-        // 🟢 FIX: Explicitly update Supabase Auth User Metadata to keep it in sync with DB
-        // This prevents the "stale local storage" issue on next login
+        // Sync to Supabase Auth
         await supabase.auth.updateUser({
           data: {
-            full_name: data.full_name,
-            document_number: data.document_number,
-            company_name: data.company_name
+            full_name: appUser.full_name,
+            company_name: appUser.company?.name
           }
         });
       }
@@ -115,13 +125,17 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
     const {
       data: { subscription }
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const currentSession = get().session;
-      // Avoid redundant updates if logic allows, but session object changes often
+      // session object changes often
       set({ session: session as any, user: (session?.user as any) ?? null });
 
       if (session?.user) {
         // Only fetch if not already loaded or different user
-        if (!get().profile || get().profile?.id !== session.user.id) {
+        // Note: checking profile.auth_user_id (new field) vs session.user.id
+        const currentProfile = get().profile;
+        if (
+          !currentProfile ||
+          currentProfile.auth_user_id !== session.user.id
+        ) {
           await get().fetchProfile(session.user.id);
         }
       } else {
@@ -135,7 +149,6 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
 
   signOut: async () => {
     const { error } = await supabase.auth.signOut();
-    // Clear state regardless of error (client side)
     set({ user: null, session: null, profile: null });
     return { error };
   }

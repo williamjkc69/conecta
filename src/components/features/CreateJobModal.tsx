@@ -31,7 +31,7 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
     title: "",
     description: "",
     location: "",
-    type: "Full-time",
+    type: "full-time",
     salary: "",
     requirements: [""],
     questions: [""]
@@ -178,10 +178,10 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
                     onChange={handleChange}
                     className="w-full px-4 py-3 rounded-lg bg-blue-950/20 border border-blue-400/20 text-slate-100 focus:outline-none focus:border-blue-500"
                   >
-                    <option value="Full-time">Tiempo completo</option>
-                    <option value="Part-time">Medio tiempo</option>
-                    <option value="Contract">Contrato</option>
-                    <option value="Freelance">Freelance</option>
+                    <option value="full-time">Tiempo completo</option>
+                    <option value="part-time">Medio tiempo</option>
+                    <option value="contract">Contrato</option>
+                    <option value="freelance">Freelance</option>
                   </select>
                 </div>
 

@@ -49,9 +49,14 @@ const AssignCandidateModal: React.FC<AssignCandidateModalProps> = ({
       setIsSearching(true);
       try {
         const { data, error } = await supabase
-          .from("profiles")
-          .select("id, full_name, email")
-          .eq("role", "candidate")
+          .from("users")
+          .select(
+            `
+            id, name, lastname, email, 
+            role:roles!inner(name)
+          `
+          )
+          .eq("role.name", "candidate")
           .eq("document_number", docNumber)
           .single();
 
@@ -68,7 +73,10 @@ const AssignCandidateModal: React.FC<AssignCandidateModalProps> = ({
             variant: "destructive"
           });
         } else {
-          setFoundCandidate(data);
+          setFoundCandidate({
+            ...data,
+            full_name: `${data.name || ""} ${data.lastname || ""}`.trim()
+          });
         }
       } catch (error) {
         console.error("Error searching candidate:", error);
@@ -103,24 +111,38 @@ const AssignCandidateModal: React.FC<AssignCandidateModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke(
-        "assign-candidate-to-job",
-        {
-          body: {
-            p_candidate_id: foundCandidate.id,
-            p_job_id: jobId,
-            p_company_id: profile.id
-          }
-        }
-      );
+      // Check existing application
+      const { data: existingApp } = await supabase
+        .from("applications")
+        .select("id")
+        .eq("user_id", foundCandidate.id)
+        .eq("listing_id", jobId)
+        .single();
+
+      if (existingApp) {
+        throw new Error("El candidato ya está asignado a esta vacante.");
+      }
+
+      // Get 'invited' status (or 'assigned' -> 'invited'?)
+      const { data: statusData } = await supabase
+        .from("application_statuses")
+        .select("id")
+        .eq("name", "invited")
+        .single();
+      const statusId = statusData?.id;
+
+      const { error } = await supabase.from("applications").insert({
+        user_id: foundCandidate.id,
+        listing_id: jobId,
+        status_id: statusId
+        // created_at default
+      });
 
       if (error) throw error;
-      if (data.error) throw new Error(data.error);
 
       toast({
         title: "✅ Asignación exitosa",
-        description:
-          data.message || `El candidato ha sido asignado a la vacante.`
+        description: `El candidato ha sido asignado a la vacante.`
       });
 
       resetForm();

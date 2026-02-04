@@ -11,17 +11,19 @@ function VerifyEmailContent() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const email = searchParams.get("email");
+  const token = searchParams.get("token");
+  const email = searchParams.get("email"); // kept for fallback or specific error messages, but verification relies on token
+
   const [status, setStatus] = useState<
     "verifying" | "success" | "error" | "unverified"
-  >(
-    email ? "verifying" : "verifying" // Initial state, will resolve in useEffect
-  );
+  >(token ? "verifying" : "verifying");
+
   const [message, setMessage] = useState(
     "Verificando tu correo electrónico..."
   );
   const [resending, setResending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [userEmail, setUserEmail] = useState<string | null>(null); // Store email for resend
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -34,68 +36,97 @@ function VerifyEmailContent() {
   }, [cooldown]);
 
   useEffect(() => {
-    const verifyUser = async () => {
-      const {
-        data: { session }
-      } = await supabase.auth.getSession();
+    const verify = async () => {
+      // If token is present, try to verify with token
+      if (token) {
+        try {
+          const { data, error } = await supabase.rpc("verify_user", { token });
 
-      if (!email) {
-        if (session) {
-          // Check if actually verified
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("verified_at")
-            .eq("id", session.user.id)
-            .single();
-
-          if (profile?.verified_at) {
-            setStatus("success");
-            setMessage("Tu cuenta ya está verificada.");
-          } else {
-            setStatus("unverified");
-            setMessage(
-              "Tu cuenta aún no ha sido verificada. Por favor, revisa tu correo electrónico."
-            );
+          if (error) {
+            throw error;
           }
-        } else {
-          // Not logged in and no token -> redirect to home
-          router.push("/");
+
+          if (data === true) {
+            setStatus("success");
+            setMessage("¡Tu correo ha sido verificado correctamente!");
+
+            // Try to update auth session if logged in
+            // Or at least update user metadata so middleware knows
+            const {
+              data: { session }
+            } = await supabase.auth.getSession();
+            if (session) {
+              await supabase.auth.updateUser({
+                data: { verified: true }
+              });
+            }
+          } else {
+            setStatus("error");
+            setMessage("El enlace de verificación es inválido o ha expirado.");
+          }
+        } catch (err: any) {
+          console.error("Verification error:", err);
+          setStatus("error");
+          setMessage("Hubo un error al verificar el token.");
         }
         return;
       }
 
-      // If email param exists, try to verify
-      try {
-        if (session && session.user.email === email) {
-          // User is logged in and email matches, valid verification context
-          const { error } = await supabase
-            .from("profiles")
-            .update({ verified_at: new Date().toISOString() })
-            .eq("id", session.user.id);
+      // If no token, check session status
+      const {
+        data: { session }
+      } = await supabase.auth.getSession();
 
-          if (error) throw error;
-          setStatus("success");
-          setMessage("¡Tu correo ha sido verificado correctamente!");
-        } else {
-          if (!session) {
-            setStatus("error"); // Soft error
-            setMessage(
-              "Por favor, inicia sesión para completar la verificación."
-            );
-          } else {
-            setStatus("error");
-            setMessage("El correo no coincide con la sesión actual.");
-          }
+      if (session) {
+        // Check if user is already verified in DB
+        const { data: userRecord } = await supabase
+          .from("users")
+          .select("verified_at, email")
+          .eq("auth_user_id", session.user.id)
+          .single();
+
+        // Store email for resend functionality
+        if (userRecord?.email) {
+          setUserEmail(userRecord.email);
         }
-      } catch (error: any) {
-        console.error("Verification error:", error);
+
+        if (userRecord?.verified_at) {
+          // User IS verified - redirect to dashboard
+          setStatus("success");
+          setMessage("Tu cuenta ya está verificada.");
+
+          // Redirect to appropriate dashboard after a short delay
+          setTimeout(async () => {
+            const { data: profileData } = await supabase
+              .from("users")
+              .select("role:roles(name)")
+              .eq("auth_user_id", session.user.id)
+              .single();
+
+            const roleName = (profileData as any)?.role?.name;
+            const dashboard =
+              roleName === "company"
+                ? "/company-dashboard"
+                : "/candidate-dashboard";
+            router.push(dashboard);
+          }, 2000);
+        } else {
+          // User is NOT verified - show unverified state
+          setStatus("unverified");
+          setMessage(
+            "Tu cuenta aún no ha sido verificada. Por favor, revisa tu correo electrónico para encontrar el enlace de verificación."
+          );
+        }
+      } else {
+        // Not logged in and no token - redirect to home
         setStatus("error");
-        setMessage("Hubo un error al verificar tu correo. Inténtalo de nuevo.");
+        setMessage("Debes iniciar sesión para verificar tu cuenta.");
+        setTimeout(() => router.push("/?login=true"), 2000);
       }
     };
 
-    verifyUser();
-  }, [email, router]);
+    verify();
+  }, [token, email, router]);
 
   const handleResendEmail = async () => {
     setResending(true);
@@ -104,33 +135,95 @@ function VerifyEmailContent() {
         data: { session }
       } = await supabase.auth.getSession();
 
-      if (session?.user?.email) {
-        await fetch("/api/send-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "verification",
-            to: session.user.email,
-            payload: {
-              link: `${window.location.origin}/verify-email?email=${encodeURIComponent(
-                session.user.email
-              )}`
-            }
-          })
-        });
-        toast({
-          title: "Correo enviado",
-          description: "Se ha enviado un nuevo enlace de verificación."
-        });
-        // 60s for production (simulated), 10s for dev/test as requested
-        const isProduction = process.env.NODE_ENV === "production";
-        setCooldown(isProduction ? 60 : 10);
+      let emailToUse = userEmail || email;
+      let tokenToSend = null;
+
+      if (session?.user?.id) {
+        // User is logged in - fetch from their auth_user_id
+        const { data: userRecord, error: fetchError } = await supabase
+          .from("users")
+          .select("verification_token, email")
+          .eq("auth_user_id", session.user.id)
+          .single();
+
+        if (fetchError) {
+          console.error("Error fetching user record:", fetchError);
+          throw new Error("No se pudo obtener la información del usuario.");
+        }
+
+        if (!userRecord?.verification_token) {
+          console.error("No verification token found for user");
+          throw new Error(
+            "No se encontró el token de verificación. Por favor contacta soporte."
+          );
+        }
+
+        emailToUse = userRecord.email;
+        tokenToSend = userRecord.verification_token;
+      } else if (emailToUse) {
+        // User is NOT logged in but we have their email - fetch by email
+        const { data: userRecord, error: fetchError } = await supabase
+          .from("users")
+          .select("verification_token")
+          .eq("email", emailToUse)
+          .single();
+
+        if (fetchError) {
+          console.error("Error fetching user by email:", fetchError);
+          throw new Error("No se pudo obtener la información del usuario.");
+        }
+
+        if (!userRecord?.verification_token) {
+          console.error("No verification token found for email");
+          throw new Error(
+            "No se encontró el token de verificación. Por favor contacta soporte."
+          );
+        }
+
+        tokenToSend = userRecord.verification_token;
+      } else {
+        throw new Error(
+          "No se pudo determinar tu correo electrónico. Por favor inicia sesión."
+        );
       }
-    } catch (error) {
+
+      console.log(
+        "Resending verification email to:",
+        emailToUse,
+        "with token:",
+        tokenToSend
+      );
+
+      const link = `${window.location.origin}/verify-email?token=${tokenToSend}`;
+
+      const emailResponse = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "verification",
+          to: emailToUse,
+          payload: { link }
+        })
+      });
+
+      if (!emailResponse.ok) {
+        throw new Error("Error al enviar el correo.");
+      }
+
+      toast({
+        title: "Correo enviado",
+        description:
+          "Se ha enviado un nuevo enlace de verificación a tu correo."
+      });
+
+      const isProduction = process.env.NODE_ENV === "production";
+      setCooldown(isProduction ? 60 : 10);
+    } catch (error: any) {
+      console.error("Resend email error:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "No se pudo enviar el correo."
+        description: error.message || "No se pudo enviar el correo."
       });
     } finally {
       setResending(false);

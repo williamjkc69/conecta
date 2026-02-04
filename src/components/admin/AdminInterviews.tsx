@@ -56,7 +56,7 @@ const AdminInterviews = () => {
         });
       } else {
         setInterviews(data);
-        setTotalPages(Math.ceil(count / limit));
+        setTotalPages(Math.ceil((count || 0) / limit));
       }
       setLoading(false);
     },
