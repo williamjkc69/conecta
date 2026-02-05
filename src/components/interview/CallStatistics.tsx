@@ -8,6 +8,7 @@ import {
 import StatusIndicator from "@/components/interview/StatusIndicator";
 import AudioLevelMeter from "@/components/interview/AudioLevelMeter";
 import { Info } from "lucide-react";
+import { TITLES, LABELS } from "@/constants/text";
 
 interface CallStatisticsProps {
   latency: number;
@@ -34,36 +35,40 @@ const CallStatistics: React.FC<CallStatisticsProps> = ({
         <AccordionTrigger>
           <div className="flex items-center gap-2">
             <Info size={16} />
-            <span>Detalles de la Conexión</span>
+            <span>{TITLES.CONNECTION_DETAILS}</span>
           </div>
         </AccordionTrigger>
         <AccordionContent>
           <div className="space-y-3 p-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-300">Latencia de Red</span>
+              <span className="text-slate-300">{LABELS.NETWORK_LATENCY}</span>
               <span className="font-mono font-medium text-cyan-300">
                 {latency} ms
               </span>
             </div>
             <StatusIndicator
-              label="Calidad de Conexión"
+              label={LABELS.CONNECTION_QUALITY}
               status={connectionQuality}
               type="connection"
             />
             <hr className="border-slate-700" />
             <StatusIndicator
-              label="Cámara"
+              label={LABELS.CAMERA}
               status={isVideoEnabled}
               type="device"
             />
             <StatusIndicator
-              label="Micrófono"
+              label={LABELS.MICROPHONE}
               status={!isMuted}
               type="device"
             />
             <hr className="border-slate-700" />
             <AudioLevelMeter audioLevel={audioLevel} />
-            <StatusIndicator label="Grabación" status={true} type="recording" />
+            <StatusIndicator
+              label={LABELS.RECORDING}
+              status={true}
+              type="recording"
+            />
           </div>
         </AccordionContent>
       </AccordionItem>

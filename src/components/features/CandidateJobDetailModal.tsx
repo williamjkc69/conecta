@@ -9,6 +9,7 @@ import {
   ListChecks
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LABELS, MESSAGES, BUTTONS, PLACEHOLDERS } from "@/constants/text";
 
 interface DetailSectionProps {
   icon: ReactNode;
@@ -89,15 +90,15 @@ const CandidateJobDetailModal: React.FC<CandidateJobDetailModalProps> = ({
               <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-slate-400">
                 <span className="flex items-center gap-2">
                   <MapPin className="w-4 h-4" />
-                  {application.location || "No especificado"}
+                  {application.location || PLACEHOLDERS.UNSPECIFIED}
                 </span>
                 <span className="flex items-center gap-2">
                   <DollarSign className="w-4 h-4" />
-                  {application.salary || "A convenir"}
+                  {application.salary || PLACEHOLDERS.NEGOTIABLE}
                 </span>
                 <span className="flex items-center gap-2">
                   <Clock className="w-4 h-4" />
-                  {application.type || "No especificado"}
+                  {application.type || PLACEHOLDERS.UNSPECIFIED}
                 </span>
               </div>
             </header>
@@ -105,14 +106,14 @@ const CandidateJobDetailModal: React.FC<CandidateJobDetailModalProps> = ({
             <div className="space-y-6">
               <DetailSection
                 icon={<Briefcase className="w-5 h-5 text-cyan-400" />}
-                title="Descripción del Puesto"
+                title={LABELS.DESCRIPTION}
               >
                 <p className="whitespace-pre-wrap">{application.description}</p>
               </DetailSection>
 
               <DetailSection
                 icon={<ListChecks className="w-5 h-5 text-cyan-400" />}
-                title="Requisitos"
+                title={LABELS.REQUIREMENTS}
               >
                 {application.requirements &&
                 application.requirements.length > 0 ? (
@@ -122,7 +123,7 @@ const CandidateJobDetailModal: React.FC<CandidateJobDetailModalProps> = ({
                     ))}
                   </ul>
                 ) : (
-                  <p>No se especificaron requisitos.</p>
+                  <p>{MESSAGES.NO_REQUIREMENTS}</p>
                 )}
               </DetailSection>
             </div>
@@ -133,7 +134,7 @@ const CandidateJobDetailModal: React.FC<CandidateJobDetailModalProps> = ({
                 variant="outline"
                 className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
               >
-                Cerrar
+                {BUTTONS.CLOSE}
               </Button>
             </div>
           </motion.div>

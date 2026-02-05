@@ -24,6 +24,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
+import {
+  BUTTONS,
+  TITLES,
+  MESSAGES,
+  LABELS,
+  PLACEHOLDERS
+} from "@/constants/text";
 
 interface RoleIcons {
   [key: string]: ReactNode;
@@ -88,8 +95,8 @@ const AdminUsers = () => {
 
       if (error) {
         toast({
-          title: "Error",
-          description: "No se pudieron cargar los usuarios.",
+          title: TITLES.ERROR,
+          description: MESSAGES.ERROR_LOADING_USERS,
           variant: "destructive"
         });
       } else {
@@ -134,12 +141,12 @@ const AdminUsers = () => {
 
     if (error) {
       toast({
-        title: "Error",
-        description: `No se pudo eliminar al usuario ${userEmail}.`,
+        title: TITLES.ERROR,
+        description: MESSAGES.ERROR_DELETING_USER,
         variant: "destructive"
       });
     } else {
-      toast({ title: "Éxito", description: `Usuario ${userEmail} eliminado.` });
+      toast({ title: TITLES.SUCCESS, description: MESSAGES.USER_DELETED });
       setUsers(users.filter((u) => u.id !== userId));
     }
     setDeletingId(null);
@@ -151,14 +158,14 @@ const AdminUsers = () => {
     const { error } = await supabase.auth.resetPasswordForEmail(email);
     if (error) {
       toast({
-        title: "Error",
-        description: "No se pudo enviar el email de recuperación.",
+        title: TITLES.ERROR,
+        description: MESSAGES.SEND_RESET_ERROR,
         variant: "destructive"
       });
     } else {
       toast({
-        title: "Éxito",
-        description: `Email de recuperación enviado a ${email}.`
+        title: TITLES.SUCCESS,
+        description: MESSAGES.RESET_SENT_TOAST
       });
     }
     setResettingId(null);
@@ -166,12 +173,14 @@ const AdminUsers = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-bold text-slate-100">Gestión de Usuarios</h2>
+      <h2 className="text-3xl font-bold text-slate-100">
+        {TITLES.USER_MANAGEMENT}
+      </h2>
       <div className="flex justify-between items-center">
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
           <Input
-            placeholder="Buscar por nombre, email o empresa..."
+            placeholder={PLACEHOLDERS.ADMIN_SEARCH_USERS}
             className="pl-10 bg-slate-800 border-slate-700"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -183,11 +192,13 @@ const AdminUsers = () => {
           <table className="w-full text-left">
             <thead className="bg-slate-800">
               <tr>
-                <th className="p-4 font-semibold">Usuario</th>
-                <th className="p-4 font-semibold">Email</th>
-                <th className="p-4 font-semibold">Rol</th>
-                <th className="p-4 font-semibold">Fecha de Registro</th>
-                <th className="p-4 font-semibold text-right">Acciones</th>
+                <th className="p-4 font-semibold">{LABELS.USER}</th>
+                <th className="p-4 font-semibold">{LABELS.EMAIL}</th>
+                <th className="p-4 font-semibold">{LABELS.ROLE}</th>
+                <th className="p-4 font-semibold">{LABELS.REGISTERED_DATE}</th>
+                <th className="p-4 font-semibold text-right">
+                  {LABELS.ACTIONS}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -250,16 +261,17 @@ const AdminUsers = () => {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                            <AlertDialogTitle>
+                              {TITLES.CONFIRM_DELETE_USER}
+                            </AlertDialogTitle>
                             <AlertDialogDescription>
-                              Esta acción es irreversible. Se eliminará
-                              permanentemente al usuario{" "}
-                              <strong>{user.email}</strong> y todos sus datos
-                              asociados (vacantes, aplicaciones, etc.).
+                              {MESSAGES.DELETE_USER_WARNING}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogCancel>
+                              {BUTTONS.CANCEL}
+                            </AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() =>
                                 handleDeleteUser(
@@ -270,7 +282,7 @@ const AdminUsers = () => {
                               }
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
-                              Sí, eliminar usuario
+                              {MESSAGES.CONFIRM_DELETE_USER_BTN}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>

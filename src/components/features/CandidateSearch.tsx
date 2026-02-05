@@ -4,6 +4,7 @@ import { Search, Loader2, UserPlus } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 // @ts-ignore
 import { useDebounce } from "@/hooks/useDebounce";
+import { MESSAGES, LABELS, PLACEHOLDERS } from "@/constants/text";
 
 interface Candidate {
   id: string;
@@ -63,7 +64,7 @@ const CandidateSearch: React.FC<CandidateSearchProps> = ({
   return (
     <div className="relative">
       <label className="block text-sm font-medium mb-2 text-slate-300">
-        Buscar Candidato Registrado
+        {LABELS.SEARCH_REGISTERED_CANDIDATE}
       </label>
       <div className="relative">
         <Search className="w-4 h-4 absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" />
@@ -74,7 +75,7 @@ const CandidateSearch: React.FC<CandidateSearchProps> = ({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setTimeout(() => setIsFocused(false), 200)}
           className="w-full pl-12 pr-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-          placeholder="Buscar por nombre o email..."
+          placeholder={PLACEHOLDERS.SEARCH_NAME_EMAIL}
         />
         {loading && (
           <Loader2 className="w-4 h-4 absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 animate-spin" />
@@ -108,10 +109,8 @@ const CandidateSearch: React.FC<CandidateSearchProps> = ({
               !loading &&
               searchTerm.length > 2 && (
                 <div className="p-4 text-center text-slate-400">
-                  <p>No se encontraron candidatos.</p>
-                  <p className="text-xs">
-                    El candidato debe estar registrado en la plataforma.
-                  </p>
+                  <p>{MESSAGES.NO_CANDIDATES_FOUND}</p>
+                  <p className="text-xs">{MESSAGES.CANDIDATE_MUST_REGISTER}</p>
                 </div>
               )
             )}

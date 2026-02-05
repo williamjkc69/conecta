@@ -4,6 +4,18 @@ import { X, Plus, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
+import {
+  BUTTONS,
+  TITLES,
+  MESSAGES,
+  LABELS,
+  PLACEHOLDERS
+} from "@/constants/text";
+import {
+  CURRENCIES,
+  JOB_STATUS_LABELS,
+  LISTING_TYPE_PLACEHOLDER
+} from "@/constants/options";
 
 interface JobFormModalProps {
   isOpen: boolean;
@@ -41,7 +53,6 @@ interface Skill {
 }
 
 const MAX_DESCRIPTION_LENGTH = 2000;
-const CURRENCIES = ["USD", "EUR", "MXN", "COP", "ARS", "CLP", "PEN"];
 
 const JobFormModal: React.FC<JobFormModalProps> = ({
   isOpen,
@@ -229,8 +240,8 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
 
     if (!formData.title?.trim()) {
       toast({
-        title: "⚠️ Título requerido",
-        description: "Por favor ingresa el título del puesto.",
+        title: MESSAGES.TITLE_REQUIRED_HEADER,
+        description: MESSAGES.TITLE_REQUIRED_DESC,
         variant: "destructive"
       });
       return;
@@ -238,8 +249,8 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
 
     if (formData.title.trim().length < 3) {
       toast({
-        title: "⚠️ Título muy corto",
-        description: "El título debe tener al menos 3 caracteres.",
+        title: MESSAGES.TITLE_TOO_SHORT_HEADER,
+        description: MESSAGES.TITLE_TOO_SHORT_DESC,
         variant: "destructive"
       });
       return;
@@ -247,8 +258,8 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
 
     if (!formData.description?.trim()) {
       toast({
-        title: "⚠️ Descripción requerida",
-        description: "Por favor ingresa una descripción del puesto.",
+        title: MESSAGES.DESC_REQUIRED_HEADER,
+        description: MESSAGES.DESC_REQUIRED_DESC,
         variant: "destructive"
       });
       return;
@@ -256,8 +267,8 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
 
     if (formData.description.trim().length < 50) {
       toast({
-        title: "⚠️ Descripción muy corta",
-        description: "La descripción debe tener al menos 50 caracteres.",
+        title: MESSAGES.DESC_TOO_SHORT_HEADER,
+        description: MESSAGES.DESC_TOO_SHORT_DESC,
         variant: "destructive"
       });
       return;
@@ -265,8 +276,8 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
 
     if (!formData.listing_type_id) {
       toast({
-        title: "⚠️ Tipo de contrato requerido",
-        description: "Por favor selecciona un tipo de contrato.",
+        title: MESSAGES.TYPE_REQUIRED_HEADER,
+        description: MESSAGES.TYPE_REQUIRED_DESC,
         variant: "destructive"
       });
       return;
@@ -277,8 +288,8 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
       parseFloat(formData.salary_range_min) <= 0
     ) {
       toast({
-        title: "⚠️ Salario mínimo inválido",
-        description: "Por favor ingresa un salario mínimo válido mayor a 0.",
+        title: MESSAGES.MIN_SALARY_INVALID_HEADER,
+        description: MESSAGES.MIN_SALARY_INVALID_DESC,
         variant: "destructive"
       });
       return;
@@ -290,8 +301,8 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
         parseFloat(formData.salary_range_min)
     ) {
       toast({
-        title: "⚠️ Rango salarial inválido",
-        description: "El salario máximo debe ser mayor o igual al mínimo.",
+        title: MESSAGES.SALARY_RANGE_INVALID_HEADER,
+        description: MESSAGES.SALARY_RANGE_INVALID_DESC,
         variant: "destructive"
       });
       return;
@@ -304,8 +315,8 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
 
     if (cleanedRequirements.length === 0) {
       toast({
-        title: "⚠️ Requisitos requeridos",
-        description: "Por favor agrega al menos un requisito o skill.",
+        title: MESSAGES.REQS_REQUIRED_HEADER,
+        description: MESSAGES.REQS_REQUIRED_DESC,
         variant: "destructive"
       });
       return;
@@ -381,7 +392,7 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                 </button>
 
                 <h2 className="text-2xl sm:text-3xl font-bold gradient-text pr-8">
-                  {mode === "create" ? "Crear Nueva Vacante" : "Editar Vacante"}
+                  {mode === "create" ? TITLES.CREATE_JOB : TITLES.EDIT_JOB}
                 </h2>
               </div>
 
@@ -394,7 +405,7 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-2 text-slate-300">
-                        Título del puesto *
+                        {LABELS.JOB_TITLE} *
                       </label>
                       <input
                         type="text"
@@ -402,14 +413,14 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                         value={formData.title}
                         onChange={handleChange}
                         className="w-full px-4 py-3 rounded-lg bg-blue-950/20 border border-blue-400/20 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 text-sm"
-                        placeholder="ej: Desarrollador Full Stack Senior"
+                        placeholder={PLACEHOLDERS.JOB_TITLE}
                         required
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium mb-2 text-slate-300">
-                        Ubicación
+                        {LABELS.LOCATION}
                       </label>
                       <input
                         type="text"
@@ -417,7 +428,7 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                         value={formData.location}
                         onChange={handleChange}
                         className="w-full px-4 py-3 rounded-lg bg-blue-950/20 border border-blue-400/20 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 text-sm"
-                        placeholder="ej: Remoto, Madrid, etc."
+                        placeholder={PLACEHOLDERS.LOCATION}
                       />
                     </div>
                   </div>
@@ -425,7 +436,7 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-2 text-slate-300">
-                        Tipo de contrato *
+                        {LABELS.CONTRACT_TYPE} *
                       </label>
                       <select
                         name="listing_type_id"
@@ -434,7 +445,7 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                         className="w-full px-4 py-3 rounded-lg bg-blue-950/20 border border-blue-400/20 text-slate-100 focus:outline-none focus:border-blue-500 text-sm"
                         required
                       >
-                        <option value="">Selecciona un tipo</option>
+                        <option value="">{LISTING_TYPE_PLACEHOLDER}</option>
                         {listingTypes.map((type) => (
                           <option key={type.id} value={type.id}>
                             {type.name}
@@ -446,7 +457,7 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                     {mode === "edit" && (
                       <div>
                         <label className="block text-sm font-medium mb-2 text-slate-300">
-                          Estado *
+                          {LABELS.STATUS} *
                         </label>
                         <select
                           name="status"
@@ -454,8 +465,12 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                           onChange={handleChange}
                           className="w-full px-4 py-3 rounded-lg bg-blue-950/20 border border-blue-400/20 text-slate-100 focus:outline-none focus:border-blue-500 text-sm"
                         >
-                          <option value="active">Activa</option>
-                          <option value="inactive">Inactiva</option>
+                          <option value="active">
+                            {JOB_STATUS_LABELS.ACTIVE}
+                          </option>
+                          <option value="inactive">
+                            {JOB_STATUS_LABELS.INACTIVE}
+                          </option>
                         </select>
                       </div>
                     )}
@@ -463,7 +478,7 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
 
                   <div>
                     <label className="block text-sm font-medium mb-2 text-slate-300">
-                      Descripción * ({formData.description.length}/
+                      {LABELS.DESCRIPTION} * ({formData.description.length}/
                       {MAX_DESCRIPTION_LENGTH})
                     </label>
                     <textarea
@@ -473,7 +488,7 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                       rows={4}
                       maxLength={MAX_DESCRIPTION_LENGTH}
                       className="w-full px-4 py-3 rounded-lg bg-blue-950/20 border border-blue-400/20 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none text-sm"
-                      placeholder="Describe el puesto, responsabilidades y lo que buscas..."
+                      placeholder={PLACEHOLDERS.DESCRIPTION}
                       required
                     />
                   </div>
@@ -481,7 +496,7 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                   <div className="grid grid-cols-3 gap-3">
                     <div>
                       <label className="block text-sm font-medium mb-2 text-slate-300">
-                        Salario mínimo *
+                        {LABELS.SALARY_MIN} *
                       </label>
                       <input
                         type="number"
@@ -491,14 +506,14 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                         min="0"
                         step="0.01"
                         className="w-full px-3 py-3 rounded-lg bg-blue-950/20 border border-blue-400/20 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 text-sm"
-                        placeholder="50000"
+                        placeholder={PLACEHOLDERS.SALARY_MIN}
                         required
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium mb-2 text-slate-300">
-                        Salario máximo
+                        {LABELS.SALARY_MAX}
                       </label>
                       <input
                         type="number"
@@ -508,13 +523,13 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                         min="0"
                         step="0.01"
                         className="w-full px-3 py-3 rounded-lg bg-blue-950/20 border border-blue-400/20 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 text-sm"
-                        placeholder="70000"
+                        placeholder={PLACEHOLDERS.SALARY_MAX}
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium mb-2 text-slate-300">
-                        Moneda *
+                        {LABELS.CURRENCY} *
                       </label>
                       <select
                         name="currency"
@@ -534,11 +549,10 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
 
                   <div>
                     <label className="block text-sm font-medium mb-2 text-slate-300">
-                      Requisitos (Skills)
+                      {LABELS.REQUIREMENTS}
                     </label>
                     <p className="text-xs text-slate-400 mb-3">
-                      Escribe para buscar skills existentes o crear nuevas.
-                      Presiona Enter para agregar.
+                      {MESSAGES.SKILL_HELP}
                     </p>
 
                     {/* Selected Skills Pills */}
@@ -573,7 +587,7 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                           setTimeout(() => setShowSuggestions(false), 200);
                         }}
                         className="w-full px-4 py-2 rounded-lg bg-blue-950/20 border border-blue-400/20 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 text-sm"
-                        placeholder="ej: React, TypeScript, Node.js (presiona Enter)"
+                        placeholder={PLACEHOLDERS.SKILLS}
                       />
 
                       {/* Suggestions Dropdown */}
@@ -596,11 +610,10 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
 
                   <div>
                     <label className="block text-sm font-medium mb-2 text-slate-300">
-                      Preguntas para la IA
+                      {LABELS.AI_QUESTIONS}
                     </label>
                     <p className="text-xs text-slate-400 mb-3">
-                      Estas preguntas serán usadas por el agente de IA durante
-                      la entrevista
+                      {MESSAGES.AI_QUESTIONS_DESC}
                     </p>
                     <div className="space-y-2">
                       {formData.questions.map((question, index) => (
@@ -616,7 +629,7 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                               )
                             }
                             className="flex-1 px-4 py-2 rounded-lg bg-blue-950/20 border border-blue-400/20 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 text-sm"
-                            placeholder="ej: ¿Cuál es tu experiencia con TypeScript?"
+                            placeholder={PLACEHOLDERS.QUESTION_EXAMPLE}
                           />
                           {formData.questions.length > 1 && (
                             <Button
@@ -639,7 +652,7 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                         className="w-full border-blue-500/50 text-cyan-400 hover:bg-blue-500/10 text-sm"
                       >
                         <Plus className="w-4 h-4 mr-2" />
-                        Agregar Pregunta
+                        {BUTTONS.ADD_QUESTION}
                       </Button>
                     </div>
                   </div>
@@ -655,7 +668,7 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                     disabled={isLoading || isDeleting}
                     className="flex-1 border-slate-100/20 text-slate-100 hover:bg-slate-100/10"
                   >
-                    Cancelar
+                    {BUTTONS.CANCEL}
                   </Button>
                   {mode === "edit" && onDelete && (
                     <Button
@@ -667,12 +680,12 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                       {isDeleting ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Eliminando...
+                          {BUTTONS.DELETING}
                         </>
                       ) : (
                         <>
                           <Trash2 className="w-4 h-4 mr-2" />
-                          Eliminar
+                          {BUTTONS.DELETE}
                         </>
                       )}
                     </Button>
@@ -686,12 +699,12 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                     {isLoading ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        {mode === "create" ? "Creando..." : "Guardando..."}
+                        {mode === "create" ? BUTTONS.CREATING : BUTTONS.SAVING}
                       </>
                     ) : mode === "create" ? (
-                      "Crear Vacante"
+                      BUTTONS.CREATE_JOB
                     ) : (
-                      "Guardar Cambios"
+                      BUTTONS.SAVE_CHANGES
                     )}
                   </Button>
                 </div>
@@ -715,12 +728,9 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
           >
             <h3 className="text-xl font-bold text-slate-100 mb-2 flex items-center gap-2">
               <Trash2 className="text-red-500" />
-              ¿Eliminar vacante?
+              {TITLES.DELETE_JOB_CONFIRM}
             </h3>
-            <p className="text-slate-300 mb-6">
-              Esta acción no se puede deshacer. Se eliminará permanentemente la
-              vacante y todas las aplicaciones asociadas.
-            </p>
+            <p className="text-slate-300 mb-6">{MESSAGES.CONFIRM_DELETE_JOB}</p>
             <div className="flex gap-3">
               <Button
                 variant="outline"
@@ -728,7 +738,7 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                 disabled={isDeleting}
                 className="flex-1"
               >
-                Cancelar
+                {BUTTONS.CANCEL}
               </Button>
               <Button
                 variant="destructive"
@@ -739,10 +749,10 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                 {isDeleting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Eliminando...
+                    {BUTTONS.DELETING}
                   </>
                 ) : (
-                  "Sí, eliminar"
+                  BUTTONS.CONFIRM_DELETE
                 )}
               </Button>
             </div>

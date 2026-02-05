@@ -11,6 +11,7 @@ import {
   Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BUTTONS, TITLES, MESSAGES, LABELS } from "@/constants/text";
 
 interface JobDetailsModalProps {
   isOpen: boolean;
@@ -103,7 +104,9 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
                             : "bg-gray-500/20 text-gray-400"
                         }`}
                       >
-                        {job.status === "active" ? "Activa" : "Inactiva"}
+                        {job.status === "active"
+                          ? LABELS.ACTIVE_JOB
+                          : LABELS.INACTIVE_JOB}
                       </span>
                     </div>
                   </div>
@@ -115,7 +118,7 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
                 {/* Description */}
                 <div>
                   <h3 className="text-lg font-semibold text-slate-200 mb-2">
-                    Descripción
+                    {LABELS.DESCRIPTION}
                   </h3>
                   <p className="text-slate-300 whitespace-pre-wrap leading-relaxed">
                     {job.description}
@@ -126,7 +129,7 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
                 {job.requirements && job.requirements.length > 0 && (
                   <div>
                     <h3 className="text-lg font-semibold text-slate-200 mb-3">
-                      Requisitos
+                      {LABELS.REQUIREMENTS}
                     </h3>
                     <div className="flex flex-wrap gap-2">
                       {job.requirements.map((skill: string, index: number) => (
@@ -145,7 +148,7 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
                 {job.questions && job.questions.length > 0 && (
                   <div>
                     <h3 className="text-lg font-semibold text-slate-200 mb-3">
-                      Preguntas para la IA
+                      {LABELS.AI_QUESTIONS}
                     </h3>
                     <ul className="space-y-2">
                       {job.questions.map((question: string, index: number) => (
@@ -168,7 +171,9 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
                       <Calendar className="w-5 h-5 text-blue-400" />
                       <span className="font-medium">
                         {job.applicants}{" "}
-                        {job.applicants === 1 ? "aplicante" : "aplicantes"}
+                        {job.applicants === 1
+                          ? LABELS.APPLICANT
+                          : LABELS.APPLICANTS}
                       </span>
                     </div>
                   </div>
@@ -184,7 +189,7 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
                     onClick={onClose}
                     className="flex-1 border-slate-100/20 text-slate-100 hover:bg-slate-100/10"
                   >
-                    Cerrar
+                    {BUTTONS.CLOSE}
                   </Button>
                   <Button
                     type="button"
@@ -195,12 +200,12 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
                     {isDeleting ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Eliminando...
+                        {BUTTONS.DELETING}
                       </>
                     ) : (
                       <>
                         <Trash2 className="w-4 h-4 mr-2" />
-                        Eliminar
+                        {BUTTONS.DELETE}
                       </>
                     )}
                   </Button>
@@ -210,7 +215,7 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     <Edit className="w-4 h-4 mr-2" />
-                    Editar
+                    {BUTTONS.EDIT}
                   </Button>
                 </div>
               </div>
@@ -233,12 +238,9 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
           >
             <h3 className="text-xl font-bold text-slate-100 mb-2 flex items-center gap-2">
               <Trash2 className="text-red-500" />
-              ¿Eliminar vacante?
+              {TITLES.DELETE_JOB_CONFIRM}
             </h3>
-            <p className="text-slate-300 mb-6">
-              Esta acción no se puede deshacer. Se eliminará permanentemente la
-              vacante y todas las aplicaciones asociadas.
-            </p>
+            <p className="text-slate-300 mb-6">{MESSAGES.CONFIRM_DELETE_JOB}</p>
             <div className="flex gap-3">
               <Button
                 variant="outline"
@@ -246,7 +248,7 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
                 disabled={isDeleting}
                 className="flex-1"
               >
-                Cancelar
+                {BUTTONS.CANCEL}
               </Button>
               <Button
                 variant="destructive"
@@ -257,10 +259,10 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
                 {isDeleting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Eliminando...
+                    {BUTTONS.DELETING}
                   </>
                 ) : (
-                  "Sí, eliminar"
+                  BUTTONS.CONFIRM_DELETE
                 )}
               </Button>
             </div>

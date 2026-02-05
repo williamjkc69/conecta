@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Shield, Key, Loader2, Mail } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { BUTTONS, TITLES, MESSAGES, LABELS } from "@/constants/text";
 
 const AdminLoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -24,8 +25,8 @@ const AdminLoginPage: React.FC = () => {
     if (email.toLowerCase() !== "root@admin.local") {
       toast({
         variant: "destructive",
-        title: "Acceso denegado",
-        description: "Email incorrecto."
+        title: TITLES.ACCESS_DENIED,
+        description: MESSAGES.WRONG_EMAIL
       });
       setLoading(false);
       return;
@@ -44,8 +45,8 @@ const AdminLoginPage: React.FC = () => {
     } else {
       toast({
         variant: "destructive",
-        title: "Error de autenticación",
-        description: error?.message || "Credenciales inválidas"
+        title: MESSAGES.AUTH_ERROR_TITLE,
+        description: error?.message || MESSAGES.INVALID_CREDENTIALS
       });
     }
 
@@ -64,15 +65,15 @@ const AdminLoginPage: React.FC = () => {
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 mb-3">
               <Shield className="w-8 h-8 text-cyan-400" />
-              <h1 className="text-3xl font-bold gradient-text">Admin Panel</h1>
+              <h1 className="text-3xl font-bold gradient-text">
+                {TITLES.ADMIN_PANEL}
+              </h1>
             </div>
-            <p className="text-slate-400">
-              Acceso exclusivo para administradores.
-            </p>
+            <p className="text-slate-400">{MESSAGES.ADMIN_ACCESS_ONLY}</p>
           </div>
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{LABELS.EMAIL}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                 <Input
@@ -87,7 +88,7 @@ const AdminLoginPage: React.FC = () => {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
+              <Label htmlFor="password">{LABELS.PASSWORD}</Label>
               <div className="relative">
                 <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                 <Input
@@ -109,7 +110,7 @@ const AdminLoginPage: React.FC = () => {
               {loading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
-              {loading ? "Verificando..." : "Ingresar"}
+              {loading ? BUTTONS.VERIFYING : BUTTONS.LOGIN_SUBMIT}
             </Button>
           </form>
         </div>

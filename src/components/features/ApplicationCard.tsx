@@ -10,6 +10,7 @@ import {
   Loader2
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { TITLES, MESSAGES, BUTTONS, LABELS } from "@/constants/text";
 
 interface ApplicationCardProps {
   application: any;
@@ -53,20 +54,17 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
             variant="outline"
             className="border-green-500/50 text-green-400 bg-green-900/10"
           >
-            Completado
+            {LABELS.COMPLETED_BADGE}
           </Badge>
         </div>
         <CardHeader>
           <CardTitle className="text-slate-200 flex items-center gap-2">
             <CheckCircle className="w-6 h-6 text-green-500" />
-            Proceso Finalizado
+            {TITLES.PROCESS_FINISHED}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-slate-400">
-            Has completado esta etapa del proceso. La empresa revisará tus
-            resultados.
-          </p>
+          <p className="text-slate-400">{MESSAGES.PROCESS_FINISHED_DESC}</p>
         </CardContent>
       </Card>
     );
@@ -81,26 +79,23 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
       <Card className="bg-gradient-to-br from-blue-900 to-cyan-900 border-cyan-700 shadow-lg shadow-cyan-900/20 relative overflow-hidden">
         <div className="absolute top-0 right-0 p-2">
           <Badge className="bg-yellow-400 text-black hover:bg-yellow-500 border-none">
-            Acción Requerida
+            {LABELS.ACTION_REQUIRED}
           </Badge>
         </div>
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-yellow-300" />
-            ¡Invitación Recibida!
+            {TITLES.INVITATION_RECEIVED}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-blue-100 mb-6">
-            Has sido seleccionado para realizar una entrevista por voz con
-            nuestro agente de IA.
-          </p>
+          <p className="text-blue-100 mb-6">{MESSAGES.INVITATION_DESC}</p>
           <Button
             className="w-full sm:w-auto bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold text-lg py-6 shadow-xl transition-all hover:scale-105"
             onClick={() => onStartInterview(application)}
           >
             <PlayCircle className="mr-2 h-5 w-5" />
-            Realizar entrevista
+            {BUTTONS.START_INTERVIEW}
           </Button>
         </CardContent>
       </Card>
@@ -119,25 +114,25 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
             variant="outline"
             className="border-yellow-500/50 text-yellow-400 bg-yellow-900/10 animate-pulse"
           >
-            En Curso
+            {LABELS.IN_COURSE_BADGE}
           </Badge>
         </div>
         <CardHeader>
           <CardTitle className="text-yellow-400 flex items-center gap-2">
             <Loader2 className="w-6 h-6 animate-spin" />
-            Entrevista en curso
+            {LABELS.INTERVIEW_IN_PROGRESS}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-slate-300 mb-4">
-            Tu entrevista está activa. Puedes continuar donde la dejaste.
+            {MESSAGES.INTERVIEW_ACTIVE_DESC}
           </p>
           <Button
             className="w-full sm:w-auto bg-yellow-600 hover:bg-yellow-500 text-white font-semibold"
             onClick={() => onStartInterview(application)}
           >
             <PauseCircle className="mr-2 h-5 w-5" />
-            Continuar Entrevista
+            {BUTTONS.CONTINUE_INTERVIEW}
           </Button>
         </CardContent>
       </Card>
@@ -152,19 +147,17 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
     <Card className="glass-effect border-slate-700/80 relative">
       <div className="absolute top-0 right-0 p-2">
         <Badge variant="outline" className="border-slate-600 text-slate-500">
-          Pendiente
+          {LABELS.PENDING_BADGE}
         </Badge>
       </div>
       <CardHeader>
         <CardTitle className="text-slate-400 flex items-center gap-2">
-          <Clock className="w-6 h-6" />A la espera de invitación
+          <Clock className="w-6 h-6" />
+          {TITLES.WAITING_INVITATION}
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-slate-500">
-          Tu solicitud ha sido enviada. Si tu perfil coincide, recibirás una
-          invitación.
-        </p>
+        <p className="text-slate-500">{MESSAGES.WAITING_DESC}</p>
       </CardContent>
     </Card>
   );

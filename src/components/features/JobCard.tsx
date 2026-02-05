@@ -19,6 +19,14 @@ interface JobCardProps {
   onClick: () => void;
 }
 
+import {
+  TITLES,
+  MESSAGES,
+  BUTTONS,
+  LABELS,
+  PLACEHOLDERS
+} from "@/constants/text";
+
 const JobCard: React.FC<JobCardProps> = ({ job, onClick }) => {
   return (
     <motion.div
@@ -34,11 +42,11 @@ const JobCard: React.FC<JobCardProps> = ({ job, onClick }) => {
           <div className="flex flex-wrap gap-3 text-sm text-slate-400">
             <span className="flex items-center gap-1">
               <MapPin className="w-4 h-4" />
-              {job.location || "No especificado"}
+              {job.location || PLACEHOLDERS.UNSPECIFIED}
             </span>
             <span className="flex items-center gap-1">
               <DollarSign className="w-4 h-4" />
-              {job.salary || "A convenir"}
+              {job.salary || PLACEHOLDERS.NEGOTIABLE}
             </span>
             <span className="flex items-center gap-1">
               <Clock className="w-4 h-4" />
@@ -54,7 +62,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, onClick }) => {
               : "bg-gray-500/20 text-gray-400"
           }`}
         >
-          {job.status === "active" ? "Activa" : "Inactiva"}
+          {job.status === "active" ? LABELS.ACTIVE_JOB : LABELS.INACTIVE_JOB}
         </span>
       </div>
 
@@ -64,7 +72,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, onClick }) => {
         <div className="flex items-center gap-4 text-sm">
           <span className="flex items-center gap-1 text-slate-400">
             <Users className="w-4 h-4" />
-            {job.applicants || 0} candidatos
+            {job.applicants || 0} {LABELS.CANDIDATES}
           </span>
         </div>
 
@@ -78,7 +86,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, onClick }) => {
           className="border-blue-500/50 text-cyan-400 hover:bg-blue-500/10"
         >
           <Eye className="w-4 h-4 mr-2" />
-          Ver Detalles
+          {BUTTONS.VIEW_DETAILS}
         </Button>
       </div>
     </motion.div>

@@ -8,6 +8,8 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
+import { BUTTONS, LABELS } from "@/constants/text";
+
 const Pagination: React.FC<PaginationProps> = ({
   currentPage,
   totalPages,
@@ -32,7 +34,7 @@ const Pagination: React.FC<PaginationProps> = ({
   return (
     <div className="flex items-center justify-end space-x-2 py-4">
       <span className="text-sm text-slate-400">
-        Página {currentPage} de {totalPages}
+        {LABELS.PAGE} {currentPage} {LABELS.OF} {totalPages}
       </span>
       <Button
         variant="outline"
@@ -41,7 +43,7 @@ const Pagination: React.FC<PaginationProps> = ({
         disabled={currentPage === 1}
       >
         <ChevronLeft className="h-4 w-4" />
-        Anterior
+        {BUTTONS.PREVIOUS}
       </Button>
       <Button
         variant="outline"
@@ -49,7 +51,7 @@ const Pagination: React.FC<PaginationProps> = ({
         onClick={handleNext}
         disabled={currentPage === totalPages}
       >
-        Siguiente
+        {BUTTONS.NEXT}
         <ChevronRight className="h-4 w-4" />
       </Button>
     </div>

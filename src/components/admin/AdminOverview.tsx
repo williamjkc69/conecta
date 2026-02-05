@@ -9,6 +9,7 @@ import {
   Briefcase,
   FileText
 } from "lucide-react";
+import { TITLES, LABELS, MESSAGES } from "@/constants/text";
 
 interface StatCardProps {
   title: string;
@@ -99,39 +100,37 @@ const AdminOverview = () => {
   return (
     <div className="space-y-6">
       <h2 className="text-3xl font-bold text-slate-100">
-        Resumen de la Plataforma
+        {TITLES.PLATFORM_SUMMARY}
       </h2>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard
-          title="Total de Usuarios"
+          title={LABELS.TOTAL_USERS}
           value={stats.totalUsers}
           icon={<Users className="h-4 w-4 text-slate-400" />}
         />
         <StatCard
-          title="Empresas"
+          title={LABELS.COMPANIES}
           value={stats.companies}
           icon={<Building className="h-4 w-4 text-slate-400" />}
         />
         <StatCard
-          title="Candidatos"
+          title={LABELS.CANDIDATES}
           value={stats.candidates}
           icon={<User className="h-4 w-4 text-slate-400" />}
         />
         <StatCard
-          title="Vacantes Creadas"
+          title={LABELS.JOBS_CREATED}
           value={stats.jobs}
           icon={<Briefcase className="h-4 w-4 text-slate-400" />}
         />
         <StatCard
-          title="Aplicaciones"
+          title={LABELS.APPLICATIONS}
           value={stats.applications}
           icon={<FileText className="h-4 w-4 text-slate-400" />}
         />
       </div>
       <div className="text-slate-400 text-sm">
-        <p>
-          🚧 Próximamente: Gráficos de crecimiento y más métricas detalladas.
-        </p>
+        <p>{MESSAGES.ANALYTICS_COMING_SOON}</p>
       </div>
     </div>
   );

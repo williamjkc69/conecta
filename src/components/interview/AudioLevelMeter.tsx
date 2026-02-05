@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { LABELS } from "@/constants/text";
 
 interface AudioLevelMeterProps {
   audioLevel: number;
@@ -10,7 +11,7 @@ const AudioLevelMeter: React.FC<AudioLevelMeterProps> = ({ audioLevel }) => {
 
   return (
     <div className="flex items-center justify-between text-sm">
-      <span className="text-slate-300">Nivel de Audio</span>
+      <span className="text-slate-300">{LABELS.AUDIO_LEVEL}</span>
       <div className="flex items-center gap-1">
         {bars.map((_, i) => {
           const isActive = i / bars.length < audioLevel;

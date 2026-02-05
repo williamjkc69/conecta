@@ -14,6 +14,13 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
+import {
+  BUTTONS,
+  TITLES,
+  MESSAGES,
+  LABELS,
+  PLACEHOLDERS
+} from "@/constants/text";
 
 interface CandidateOnboardingModalProps {
   userId: number; // The public.users id (integer)
@@ -46,8 +53,8 @@ const CandidateOnboardingModal: React.FC<CandidateOnboardingModalProps> = ({
       if (updateError) throw updateError;
 
       toast({
-        title: "¡Perfil Completado!",
-        description: "Tu información ha sido guardada correctamente."
+        title: MESSAGES.COMPLETE_PROFILE_SUCCESS,
+        description: MESSAGES.PROFILE_SAVED
       });
 
       // Wait a moment for the database to update, then reload
@@ -58,8 +65,8 @@ const CandidateOnboardingModal: React.FC<CandidateOnboardingModalProps> = ({
     } catch (error: any) {
       console.error("Error completing candidate profile:", error);
       toast({
-        title: "Error",
-        description: error.message || "No se pudo guardar la información.",
+        title: TITLES.ERROR,
+        description: error.message || MESSAGES.SAVE_ERROR,
         variant: "destructive"
       });
     } finally {
@@ -76,22 +83,22 @@ const CandidateOnboardingModal: React.FC<CandidateOnboardingModalProps> = ({
       >
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold gradient-text text-center">
-            Completa tu Perfil
+            {TITLES.COMPLETE_PROFILE}
           </DialogTitle>
           <p className="text-slate-400 text-center text-sm">
-            Hola {userName}, necesitamos un dato adicional para continuar.
+            {MESSAGES.ONBOARDING_DESC.replace("{name}", userName)}
           </p>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="space-y-2">
             <Label htmlFor="document_number" className="text-slate-300">
-              Número de Documento *
+              {LABELS.DOCUMENT_NUMBER} *
             </Label>
             <Input
               id="document_number"
               name="document_number"
-              placeholder="Tu número de identidad"
+              placeholder={PLACEHOLDERS.DOC_NUMBER_PH}
               value={documentNumber}
               onChange={(e) => setDocumentNumber(e.target.value)}
               className="bg-blue-950/20 border-blue-400/20 text-slate-100"
@@ -108,10 +115,10 @@ const CandidateOnboardingModal: React.FC<CandidateOnboardingModalProps> = ({
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Guardando...
+                  {BUTTONS.SAVING}
                 </>
               ) : (
-                "Guardar y Continuar"
+                BUTTONS.SAVE_CONTINUE
               )}
             </Button>
           </DialogFooter>

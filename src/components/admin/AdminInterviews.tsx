@@ -6,6 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Search, FileText } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import Pagination from "./Pagination";
+import {
+  TITLES,
+  MESSAGES,
+  PLACEHOLDERS,
+  LABELS,
+  BUTTONS
+} from "@/constants/text";
 
 interface Interview {
   id: string;
@@ -50,8 +57,8 @@ const AdminInterviews = () => {
 
       if (error) {
         toast({
-          title: "Error",
-          description: "No se pudieron cargar las entrevistas.",
+          title: TITLES.ERROR,
+          description: MESSAGES.ERROR_LOADING_INTERVIEWS,
           variant: "destructive"
         });
       } else {
@@ -78,8 +85,8 @@ const AdminInterviews = () => {
 
   const exportData = () => {
     toast({
-      title: "Próximamente",
-      description: "La exportación de datos aún no está implementada."
+      title: TITLES.COMING_SOON,
+      description: MESSAGES.EXPORT_NOT_IMPLEMENTED
     });
   };
 
@@ -87,15 +94,15 @@ const AdminInterviews = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold text-slate-100 flex items-center gap-3">
-          <FileText /> Gestión de Entrevistas
+          <FileText /> {TITLES.INTERVIEW_MANAGEMENT}
         </h2>
-        <Button onClick={exportData}>Exportar</Button>
+        <Button onClick={exportData}>{BUTTONS.EXPORT}</Button>
       </div>
       <div className="flex gap-4">
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
           <Input
-            placeholder="Filtrar por estado (ej: completed)..."
+            placeholder={PLACEHOLDERS.FILTER_BY_STATUS}
             className="pl-10 bg-slate-800 border-slate-700"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -107,11 +114,11 @@ const AdminInterviews = () => {
           <table className="w-full text-left">
             <thead className="bg-slate-800">
               <tr>
-                <th className="p-4 font-semibold">Candidato</th>
-                <th className="p-4 font-semibold">Empresa</th>
-                <th className="p-4 font-semibold">Vacante</th>
-                <th className="p-4 font-semibold">Fecha</th>
-                <th className="p-4 font-semibold">Estado</th>
+                <th className="p-4 font-semibold">{LABELS.CANDIDATE}</th>
+                <th className="p-4 font-semibold">{LABELS.COMPANY}</th>
+                <th className="p-4 font-semibold">{LABELS.JOB}</th>
+                <th className="p-4 font-semibold">{LABELS.DATE}</th>
+                <th className="p-4 font-semibold">{LABELS.STATUS}</th>
               </tr>
             </thead>
             <tbody>

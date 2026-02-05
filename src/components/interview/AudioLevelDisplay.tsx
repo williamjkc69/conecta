@@ -1,5 +1,6 @@
 import React from "react";
 import { Volume2 } from "lucide-react";
+import { LABELS, MESSAGES } from "@/constants/text";
 
 interface AudioLevelDisplayProps {
   audioLevel: number;
@@ -13,7 +14,7 @@ const AudioLevelDisplay: React.FC<AudioLevelDisplayProps> = ({
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2 text-slate-400">
           <Volume2 className="w-4 h-4" />
-          <span className="text-sm">Nivel de Audio</span>
+          <span className="text-sm">{LABELS.AUDIO_LEVEL}</span>
         </div>
         <span className="text-xs text-slate-500">
           {Math.round(audioLevel)}%
@@ -47,7 +48,7 @@ const AudioLevelDisplay: React.FC<AudioLevelDisplayProps> = ({
       </div>
 
       <p className="text-xs text-slate-500 text-center mt-2">
-        {audioLevel > 5 ? "Audio detectado" : "Habla para verificar tu audio"}
+        {audioLevel > 5 ? MESSAGES.AUDIO_DETECTED : MESSAGES.SPEAK_TO_TEST}
       </p>
     </div>
   );

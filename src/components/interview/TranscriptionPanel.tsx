@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/accordion";
 import { MessageSquare as MessageSquareText } from "lucide-react";
 import { motion } from "framer-motion";
+import { TITLES, MESSAGES } from "@/constants/text";
 
 interface TranscriptEntry {
   timestamp: string;
@@ -38,7 +39,7 @@ const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
         <AccordionTrigger>
           <div className="flex items-center gap-2">
             <MessageSquareText size={16} />
-            <span>Transcripción en Vivo</span>
+            <span>{TITLES.LIVE_TRANSCRIPTION}</span>
           </div>
         </AccordionTrigger>
         <AccordionContent>
@@ -48,7 +49,7 @@ const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
           >
             {transcript.length === 0 && (
               <p className="text-slate-400 text-center py-10">
-                Esperando a que el usuario hable...
+                {MESSAGES.WAITING_FOR_USER_SPEECH}
               </p>
             )}
             {transcript.map((entry, index) => (

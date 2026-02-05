@@ -1,4 +1,4 @@
-import React from "react";
+import { LABELS } from "@/constants/text";
 
 interface ConnectionStatusProps {
   state: "idle" | "connecting" | "connected" | "ended" | "error";
@@ -8,17 +8,17 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ state }) => {
   const getLabel = () => {
     switch (state) {
       case "idle":
-        return "Listo para iniciar";
+        return LABELS.READY_TO_START;
       case "connecting":
-        return "Conectando…";
+        return LABELS.CONNECTING;
       case "connected":
-        return "Conectado";
+        return LABELS.CONNECTED;
       case "ended":
-        return "Entrevista finalizada";
+        return LABELS.INTERVIEW_FINISHED;
       case "error":
-        return "Error en la conexión";
+        return LABELS.CONNECTION_ERROR;
       default:
-        return "Desconocido";
+        return LABELS.UNKNOWN;
     }
   };
 

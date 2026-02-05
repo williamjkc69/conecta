@@ -28,6 +28,16 @@ import AssignCandidateModal from "@/components/features/AssignCandidateModal";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
 import { useAuthStore } from "@/store/authStore";
 import CompanyOnboardingModal from "@/components/features/CompanyOnboardingModal";
+import {
+  BUTTONS,
+  TITLES,
+  MESSAGES,
+  TABS,
+  TAB_LABELS,
+  LABELS,
+  PLACEHOLDERS
+} from "@/constants/text";
+import { ROUTES } from "@/constants/routes";
 
 const CompanyDashboard: React.FC = () => {
   const router = useRouter();
@@ -186,8 +196,8 @@ const CompanyDashboard: React.FC = () => {
     } catch (error: any) {
       console.error("[CompanyDashboard] Error fetching data:", error);
       toast({
-        title: "Error",
-        description: `No se pudieron cargar los datos: ${error.message}`,
+        title: TITLES.ERROR,
+        description: `${MESSAGES.ERROR_FETCHING_DATA}: ${error.message}`,
         variant: "destructive"
       });
     } finally {
@@ -206,29 +216,29 @@ const CompanyDashboard: React.FC = () => {
 
       // Backend validation
       if (!jobData.title || jobData.title.trim().length < 3) {
-        throw new Error("El título debe tener al menos 3 caracteres");
+        throw new Error(MESSAGES.TITLE_MIN_LENGTH);
       }
 
       if (!jobData.description || jobData.description.trim().length < 50) {
-        throw new Error("La descripción debe tener al menos 50 caracteres");
+        throw new Error(MESSAGES.DESC_MIN_LENGTH);
       }
 
       if (
         !jobData.listing_type_id ||
         typeof jobData.listing_type_id !== "number"
       ) {
-        throw new Error("Tipo de contrato inválido");
+        throw new Error(MESSAGES.INVALID_CONTRACT_TYPE);
       }
 
       if (!jobData.salary_range_min || jobData.salary_range_min <= 0) {
-        throw new Error("Salario mínimo inválido");
+        throw new Error(MESSAGES.INVALID_SALARY);
       }
 
       if (
         jobData.salary_range_max &&
         jobData.salary_range_max < jobData.salary_range_min
       ) {
-        throw new Error("El salario máximo debe ser mayor al mínimo");
+        throw new Error(MESSAGES.MAX_SALARY_ERROR);
       }
 
       if (
@@ -237,11 +247,11 @@ const CompanyDashboard: React.FC = () => {
           jobData.currency
         )
       ) {
-        throw new Error("Moneda inválida");
+        throw new Error(MESSAGES.INVALID_CURRENCY);
       }
 
       if (!jobData.requirements || jobData.requirements.length === 0) {
-        throw new Error("Debes agregar al menos un requisito");
+        throw new Error(MESSAGES.REQUIREMENT_NEEDED);
       }
 
       console.log("Creating job with data:", jobData);
@@ -345,19 +355,16 @@ const CompanyDashboard: React.FC = () => {
       }
 
       toast({
-        title: "✅ Vacante creada exitosamente",
-        description:
-          "Tu oferta de trabajo está activa y lista para recibir candidatos."
+        title: TITLES.JOB_CREATED_SUCCESS,
+        description: MESSAGES.JOB_CREATED_DESC
       });
       setShowCreateJob(false);
       fetchCompanyData();
     } catch (error: any) {
       console.error("[handleCreateJob] Error:", error.message);
       toast({
-        title: "Error al crear la vacante",
-        description:
-          error.message ||
-          "No se pudo crear la vacante. Verifica tu perfil y vuelve a intentarlo.",
+        title: TITLES.CREATE_JOB_ERROR,
+        description: error.message || MESSAGES.ERROR_CREATING_JOB,
         variant: "destructive"
       });
     } finally {
@@ -450,8 +457,8 @@ const CompanyDashboard: React.FC = () => {
       }
 
       toast({
-        title: "✅ Vacante actualizada",
-        description: "Los cambios han sido guardados."
+        title: TITLES.JOB_UPDATED_SUCCESS,
+        description: MESSAGES.JOB_UPDATED_DESC
       });
       setJobToEdit(null);
       fetchCompanyData();
@@ -484,8 +491,8 @@ const CompanyDashboard: React.FC = () => {
         });
       } else {
         toast({
-          title: "🗑️ Vacante eliminada",
-          description: "La vacante y sus aplicaciones han sido eliminadas."
+          title: TITLES.JOB_DELETED_SUCCESS,
+          description: MESSAGES.JOB_DELETED_DESC
         });
         setSelectedJob(null);
         setJobToEdit(null);
@@ -503,25 +510,25 @@ const CompanyDashboard: React.FC = () => {
   const stats = [
     {
       icon: <Briefcase className="w-6 h-6" />,
-      label: "Vacantes Activas",
+      label: LABELS.ACTIVE_JOBS,
       value: jobs.filter((j) => j.status === "active").length,
       color: "from-blue-600 to-cyan-600"
     },
     {
       icon: <Users className="w-6 h-6" />,
-      label: "Candidatos Totales",
+      label: LABELS.TOTAL_CANDIDATES,
       value: statsData.applicants,
       color: "from-green-600 to-emerald-600"
     },
     {
       icon: <FileText className="w-6 h-6" />,
-      label: "Total Entrevistas",
+      label: LABELS.TOTAL_INTERVIEWS,
       value: statsData.interviews,
       color: "from-pink-600 to-rose-600"
     },
     {
       icon: <Clock className="w-6 h-6" />,
-      label: "Entrevistas Pendientes",
+      label: LABELS.PENDING_INTERVIEWS,
       value: pendingInterviewsCount,
       color: "from-orange-600 to-yellow-600"
     }
@@ -531,7 +538,7 @@ const CompanyDashboard: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white">
         <Loader2 className="w-12 h-12 animate-spin text-cyan-400 mb-4" />
-        <p className="text-slate-300">Verificando perfil de empresa...</p>
+        <p className="text-slate-300">{MESSAGES.CHECKING_PROFILE}</p>
       </div>
     );
   }
@@ -541,12 +548,12 @@ const CompanyDashboard: React.FC = () => {
       <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white p-6 text-center">
         <AlertTriangle className="w-16 h-16 text-red-500 mb-4" />
         <h2 className="text-2xl font-bold text-red-400 mb-2">
-          Error de Perfil
+          {TITLES.PROFILE_ERROR}
         </h2>
         <p className="text-slate-300 max-w-md mb-6">{profileError}</p>
         <Button onClick={handleLogout}>
           <LogOut className="w-4 h-4 mr-2" />
-          Volver a inicio
+          {BUTTONS.BACK_HOME}
         </Button>
       </div>
     );
@@ -559,10 +566,10 @@ const CompanyDashboard: React.FC = () => {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold gradient-text">
-                Panel de Empresa
+                {TITLES.COMPANY_DASHBOARD}
               </h1>
               <p className="text-sm text-slate-400">
-                Bienvenido, {profile?.company?.name || user?.email}
+                {MESSAGES.WELCOME} {profile?.company?.name || user?.email}
               </p>
             </div>
 
@@ -572,27 +579,27 @@ const CompanyDashboard: React.FC = () => {
                 variant="outline"
                 className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10 hover:text-purple-300"
               >
-                <UserPlus className="w-4 h-4 mr-2" /> Asignar por Documento
+                <UserPlus className="w-4 h-4 mr-2" /> {BUTTONS.ASSIGN_BY_DOC}
               </Button>
               <Button
                 onClick={() => setShowInviteCandidate(true)}
                 variant="outline"
                 className="border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-300"
               >
-                <Mail className="w-4 h-4 mr-2" /> Invitar Candidato
+                <Mail className="w-4 h-4 mr-2" /> {BUTTONS.INVITE_CANDIDATE}
               </Button>
               <Button
                 onClick={() => setShowCreateJob(true)}
                 className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white"
               >
-                <Plus className="w-4 h-4 mr-2" /> Nueva Vacante
+                <Plus className="w-4 h-4 mr-2" /> {BUTTONS.CREATE_JOB}
               </Button>
               <Button
                 variant="outline"
                 onClick={handleLogout}
                 className="border-slate-500 text-slate-300 hover:bg-slate-800 hover:text-white"
               >
-                <LogOut className="w-4 h-4 mr-2" /> Salir
+                <LogOut className="w-4 h-4 mr-2" /> {BUTTONS.LOGOUT}
               </Button>
             </div>
           </div>
@@ -623,18 +630,20 @@ const CompanyDashboard: React.FC = () => {
         </div>
         <div className="bg-slate-800/50 rounded-2xl border border-slate-700 mb-8">
           <div className="flex border-b border-slate-700 overflow-x-auto">
-            {["overview", "jobs", "candidates", "analytics"].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`flex-shrink-0 px-6 py-4 font-semibold transition-all ${activeTab === tab ? "text-cyan-400 border-b-2 border-cyan-400" : "text-slate-400 hover:text-slate-100"}`}
-              >
-                {tab === "overview" && "Resumen"}
-                {tab === "jobs" && "Vacantes"}
-                {tab === "candidates" && "Candidatos"}
-                {tab === "analytics" && "Analíticas"}
-              </button>
-            ))}
+            {[TABS.OVERVIEW, TABS.JOBS, TABS.CANDIDATES, TABS.ANALYTICS].map(
+              (tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`flex-shrink-0 px-6 py-4 font-semibold transition-all ${activeTab === tab ? "text-cyan-400 border-b-2 border-cyan-400" : "text-slate-400 hover:text-slate-100"}`}
+                >
+                  {tab === TABS.OVERVIEW && TAB_LABELS.OVERVIEW}
+                  {tab === TABS.JOBS && TAB_LABELS.JOBS}
+                  {tab === TABS.CANDIDATES && TAB_LABELS.CANDIDATES}
+                  {tab === TABS.ANALYTICS && TAB_LABELS.ANALYTICS}
+                </button>
+              )
+            )}
           </div>
 
           <div className="p-6">
@@ -648,7 +657,7 @@ const CompanyDashboard: React.FC = () => {
                   <div className="space-y-6">
                     <div>
                       <h3 className="text-xl font-bold mb-4 text-slate-100">
-                        Vacantes Recientes
+                        {TITLES.RECENT_JOBS}
                       </h3>
                       {jobs.length > 0 ? (
                         <div className="grid md:grid-cols-2 gap-6">
@@ -662,13 +671,13 @@ const CompanyDashboard: React.FC = () => {
                         </div>
                       ) : (
                         <p className="text-slate-400">
-                          No hay vacantes creadas.
+                          {MESSAGES.NO_JOBS_CREATED}
                         </p>
                       )}
                     </div>
                     <div>
                       <h3 className="text-xl font-bold mb-4 text-slate-100">
-                        Actividad Reciente
+                        {TITLES.RECENT_ACTIVITY}
                       </h3>
                       {candidates.length > 0 ? (
                         <div className="space-y-3">
@@ -694,7 +703,7 @@ const CompanyDashboard: React.FC = () => {
                         </div>
                       ) : (
                         <p className="text-slate-400">
-                          No hay actividad reciente de candidatos.
+                          {MESSAGES.NO_RECENT_ACTIVITY}
                         </p>
                       )}
                     </div>
@@ -706,13 +715,13 @@ const CompanyDashboard: React.FC = () => {
                       <div className="text-center py-12">
                         <Briefcase className="w-16 h-16 mx-auto mb-4 text-slate-600" />
                         <p className="text-slate-400 mb-4">
-                          No tienes vacantes creadas
+                          {MESSAGES.NO_JOBS}
                         </p>
                         <Button
                           onClick={() => setShowCreateJob(true)}
                           className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white"
                         >
-                          Crear Primera Vacante
+                          {BUTTONS.CREATE_FIRST_JOB}
                         </Button>
                       </div>
                     ) : (
@@ -735,9 +744,9 @@ const CompanyDashboard: React.FC = () => {
                   <div className="flex flex-col items-center justify-center text-center h-64">
                     <BarChart3 className="w-16 h-16 text-slate-600 mb-4" />
                     <h3 className="text-xl font-bold text-slate-300">
-                      Las analíticas están en camino
+                      {MESSAGES.ANALYTICS_COMING_SOON}
                     </h3>
-                    <p className="text-slate-500">¡Vuelve pronto!</p>
+                    <p className="text-slate-500">{MESSAGES.COME_BACK_SOON}</p>
                   </div>
                 )}
               </>

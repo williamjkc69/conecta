@@ -15,6 +15,7 @@ import { supabase } from "@/lib/supabase";
 // @ts-ignore
 import { useDebounce } from "@/hooks/useDebounce";
 import { useAuthStore } from "@/store/authStore";
+import { BUTTONS, TITLES, MESSAGES, LABELS } from "@/constants/text";
 
 interface AssignCandidateModalProps {
   isOpen: boolean;
@@ -67,9 +68,8 @@ const AssignCandidateModal: React.FC<AssignCandidateModalProps> = ({
             throw error;
           }
           toast({
-            title: "Candidato no encontrado",
-            description:
-              "No se encontró ningún candidato con ese número de documento.",
+            title: MESSAGES.CANDIDATE_NOT_FOUND_TITLE,
+            description: MESSAGES.CANDIDATE_NOT_FOUND_DESC,
             variant: "destructive"
           });
         } else {
@@ -82,8 +82,8 @@ const AssignCandidateModal: React.FC<AssignCandidateModalProps> = ({
         console.error("Error searching candidate:", error);
         setFoundCandidate(null);
         toast({
-          title: "Error en la búsqueda",
-          description: "Ocurrió un error al buscar el candidato.",
+          title: MESSAGES.SEARCH_ERROR_TITLE,
+          description: MESSAGES.SEARCH_ERROR_DESC,
           variant: "destructive"
         });
       } finally {
@@ -101,9 +101,8 @@ const AssignCandidateModal: React.FC<AssignCandidateModalProps> = ({
     e.preventDefault();
     if (!foundCandidate || !jobId || !profile) {
       toast({
-        title: "⚠️ Campos requeridos",
-        description:
-          "Debes encontrar un candidato, seleccionar una vacante y estar autenticado.",
+        title: MESSAGES.FIELDS_REQUIRED_TITLE,
+        description: MESSAGES.FIELDS_REQUIRED_DESC,
         variant: "destructive"
       });
       return;
@@ -120,7 +119,7 @@ const AssignCandidateModal: React.FC<AssignCandidateModalProps> = ({
         .single();
 
       if (existingApp) {
-        throw new Error("El candidato ya está asignado a esta vacante.");
+        throw new Error(MESSAGES.ALREADY_ASSIGNED_DESC);
       }
 
       // Get 'invited' status (or 'assigned' -> 'invited'?)
@@ -141,8 +140,8 @@ const AssignCandidateModal: React.FC<AssignCandidateModalProps> = ({
       if (error) throw error;
 
       toast({
-        title: "✅ Asignación exitosa",
-        description: `El candidato ha sido asignado a la vacante.`
+        title: MESSAGES.ASSIGNMENT_SUCCESS_TITLE,
+        description: MESSAGES.ASSIGNMENT_SUCCESS_DESC
       });
 
       resetForm();
@@ -151,7 +150,7 @@ const AssignCandidateModal: React.FC<AssignCandidateModalProps> = ({
     } catch (error: any) {
       console.error("[AssignCandidateModal] Error:", error);
       toast({
-        title: "Error en la asignación",
+        title: MESSAGES.ASSIGNMENT_ERROR_TITLE,
         description: error.message,
         variant: "destructive"
       });
@@ -197,22 +196,21 @@ const AssignCandidateModal: React.FC<AssignCandidateModalProps> = ({
             </button>
 
             <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-indigo-400 text-transparent bg-clip-text mb-6">
-              Asignar por Documento
+              {BUTTONS.ASSIGN_BY_DOC}
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium mb-2 text-slate-300">
-                  Número de Documento del Candidato *
+                  {LABELS.DOCUMENT_NUMBER} *
                 </label>
                 <div className="relative">
                   <Search className="w-4 h-4 absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" />
                   <input
-                    type="text"
                     value={documentNumber}
                     onChange={(e) => setDocumentNumber(e.target.value)}
                     className="w-full pl-12 pr-10 py-3 rounded-lg bg-slate-900 border border-slate-600 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    placeholder="Introduce el número de documento..."
+                    placeholder={MESSAGES.PLACEHOLDER_DOC_NUMBER}
                     required
                   />
                   {isSearching && (
@@ -230,7 +228,7 @@ const AssignCandidateModal: React.FC<AssignCandidateModalProps> = ({
                     className="bg-slate-700/50 p-4 rounded-lg border border-slate-600"
                   >
                     <h3 className="font-semibold text-slate-200 mb-2">
-                      Candidato Encontrado
+                      {MESSAGES.CANDIDATE_FOUND_TITLE}
                     </h3>
                     <div className="space-y-2 text-sm">
                       <p className="flex items-center gap-2 text-slate-300">
@@ -248,7 +246,7 @@ const AssignCandidateModal: React.FC<AssignCandidateModalProps> = ({
 
               <div>
                 <label className="block text-sm font-medium mb-2 text-slate-300">
-                  Seleccionar Vacante *
+                  {LABELS.JOB} *
                 </label>
                 <div className="relative">
                   <Briefcase className="w-4 h-4 absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" />
@@ -260,7 +258,7 @@ const AssignCandidateModal: React.FC<AssignCandidateModalProps> = ({
                     disabled={!foundCandidate}
                   >
                     <option value="" disabled>
-                      Selecciona una vacante activa...
+                      {MESSAGES.PLACEHOLDER_SELECT_ACTIVE_JOB}
                     </option>
                     {jobs.map((job: any) => (
                       <option key={job.id} value={job.id}>
@@ -278,7 +276,7 @@ const AssignCandidateModal: React.FC<AssignCandidateModalProps> = ({
                   onClick={handleClose}
                   className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
                 >
-                  Cancelar
+                  {BUTTONS.CANCEL}
                 </Button>
                 <Button
                   type="submit"
@@ -290,7 +288,7 @@ const AssignCandidateModal: React.FC<AssignCandidateModalProps> = ({
                   ) : (
                     <UserPlus className="w-4 h-4 mr-2" />
                   )}
-                  Asignar Candidato
+                  {BUTTONS.ASSIGN_CANDIDATE}
                 </Button>
               </div>
             </form>

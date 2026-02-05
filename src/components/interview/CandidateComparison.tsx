@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { Loader2, AlertTriangle, Users, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { TITLES, LABELS } from "@/constants/text";
 
 interface LeaderboardCandidate {
   id: string;
@@ -28,7 +29,7 @@ const CandidateLeaderboard: React.FC<CandidateLeaderboardProps> = ({
   <div className="space-y-3">
     <h4 className="flex items-center gap-2 text-md font-semibold text-slate-300">
       <Trophy size={18} className="text-yellow-400" />
-      Top 5 Postulantes
+      {TITLES.TOP_APPLICANTS}
     </h4>
     <ul className="space-y-2">
       {leaderboard.map((candidate, index) => (
@@ -80,22 +81,22 @@ const CandidateComparison: React.FC<CandidateComparisonProps> = ({
 
   const chartData = [
     {
-      name: "Calidad Resp.",
+      name: LABELS.ANSWER_QUALITY_SHORT,
       Candidato: report.answerQuality,
       Promedio: averageMetrics.answerQuality
     },
     {
-      name: "Engagement",
+      name: LABELS.ENGAGEMENT,
       Candidato: report.engagementLevel,
       Promedio: averageMetrics.engagementLevel
     },
     {
-      name: "Comunicación",
+      name: LABELS.COMMUNICATION_SHORT,
       Candidato: report.communicationClarity,
       Promedio: averageMetrics.communicationClarity
     },
     {
-      name: "Técnica",
+      name: LABELS.TECH_SHORT,
       Candidato: report.technicalProficiency,
       Promedio: averageMetrics.technicalProficiency
     }
@@ -105,15 +106,15 @@ const CandidateComparison: React.FC<CandidateComparisonProps> = ({
     <div className="space-y-6 mt-6 pt-6 border-t border-slate-700">
       <h3 className="text-xl font-semibold text-cyan-400 flex items-center gap-2">
         <Users size={22} />
-        Análisis Comparativo
+        {TITLES.COMPARATIVE_ANALYSIS}
         <span className="text-sm font-normal text-slate-400">
-          (vs. {totalCompared} postulantes)
+          (vs. {totalCompared} {LABELS.APPLICANTS})
         </span>
       </h3>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
           <h4 className="mb-4 text-md font-semibold text-slate-300">
-            Comparación de Métricas
+            {TITLES.METRIC_COMPARISON}
           </h4>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart
@@ -142,7 +143,12 @@ const CandidateComparison: React.FC<CandidateComparisonProps> = ({
                 }}
                 cursor={{ fill: "rgba(100, 116, 139, 0.1)" }}
               />
-              <Legend wrapperStyle={{ fontSize: "14px" }} />
+              <Legend
+                wrapperStyle={{ fontSize: "14px" }}
+                formatter={(value) =>
+                  value === "Candidato" ? LABELS.CANDIDATE : LABELS.AVERAGE
+                }
+              />
               <Bar dataKey="Candidato" fill="#22d3ee" radius={[4, 4, 0, 0]} />
               <Bar dataKey="Promedio" fill="#475569" radius={[4, 4, 0, 0]} />
             </BarChart>
@@ -152,27 +158,27 @@ const CandidateComparison: React.FC<CandidateComparisonProps> = ({
       </div>
       {/* Filters - UI only for now */}
       <div className="flex flex-wrap gap-2 items-center">
-        <span className="text-sm text-slate-400">Filtrar por:</span>
+        <span className="text-sm text-slate-400">{LABELS.FILTER_BY}</span>
         <Button
           variant="outline"
           size="sm"
           className="bg-slate-800 border-slate-700"
         >
-          Posición
+          {LABELS.POSITION}
         </Button>
         <Button
           variant="outline"
           size="sm"
           className="bg-slate-800 border-slate-700"
         >
-          Departamento
+          {LABELS.DEPARTMENT}
         </Button>
         <Button
           variant="outline"
           size="sm"
           className="bg-slate-800 border-slate-700"
         >
-          Fecha
+          {LABELS.DATE}
         </Button>
       </div>
     </div>

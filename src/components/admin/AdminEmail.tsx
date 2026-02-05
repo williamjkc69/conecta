@@ -1,24 +1,28 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MailWarning } from 'lucide-react';
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MailWarning } from "lucide-react";
+
+import { TITLES, MESSAGES } from "@/constants/text";
 
 const AdminEmail = () => {
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-bold text-slate-100">Gestión de Plantillas de Email</h2>
+      <h2 className="text-3xl font-bold text-slate-100">
+        {TITLES.EMAIL_TEMPLATE_MGMT}
+      </h2>
       <Card className="bg-slate-800/50 border-slate-700 text-slate-200">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MailWarning className="w-6 h-6 text-yellow-400" />
-            Funcionalidad en Desarrollo
+            {TITLES.FEATURE_IN_DEVELOPMENT}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-slate-400">
-            La gestión de plantillas de email aún no está implementada.
+            {MESSAGES.EMAIL_TEMPLATES_NOT_IMPLEMENTED}
           </p>
           <p className="mt-2 text-slate-500 text-sm">
-            Aquí podrás editar el contenido de los correos de bienvenida, recuperación de contraseña, invitaciones a vacantes, y más.
+            {MESSAGES.EMAIL_TEMPLATES_DESC}
           </p>
         </CardContent>
       </Card>

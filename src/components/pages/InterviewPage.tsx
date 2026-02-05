@@ -20,6 +20,8 @@ import AudioLevelDisplay from "@/components/interview/AudioLevelDisplay";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { INTERVIEW_STATUS, CALL_STATES, APPLICATION_STATUS } from "@/constants";
+import { TITLES, MESSAGES, BUTTONS, LABELS, DEBUG } from "@/constants/text";
+import { CANDIDATE_STATUS_LABELS } from "@/constants/options";
 
 // Visual Debug Panel for Integration Testing
 const DebugPanel = ({
@@ -33,23 +35,27 @@ const DebugPanel = ({
   const steps = [
     {
       id: 1,
-      label: "Status: Invited/InProgress",
+      label: DEBUG.STATUS_INVITED_IN_PROGRESS,
       check: [INTERVIEW_STATUS.INVITED, INTERVIEW_STATUS.IN_PROGRESS].includes(
         application?.interview_status
       )
     },
-    { id: 2, label: "Can Interview", check: canInterview },
+    { id: 2, label: DEBUG.CAN_INTERVIEW, check: canInterview },
     {
       id: 3,
-      label: "Call Connected",
+      label: DEBUG.CALL_CONNECTED,
       check: callState === CALL_STATES.CONNECTED
     },
-    { id: 4, label: "Audio Detected", check: audioLevel > 5 },
-    { id: 5, label: "Conversation Active", check: transcript.length > 0 },
-    { id: 6, label: "Interview Ended", check: callState === CALL_STATES.ENDED },
+    { id: 4, label: DEBUG.AUDIO_DETECTED, check: audioLevel > 5 },
+    { id: 5, label: DEBUG.CONVERSATION_ACTIVE, check: transcript.length > 0 },
+    {
+      id: 6,
+      label: DEBUG.INTERVIEW_ENDED,
+      check: callState === CALL_STATES.ENDED
+    },
     {
       id: 7,
-      label: "Status: Completed",
+      label: DEBUG.STATUS_COMPLETED,
       check: application?.interview_status === INTERVIEW_STATUS.COMPLETED
     }
   ];
@@ -57,7 +63,7 @@ const DebugPanel = ({
   return (
     <div className="fixed bottom-4 right-4 p-4 bg-slate-950/90 text-xs text-slate-200 font-mono rounded-lg border border-slate-800 shadow-2xl z-50 max-w-xs backdrop-blur-md hidden md:block">
       <h3 className="font-bold mb-3 border-b border-slate-800 pb-2 text-cyan-400 flex justify-between items-center">
-        <span>🧪 Integration Test</span>
+        <span>{DEBUG.INTEGRATION_TEST}</span>
         <span className="text-[10px] bg-slate-800 px-1 rounded">v1.1</span>
       </h3>
 
@@ -78,13 +84,13 @@ const DebugPanel = ({
 
       <div className="space-y-1 pt-2 border-t border-slate-800 text-[10px] text-slate-400">
         <div className="flex justify-between">
-          <span>Status:</span>{" "}
+          <span>{DEBUG.STATUS}:</span>{" "}
           <span className="text-white">
             {application?.interview_status || "N/A"}
           </span>
         </div>
         <div className="flex justify-between">
-          <span>Call:</span>{" "}
+          <span>{DEBUG.CALL}:</span>{" "}
           <span
             className={
               callState === CALL_STATES.CONNECTED
@@ -96,11 +102,11 @@ const DebugPanel = ({
           </span>
         </div>
         <div className="flex justify-between">
-          <span>Audio:</span>{" "}
+          <span>{DEBUG.AUDIO}:</span>{" "}
           <span className="text-white">{audioLevel?.toFixed(1)}</span>
         </div>
         <div className="flex justify-between">
-          <span>Msgs:</span>{" "}
+          <span>{DEBUG.MSGS}:</span>{" "}
           <span className="text-white">{transcript.length}</span>
         </div>
       </div>
@@ -183,7 +189,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
           variant="secondary"
           className="bg-green-900 text-green-200 border-green-700"
         >
-          Finalizado
+          {LABELS.FINISHED}
         </Badge>
       );
     }
@@ -195,7 +201,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
             variant="secondary"
             className="bg-blue-900 text-blue-200 border-blue-700"
           >
-            Invitado
+            {CANDIDATE_STATUS_LABELS.invited}
           </Badge>
         );
       case APPLICATION_STATUS.APPLIED:
@@ -204,7 +210,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
             variant="secondary"
             className="bg-cyan-900 text-cyan-200 border-cyan-700"
           >
-            Listo
+            {LABELS.READY}
           </Badge>
         );
       case APPLICATION_STATUS.INTERVIEWING:
@@ -214,7 +220,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
             variant="secondary"
             className="bg-yellow-900 text-yellow-200 border-yellow-700"
           >
-            En Progreso
+            {LABELS.INTERVIEW_IN_PROGRESS}
           </Badge>
         );
       case APPLICATION_STATUS.REVIEWED:
@@ -224,13 +230,13 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
             variant="secondary"
             className="bg-green-900 text-green-200 border-green-700"
           >
-            Finalizado
+            {LABELS.FINISHED}
           </Badge>
         );
       default:
         return (
           <Badge variant="outline" className="text-slate-400">
-            {status || "Desconocido"}
+            {status || LABELS.UNKNOWN}
           </Badge>
         );
     }
@@ -240,7 +246,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white p-4">
         <Loader2 className="w-16 h-16 text-cyan-400 animate-spin mb-4" />
-        <h1 className="text-2xl font-bold">Cargando Entrevista...</h1>
+        <h1 className="text-2xl font-bold">{MESSAGES.LOADING_INTERVIEW}</h1>
       </div>
     );
   }
@@ -249,17 +255,16 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white p-4">
         <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Error de Acceso</h1>
+        <h1 className="text-2xl font-bold mb-2">{TITLES.ACCESS_ERROR}</h1>
         <p className="text-slate-400 mb-6 text-center">
-          {(error as any)?.message ||
-            "No se encontró información de la aplicación."}
+          {(error as any)?.message || MESSAGES.NO_APP_INFO}
         </p>
         <Button
           onClick={() => router.push("/candidate-dashboard")}
           variant="outline"
           className="border-slate-600 text-white hover:bg-slate-800"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" /> Volver al Panel
+          <ArrowLeft className="w-4 h-4 mr-2" /> {BUTTONS.BACK_DASHBOARD}
         </Button>
       </div>
     );
@@ -284,7 +289,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
             // If call is active, show confirmation
             if (callState === "connected" || callState === "connecting") {
               const confirmed = window.confirm(
-                "Tienes una entrevista en curso. Si sales ahora, perderás todo el progreso. ¿Estás seguro?"
+                MESSAGES.CONFIRM_LEAVE_INTERVIEW
               );
               if (!confirmed) return;
 
@@ -296,17 +301,17 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
             router.push("/candidate-dashboard");
           }}
         >
-          <ArrowLeft className="w-4 h-4 mr-2" /> Salir
+          <ArrowLeft className="w-4 h-4 mr-2" /> {BUTTONS.EXIT}
         </Button>
         <h1 className="text-2xl md:text-3xl font-bold gradient-text">
-          {(application as any)?.jobs?.title || "Entrevista de Evaluación"}
+          {(application as any)?.jobs?.title || TITLES.EVALUATION_INTERVIEW}
         </h1>
         <p className="text-slate-400 text-sm md:text-base mb-3">
           {candidateName} | {interviewDate}
         </p>
 
         <div className="flex justify-center items-center gap-2">
-          <span className="text-sm text-slate-400">Estado:</span>
+          <span className="text-sm text-slate-400">{LABELS.STATUS}:</span>
           {getStatusBadge(
             (application as any)?.interview_status ||
               (application as any)?.status,
@@ -330,10 +335,10 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
             <div className="flex flex-col items-center justify-center p-4 bg-slate-800/50 rounded-lg border border-slate-700">
               <Loader2 className="w-8 h-8 animate-spin text-cyan-400 mb-2" />
               <p className="text-slate-300 font-medium">
-                Guardando entrevista...
+                {MESSAGES.SAVING_INTERVIEW}
               </p>
               <p className="text-slate-500 text-sm">
-                Por favor no cierres la ventana.
+                {MESSAGES.DO_NOT_CLOSE_WINDOW}
               </p>
             </div>
           ) : (

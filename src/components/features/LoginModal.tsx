@@ -17,6 +17,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
+import {
+  BUTTONS,
+  TITLES,
+  MESSAGES,
+  TABS,
+  PLACEHOLDERS,
+  LABELS,
+  LINKS
+} from "@/constants/text";
+import { ROUTES, API_ROUTES } from "@/constants/routes";
+import { ROLES } from "@/constants/roles";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -37,8 +48,8 @@ const LoginModal: React.FC<LoginModalProps> = ({
 }) => {
   const { signIn, signUp } = useAuthStore();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState(
-    initialEmail ? "signup" : "signin"
+  const [activeTab, setActiveTab] = useState<string>(
+    initialEmail ? TABS.SIGNUP : TABS.SIGNIN
   );
   const [formData, setFormData] = useState({
     email: initialEmail || "",
@@ -61,8 +72,8 @@ const LoginModal: React.FC<LoginModalProps> = ({
     const { data, error } = await signIn(formData.email, formData.password);
     if (!error) {
       toast({
-        title: "✅ ¡Bienvenido de vuelta!",
-        description: "Has iniciado sesión correctamente."
+        title: TITLES.WELCOME_BACK,
+        description: MESSAGES.LOGIN_SUCCESS
       });
       const { user } = data;
 
@@ -77,12 +88,13 @@ const LoginModal: React.FC<LoginModalProps> = ({
         const roleData = profileData?.role;
         const userRole = Array.isArray(roleData)
           ? roleData[0]?.name
-          : roleData?.name || (type === "company" ? "company" : "candidate");
+          : roleData?.name ||
+            (type === ROLES.COMPANY ? ROLES.COMPANY : ROLES.CANDIDATE);
 
         const dashboard =
-          userRole === "company"
-            ? "/company-dashboard"
-            : "/candidate-dashboard";
+          userRole === ROLES.COMPANY
+            ? ROUTES.COMPANY_DASHBOARD
+            : ROUTES.CANDIDATE_DASHBOARD;
 
         window.location.href = dashboard;
       } else {
@@ -101,24 +113,23 @@ const LoginModal: React.FC<LoginModalProps> = ({
             : roleData?.name || (type === "company" ? "company" : "candidate");
 
           const dashboard =
-            userRole === "company"
-              ? "/company-dashboard"
-              : "/candidate-dashboard";
+            userRole === ROLES.COMPANY
+              ? ROUTES.COMPANY_DASHBOARD
+              : ROUTES.CANDIDATE_DASHBOARD;
           window.location.href = dashboard;
         } else {
           onClose();
           toast({
-            title: "Verificación requerida",
-            description:
-              "Por favor, verifica tu correo electrónico para continuar."
+            title: TITLES.VERIFICATION_REQUIRED,
+            description: MESSAGES.VERIFY_EMAIL_REQUIRED
           });
         }
       }
     } else {
       toast({
         variant: "destructive",
-        title: "Error al iniciar sesión",
-        description: error.message || "Credenciales incorrectas"
+        title: TITLES.LOGIN_ERROR,
+        description: error.message || MESSAGES.INVALID_CREDENTIALS
       });
     }
     setLoading(false);
@@ -131,20 +142,19 @@ const LoginModal: React.FC<LoginModalProps> = ({
     if (formData.email.toLowerCase() === "root@admin.local") {
       toast({
         variant: "destructive",
-        title: "Acción no permitida",
-        description:
-          "No puedes registrar el correo del administrador. Por favor, inicia sesión."
+        title: TITLES.ACTION_NOT_ALLOWED,
+        description: MESSAGES.ADMIN_REGISTER_ERROR
       });
       setLoading(false);
-      setActiveTab("signin");
+      setActiveTab(TABS.SIGNIN);
       return;
     }
 
     if (formData.password !== formData.confirm_password) {
       toast({
         variant: "destructive",
-        title: "Las contraseñas no coinciden",
-        description: "Por favor verifica que ambas contraseñas sean iguales."
+        title: TITLES.PASSWORDS_DO_NOT_MATCH,
+        description: MESSAGES.PASSWORDS_MISMATCH
       });
       setLoading(false);
       return;
@@ -181,9 +191,9 @@ const LoginModal: React.FC<LoginModalProps> = ({
       const verificationToken = userRecord?.verification_token;
 
       // Logic to accept invitation if token is present
-      if (token && jobId && type === "candidate") {
+      if (token && jobId && type === ROLES.CANDIDATE) {
         try {
-          await fetch("/api/accept-invite", {
+          await fetch(API_ROUTES.ACCEPT_INVITE, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -200,14 +210,14 @@ const LoginModal: React.FC<LoginModalProps> = ({
 
       // Send verification email
       try {
-        const emailResponse = await fetch("/api/send-email", {
+        const emailResponse = await fetch(API_ROUTES.SEND_EMAIL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type: "verification",
             to: formData.email,
             payload: {
-              link: `${window.location.origin}/verify-email?token=${verificationToken || ""}`
+              link: `${window.location.origin}${ROUTES.VERIFY_EMAIL}?token=${verificationToken || ""}`
             }
           })
         });
@@ -219,38 +229,36 @@ const LoginModal: React.FC<LoginModalProps> = ({
         console.error("Failed to send verification email", emailErr);
         toast({
           variant: "destructive",
-          title: "Error al enviar email",
-          description:
-            "No se pudo enviar el correo de verificación. Por favor contacta soporte."
+          title: TITLES.ERROR,
+          description: MESSAGES.RESEND_ERROR
         });
         setLoading(false);
         return;
       }
 
       toast({
-        title: "🎉 ¡Registro exitoso!",
-        description:
-          "Revisa tu correo para verificar tu cuenta. Serás redirigido a la página de verificación."
+        title: TITLES.REGISTRATION_SUCCESS,
+        description: MESSAGES.REGISTRATION_SUCCESS_MSG
       });
 
       onClose();
 
       // Redirect to verify-email page where middleware will catch them
       setTimeout(() => {
-        window.location.href = "/verify-email?justRegistered=true";
+        window.location.href = `${ROUTES.VERIFY_EMAIL}?justRegistered=true`;
       }, 1500);
     } else if (error?.message?.includes("User already registered")) {
       toast({
         variant: "destructive",
-        title: "Email ya registrado",
-        description: "Este email ya está registrado. Por favor, inicia sesión."
+        title: TITLES.EMAIL_ALREADY_REGISTERED,
+        description: MESSAGES.EMAIL_ALREADY_REGISTERED_MSG
       });
-      setActiveTab("signin");
+      setActiveTab(TABS.SIGNIN);
     } else {
       toast({
         variant: "destructive",
-        title: "Error en el registro",
-        description: error.message || "Algo salió mal"
+        title: TITLES.REGISTRATION_ERROR,
+        description: error.message || MESSAGES.SOMETHING_WENT_WRONG
       });
     }
     setLoading(false);
@@ -261,27 +269,27 @@ const LoginModal: React.FC<LoginModalProps> = ({
       <DialogContent className="glass-effect border-blue-500/50 text-slate-100">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold gradient-text">
-            {type === "company"
-              ? "Acceso para Empresas"
-              : "Acceso para Candidatos"}
+            {type === ROLES.COMPANY
+              ? TITLES.COMPANY_LOGIN
+              : TITLES.CANDIDATE_LOGIN}
           </DialogTitle>
         </DialogHeader>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-blue-950/30">
-            <TabsTrigger value="signin">Iniciar Sesión</TabsTrigger>
-            <TabsTrigger value="signup">Registrarse</TabsTrigger>
+            <TabsTrigger value="signin">{BUTTONS.LOGIN}</TabsTrigger>
+            <TabsTrigger value="signup">{BUTTONS.REGISTER}</TabsTrigger>
           </TabsList>
           <TabsContent value="signin">
             <form onSubmit={handleSignIn} className="space-y-4 pt-4">
               <div className="space-y-2">
                 <Label htmlFor="email-signin" className="text-slate-300">
-                  Email
+                  {LABELS.EMAIL}
                 </Label>
                 <Input
                   id="email-signin"
                   name="email"
                   type="email"
-                  placeholder="tu@email.com"
+                  placeholder={PLACEHOLDERS.EMAIL_GENERIC}
                   value={formData.email}
                   onChange={handleChange}
                   className="bg-blue-950/20 border-blue-400/20 text-slate-100"
@@ -290,7 +298,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password-signin" className="text-slate-300">
-                  Contraseña
+                  {LABELS.PASSWORD}
                 </Label>
                 <div className="relative">
                   <Input
@@ -322,7 +330,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
                 disabled={loading}
                 className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white"
               >
-                {loading ? "Ingresando..." : "Ingresar"}
+                {loading ? BUTTONS.LOGGING_IN : BUTTONS.LOGIN_SUBMIT}
               </Button>
             </form>
             <DialogFooter className="pt-4">
@@ -331,7 +339,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
                 onClick={onClose}
                 className="text-sm text-cyan-400 hover:underline text-center w-full"
               >
-                ¿Olvidaste tu contraseña?
+                {LINKS.FORGOT_PASSWORD}
               </Link>
             </DialogFooter>
           </TabsContent>
@@ -339,12 +347,12 @@ const LoginModal: React.FC<LoginModalProps> = ({
             <form onSubmit={handleSignUp} className="space-y-4 pt-4">
               <div className="space-y-2">
                 <Label htmlFor="full_name-signup" className="text-slate-300">
-                  Nombre Completo
+                  {LABELS.FULL_NAME}
                 </Label>
                 <Input
                   id="full_name-signup"
                   name="full_name"
-                  placeholder="Tu Nombre Completo"
+                  placeholder={PLACEHOLDERS.FULL_NAME}
                   value={formData.full_name}
                   onChange={handleChange}
                   className="bg-blue-950/20 border-blue-400/20 text-slate-100"
@@ -353,12 +361,12 @@ const LoginModal: React.FC<LoginModalProps> = ({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lastname-signup" className="text-slate-300">
-                  Apellido
+                  {LABELS.LAST_NAME}
                 </Label>
                 <Input
                   id="lastname-signup"
                   name="lastname"
-                  placeholder="Tu Apellido"
+                  placeholder={PLACEHOLDERS.LAST_NAME}
                   value={formData.lastname}
                   onChange={handleChange}
                   className="bg-blue-950/20 border-blue-400/20 text-slate-100"
@@ -367,13 +375,13 @@ const LoginModal: React.FC<LoginModalProps> = ({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email-signup" className="text-slate-300">
-                  Email
+                  {LABELS.EMAIL}
                 </Label>
                 <Input
                   id="email-signup"
                   name="email"
                   type="email"
-                  placeholder="tu@email.com"
+                  placeholder={PLACEHOLDERS.EMAIL_GENERIC}
                   value={formData.email}
                   onChange={handleChange}
                   className="bg-blue-950/20 border-blue-400/20 text-slate-100"
@@ -382,7 +390,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password-signup" className="text-slate-300">
-                  Contraseña
+                  {LABELS.PASSWORD}
                 </Label>
                 <div className="relative">
                   <Input
@@ -414,7 +422,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
                   htmlFor="confirm_password-signup"
                   className="text-slate-300"
                 >
-                  Confirmar Contraseña
+                  {LABELS.CONFIRM_PASSWORD}
                 </Label>
                 <div className="relative">
                   <Input
@@ -446,7 +454,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
                 disabled={loading}
                 className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white"
               >
-                {loading ? "Creando cuenta..." : "Crear Cuenta"}
+                {loading ? BUTTONS.CREATING_ACCOUNT : BUTTONS.CREATE_ACCOUNT}
               </Button>
             </form>
           </TabsContent>

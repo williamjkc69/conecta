@@ -2,6 +2,8 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { Wifi, WifiOff, Check, X, Shield, ShieldAlert } from "lucide-react";
 
+import { LABELS } from "@/constants/text";
+
 interface QualityConfig {
   text: string;
   color: string;
@@ -10,13 +12,25 @@ interface QualityConfig {
 
 const qualityConfig: Record<string, QualityConfig> = {
   excellent: {
-    text: "Excelente",
+    text: LABELS.QUALITY_EXCELLENT,
     color: "text-green-400",
     icon: <Wifi size={14} />
   },
-  good: { text: "Buena", color: "text-yellow-400", icon: <Wifi size={14} /> },
-  fair: { text: "Regular", color: "text-orange-400", icon: <Wifi size={14} /> },
-  poor: { text: "Mala", color: "text-red-500", icon: <WifiOff size={14} /> }
+  good: {
+    text: LABELS.QUALITY_GOOD,
+    color: "text-yellow-400",
+    icon: <Wifi size={14} />
+  },
+  fair: {
+    text: LABELS.QUALITY_FAIR,
+    color: "text-orange-400",
+    icon: <Wifi size={14} />
+  },
+  poor: {
+    text: LABELS.QUALITY_POOR,
+    color: "text-red-500",
+    icon: <WifiOff size={14} />
+  }
 };
 
 interface StatusIndicatorProps {
@@ -51,7 +65,7 @@ const StatusIndicator: React.FC<StatusIndicatorProps> = ({
   if (type === "device") {
     const isEnabled = status;
     const color = isEnabled ? "text-green-400" : "text-red-400";
-    const text = isEnabled ? "Activada" : "Desactivada";
+    const text = isEnabled ? LABELS.ENABLED : LABELS.DISABLED;
     const Icon = isEnabled ? Check : X;
     return (
       <div className={baseClasses}>
@@ -69,7 +83,7 @@ const StatusIndicator: React.FC<StatusIndicatorProps> = ({
   if (type === "recording") {
     const isRecording = status;
     const color = isRecording ? "text-red-400" : "text-slate-400";
-    const text = isRecording ? "Grabando" : "Detenida";
+    const text = isRecording ? LABELS.RECORDING_STATUS : LABELS.STOPPED_STATUS;
     const Icon = isRecording ? ShieldAlert : Shield;
     return (
       <div className={baseClasses}>

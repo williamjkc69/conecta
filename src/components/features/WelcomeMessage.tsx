@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { MESSAGES } from "@/constants/text";
 
 const WelcomeMessage: React.FC = () => {
   return (
@@ -9,9 +10,9 @@ const WelcomeMessage: React.FC = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5, delay: 0.5 }}
     >
-      Hello there! I'm{" "}
-      <span className="font-semibold text-purple-300">Horizons</span>, your AI
-      coding companion. I'm here to help you build amazing web application!
+      {MESSAGES.WELCOME_AI}{" "}
+      <span className="font-semibold text-purple-300">Jennifer</span>,{" "}
+      {MESSAGES.WELCOME_AI_SUBTITLE}
     </motion.p>
   );
 };

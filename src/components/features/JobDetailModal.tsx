@@ -13,6 +13,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
+import { TITLES, MESSAGES, BUTTONS, LABELS } from "@/constants/text";
+import { JOB_STATUS_LABELS, CONTRACT_TYPE_LABELS } from "@/constants/options";
 
 interface FormData {
   id: string;
@@ -107,8 +109,8 @@ const JobDetailModal: React.FC<JobDetailModalProps> = ({
     e.preventDefault();
     if (!formData.title || !formData.description) {
       toast({
-        title: "⚠️ Campos requeridos",
-        description: "Por favor completa el título y descripción.",
+        title: MESSAGES.FIELDS_REQUIRED_TITLE,
+        description: MESSAGES.FIELDS_INCOMPLETE_DESC_SIMPLE,
         variant: "destructive"
       });
       return;
@@ -209,14 +211,14 @@ const JobDetailModal: React.FC<JobDetailModalProps> = ({
                         }}
                         className="bg-blue-600 hover:bg-blue-700 text-white"
                       >
-                        <Edit className="w-4 h-4 mr-2" /> Editar
+                        <Edit className="w-4 h-4 mr-2" /> {BUTTONS.EDIT}
                       </Button>
                     ) : (
                       <Button
                         type="submit"
                         className="bg-green-600 hover:bg-green-700 text-white"
                       >
-                        <Save className="w-4 h-4 mr-2" /> Guardar
+                        <Save className="w-4 h-4 mr-2" /> {BUTTONS.SAVE}
                       </Button>
                     )}
                     <Button
@@ -224,7 +226,7 @@ const JobDetailModal: React.FC<JobDetailModalProps> = ({
                       variant="destructive"
                       onClick={() => setShowDeleteConfirm(true)}
                     >
-                      <Trash2 className="w-4 h-4 mr-2" /> Eliminar
+                      <Trash2 className="w-4 h-4 mr-2" /> {BUTTONS.DELETE}
                     </Button>
                   </div>
                 </div>
@@ -233,7 +235,7 @@ const JobDetailModal: React.FC<JobDetailModalProps> = ({
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-1 text-slate-400">
-                        Ubicación
+                        {LABELS.LOCATION}
                       </label>
                       {isEditing ? (
                         <input
@@ -249,7 +251,7 @@ const JobDetailModal: React.FC<JobDetailModalProps> = ({
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1 text-slate-400">
-                        Tipo de contrato
+                        {LABELS.CONTRACT_TYPE}
                       </label>
                       {isEditing ? (
                         <select
@@ -258,10 +260,18 @@ const JobDetailModal: React.FC<JobDetailModalProps> = ({
                           onChange={handleChange}
                           className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 appearance-none"
                         >
-                          <option value="Full-time">Tiempo completo</option>
-                          <option value="Part-time">Medio tiempo</option>
-                          <option value="Contract">Contrato</option>
-                          <option value="Freelance">Freelance</option>
+                          <option value="Full-time">
+                            {CONTRACT_TYPE_LABELS.FULL_TIME}
+                          </option>
+                          <option value="Part-time">
+                            {CONTRACT_TYPE_LABELS.PART_TIME}
+                          </option>
+                          <option value="Contract">
+                            {CONTRACT_TYPE_LABELS.CONTRACT}
+                          </option>
+                          <option value="Freelance">
+                            {CONTRACT_TYPE_LABELS.FREELANCE}
+                          </option>
                         </select>
                       ) : (
                         renderField(formData.type)
@@ -272,7 +282,7 @@ const JobDetailModal: React.FC<JobDetailModalProps> = ({
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-1 text-slate-400">
-                        Rango salarial
+                        {LABELS.SALARY_RANGE}
                       </label>
                       {isEditing ? (
                         <input
@@ -288,7 +298,7 @@ const JobDetailModal: React.FC<JobDetailModalProps> = ({
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1 text-slate-400">
-                        Estado
+                        {LABELS.STATUS}
                       </label>
                       {isEditing ? (
                         <select
@@ -297,14 +307,20 @@ const JobDetailModal: React.FC<JobDetailModalProps> = ({
                           onChange={handleChange}
                           className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 appearance-none"
                         >
-                          <option value="active">Activa</option>
-                          <option value="inactive">Inactiva</option>
+                          <option value="active">
+                            {JOB_STATUS_LABELS.ACTIVE}
+                          </option>
+                          <option value="inactive">
+                            {JOB_STATUS_LABELS.INACTIVE}
+                          </option>
                         </select>
                       ) : (
                         <span
                           className={`px-3 py-1.5 rounded-full text-sm font-semibold ${formData.status === "active" ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-400"}`}
                         >
-                          {formData.status === "active" ? "Activa" : "Inactiva"}
+                          {formData.status === "active"
+                            ? JOB_STATUS_LABELS.ACTIVE
+                            : JOB_STATUS_LABELS.INACTIVE}
                         </span>
                       )}
                     </div>
@@ -312,7 +328,7 @@ const JobDetailModal: React.FC<JobDetailModalProps> = ({
 
                   <div>
                     <label className="block text-sm font-medium mb-1 text-slate-400">
-                      Descripción *
+                      {LABELS.DESCRIPTION} *
                     </label>
                     {isEditing ? (
                       <textarea
@@ -330,7 +346,7 @@ const JobDetailModal: React.FC<JobDetailModalProps> = ({
 
                   <div>
                     <label className="block text-sm font-medium mb-1 text-slate-400">
-                      Requisitos
+                      {LABELS.REQUIREMENTS}
                     </label>
                     {isEditing ? (
                       <div className="space-y-2">
@@ -367,7 +383,8 @@ const JobDetailModal: React.FC<JobDetailModalProps> = ({
                           onClick={() => addArrayItem("requirements")}
                           className="w-full border-blue-500/50 text-cyan-400 hover:bg-blue-500/10"
                         >
-                          <Plus className="w-4 h-4 mr-2" /> Agregar Requisito
+                          <Plus className="w-4 h-4 mr-2" />{" "}
+                          {BUTTONS.ADD_REQUIREMENT}
                         </Button>
                       </div>
                     ) : (
@@ -377,7 +394,7 @@ const JobDetailModal: React.FC<JobDetailModalProps> = ({
 
                   <div>
                     <label className="block text-sm font-medium mb-1 text-slate-400">
-                      Preguntas para la IA
+                      {LABELS.AI_QUESTIONS}
                     </label>
                     {isEditing ? (
                       <div className="space-y-2">
@@ -414,7 +431,8 @@ const JobDetailModal: React.FC<JobDetailModalProps> = ({
                           onClick={() => addArrayItem("questions")}
                           className="w-full border-blue-500/50 text-cyan-400 hover:bg-blue-500/10"
                         >
-                          <Plus className="w-4 h-4 mr-2" /> Agregar Pregunta
+                          <Plus className="w-4 h-4 mr-2" />{" "}
+                          {BUTTONS.ADD_QUESTION}
                         </Button>
                       </div>
                     ) : (
@@ -433,20 +451,19 @@ const JobDetailModal: React.FC<JobDetailModalProps> = ({
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertTriangle className="text-red-500" />
-              ¿Estás seguro de eliminar esta vacante?
+              {TITLES.DELETE_JOB_CONFIRM}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer. Se eliminará permanentemente la
-              vacante y todas las aplicaciones asociadas a ella.
+              {MESSAGES.CONFIRM_DELETE_JOB}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{BUTTONS.CANCEL}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-red-600 hover:bg-red-700"
             >
-              Sí, eliminar
+              {BUTTONS.CONFIRM_DELETE}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

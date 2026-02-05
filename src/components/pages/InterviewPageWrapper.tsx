@@ -8,6 +8,7 @@ import InterviewPage from "./InterviewPage";
 import { Loader2 } from "lucide-react";
 import React from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { BUTTONS, TITLES, MESSAGES, LABELS } from "@/constants/text";
 
 export default function InterviewPageWrapper({
   applicationId
@@ -40,8 +41,8 @@ export default function InterviewPageWrapper({
           })
         });
         toast({
-          title: "Entrevista completada",
-          description: "Se ha enviado un correo de confirmación."
+          title: TITLES.INTERVIEW_COMPLETED,
+          description: MESSAGES.RESEND_SUCCESS // or generic success
         });
       } catch (error) {
         console.error("Error sending completion email:", error);
@@ -72,12 +73,12 @@ export default function InterviewPageWrapper({
     // return null;
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white">
-        <p>Debes iniciar sesión para acceder a la entrevista.</p>
+        <p>{MESSAGES.ACCESS_DENIED_INTERVIEW}</p>
         <button
           onClick={() => router.push("/")}
           className="mt-4 text-cyan-400 underline"
         >
-          Ir al inicio
+          {MESSAGES.GO_TO_LOGIN}
         </button>
       </div>
     );

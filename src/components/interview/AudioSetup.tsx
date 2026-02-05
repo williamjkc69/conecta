@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Mic, MicOff, Volume2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { TITLES, MESSAGES, LABELS, BUTTONS } from "@/constants/text";
 
 interface AudioSetupProps {
   onReady: (deviceId: string) => void;
@@ -166,7 +167,7 @@ const AudioSetup: React.FC<AudioSetupProps> = ({
         <div className="animate-pulse mb-4">
           <Mic className="w-12 h-12 text-cyan-400" />
         </div>
-        <p className="text-slate-300">Solicitando permiso de micrófono...</p>
+        <p className="text-slate-300">{MESSAGES.REQUESTING_MIC_PERMISSION}</p>
       </div>
     );
   }
@@ -176,13 +177,13 @@ const AudioSetup: React.FC<AudioSetupProps> = ({
       <div className="flex flex-col items-center justify-center p-8 bg-red-900/20 rounded-lg border border-red-900/50">
         <MicOff className="w-12 h-12 text-red-400 mb-4" />
         <h3 className="text-lg font-semibold text-red-400 mb-2">
-          Permiso Denegado
+          {TITLES.PERMISSION_DENIED}
         </h3>
         <p className="text-slate-300 text-center mb-4">
-          Necesitas dar permiso al micrófono para continuar con la entrevista.
+          {MESSAGES.MIC_PERMISSION_REQUIRED}
         </p>
         <p className="text-sm text-slate-400 text-center">
-          Por favor, actualiza los permisos del navegador y recarga la página.
+          {MESSAGES.MIC_REFRESH_INSTRUCTION}
         </p>
       </div>
     );
@@ -193,14 +194,12 @@ const AudioSetup: React.FC<AudioSetupProps> = ({
       <div className="bg-slate-800/50 rounded-lg border border-slate-700 p-6 space-y-4">
         <div className="flex items-center gap-2 text-cyan-400 mb-4">
           <Mic className="w-5 h-5" />
-          <h3 className="font-semibold">Configuración de Audio</h3>
+          <h3 className="font-semibold">{TITLES.AUDIO_SETUP}</h3>
         </div>
 
         {/* Microphone Selection */}
         <div className="space-y-2">
-          <label className="text-sm text-slate-400">
-            Seleccionar Micrófono
-          </label>
+          <label className="text-sm text-slate-400">{LABELS.SELECT_MIC}</label>
           <select
             value={selectedDevice}
             onChange={(e) => handleDeviceChange(e.target.value)}
@@ -208,7 +207,8 @@ const AudioSetup: React.FC<AudioSetupProps> = ({
           >
             {devices.map((device) => (
               <option key={device.deviceId} value={device.deviceId}>
-                {device.label || `Micrófono ${device.deviceId.slice(0, 8)}`}
+                {device.label ||
+                  `${LABELS.MICROPHONE} ${device.deviceId.slice(0, 8)}`}
               </option>
             ))}
           </select>
@@ -219,7 +219,7 @@ const AudioSetup: React.FC<AudioSetupProps> = ({
           <div className="flex items-center justify-between">
             <label className="text-sm text-slate-400 flex items-center gap-2">
               <Volume2 className="w-4 h-4" />
-              Nivel de Audio
+              {LABELS.AUDIO_LEVEL}
             </label>
             <span className="text-xs text-slate-500">
               {Math.round(audioLevel)}%
@@ -255,7 +255,7 @@ const AudioSetup: React.FC<AudioSetupProps> = ({
           </div>
 
           <p className="text-xs text-slate-500 text-center">
-            Habla para probar tu micrófono
+            {MESSAGES.SPEAK_TO_TEST}
           </p>
         </div>
 
@@ -264,11 +264,11 @@ const AudioSetup: React.FC<AudioSetupProps> = ({
           <div className="flex gap-2">
             <AlertCircle className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" />
             <div className="text-xs text-cyan-300">
-              <p className="font-medium mb-1">Antes de continuar:</p>
+              <p className="font-medium mb-1">{LABELS.BEFORE_CONTINUE}</p>
               <ul className="list-disc list-inside space-y-0.5 text-slate-400">
-                <li>Asegúrate de estar en un lugar tranquilo</li>
-                <li>Verifica que tu micrófono funciona correctamente</li>
-                <li>La entrevista será grabada</li>
+                <li>{MESSAGES.QUIET_PLACE_REQ}</li>
+                <li>{MESSAGES.CHECK_MIC_REQ}</li>
+                <li>{MESSAGES.INTERVIEW_RECORDED}</li>
               </ul>
             </div>
           </div>
@@ -282,7 +282,7 @@ const AudioSetup: React.FC<AudioSetupProps> = ({
         className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 shadow-lg shadow-cyan-500/20"
       >
         <Mic className="mr-2 h-4 w-4" />
-        Continuar con la Entrevista
+        {BUTTONS.CONTINUE_INTERVIEW}
       </Button>
     </div>
   );

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Save } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { TITLES, MESSAGES, BUTTONS } from "@/constants/text";
 
 interface Setting {
   key: string;
@@ -28,8 +29,8 @@ const AdminSettings = () => {
       .order("key");
     if (error) {
       toast({
-        title: "Error",
-        description: "No se pudieron cargar los ajustes.",
+        title: TITLES.ERROR,
+        description: MESSAGES.ERROR_LOADING_SETTINGS,
         variant: "destructive"
       });
     } else {
@@ -67,14 +68,14 @@ const AdminSettings = () => {
 
     if (hasError) {
       toast({
-        title: "Error",
-        description: "Algunos ajustes no se pudieron guardar.",
+        title: TITLES.ERROR,
+        description: MESSAGES.ERROR_SAVING_SETTINGS,
         variant: "destructive"
       });
     } else {
       toast({
-        title: "Éxito",
-        description: "Todos los ajustes han sido guardados."
+        title: TITLES.SUCCESS,
+        description: MESSAGES.SETTINGS_SAVED
       });
       fetchSettings(); // Re-fetch to get latest updated_at
     }
@@ -92,11 +93,9 @@ const AdminSettings = () => {
       <div className="flex justify-between items-start">
         <div>
           <h2 className="text-3xl font-bold text-slate-100">
-            Ajustes Generales
+            {TITLES.GENERAL_SETTINGS}
           </h2>
-          <p className="text-slate-400 mt-1">
-            Gestiona los parámetros principales de la plataforma.
-          </p>
+          <p className="text-slate-400 mt-1">{MESSAGES.ADMIN_SETTINGS_DESC}</p>
         </div>
         <Button onClick={handleSaveSettings} disabled={saving}>
           {saving ? (
@@ -104,7 +103,7 @@ const AdminSettings = () => {
           ) : (
             <Save className="mr-2 h-4 w-4" />
           )}
-          Guardar Cambios
+          {BUTTONS.SAVE_CHANGES}
         </Button>
       </div>
 

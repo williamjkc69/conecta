@@ -35,6 +35,8 @@ import CandidateJobDetailModal from "@/components/features/CandidateJobDetailMod
 import { useCandidateApplications } from "@/hooks/useCandidateApplications";
 import ApplicationCard from "@/components/features/ApplicationCard";
 import CandidateOnboardingModal from "@/components/features/CandidateOnboardingModal";
+import { BUTTONS, TITLES, MESSAGES, LABELS } from "@/constants/text";
+import { CANDIDATE_STATUS_LABELS } from "@/constants/options";
 
 /*
   TEST CHECKLIST:
@@ -49,13 +51,9 @@ const StatusTimeline = ({ status }: { status: string }) => {
   const currentStatusIndex = statuses.indexOf(status);
 
   const getStatusLabel = (s: string) => {
-    const labels: Record<string, string> = {
-      applied: "Postulado",
-      interviewing: "En Entrevista",
-      reviewed: "En Revisión",
-      hired: "Contratado"
-    };
-    return labels[s] || s;
+    return (
+      CANDIDATE_STATUS_LABELS[s as keyof typeof CANDIDATE_STATUS_LABELS] || s
+    );
   };
 
   return (
@@ -109,7 +107,7 @@ const InterviewSchedule = ({
     return (
       <div className="flex items-center gap-3 text-slate-400">
         <Check className="w-5 h-5 text-green-500" />
-        <p>Entrevista completada.</p>
+        <p>{MESSAGES.INTERVIEW_COMPLETED}</p>
       </div>
     );
   }
@@ -118,7 +116,7 @@ const InterviewSchedule = ({
     return (
       <div className="flex items-center gap-3 text-slate-400">
         <Calendar className="w-5 h-5 text-cyan-400" />
-        <p>Entrevista flexible, sin fecha agendada.</p>
+        <p>{MESSAGES.INTERVIEW_FLEXIBLE}</p>
       </div>
     );
   }
@@ -131,11 +129,13 @@ const InterviewSchedule = ({
 
   let timeText = "";
   if (isUpcoming) {
-    if (diffDays > 1) timeText = `Comienza en ${diffDays} días`;
-    else if (diffHours > 1) timeText = `Comienza en ${diffHours} horas`;
-    else timeText = `Comienza pronto`;
+    if (diffDays > 1)
+      timeText = `${MESSAGES.STARTS_PREFIX} ${diffDays} ${MESSAGES.DAYS_UNIT}`;
+    else if (diffHours > 1)
+      timeText = `${MESSAGES.STARTS_PREFIX} ${diffHours} ${MESSAGES.HOURS_UNIT}`;
+    else timeText = MESSAGES.STARTS_SOON;
   } else {
-    timeText = "La hora de la entrevista ha pasado";
+    timeText = MESSAGES.INTERVIEW_PAST;
   }
 
   return (
@@ -250,12 +250,12 @@ const CandidateDashboard = () => {
               <Sparkles className="w-5 h-5 text-slate-900" />
             </div>
             <h1 className="text-xl font-bold gradient-text">
-              Panel del Candidato
+              {TITLES.CANDIDATE_DASHBOARD}
             </h1>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-slate-300 hidden sm:block">
-              ¡Hola, {profile?.full_name?.split(" ")[0]}!
+              {MESSAGES.WELCOME} {profile?.full_name?.split(" ")[0]}!
             </span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -295,7 +295,7 @@ const CandidateDashboard = () => {
                   className="cursor-pointer focus:bg-slate-700 focus:text-slate-50"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Cerrar Sesión</span>
+                  <span>{BUTTONS.LOGOUT}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -306,7 +306,7 @@ const CandidateDashboard = () => {
       <div className="flex-grow flex max-w-screen-2xl mx-auto w-full overflow-hidden">
         <aside className="w-1/3 xl:w-1/4 h-full overflow-y-auto border-r border-slate-800 p-4 space-y-4 hidden md:block">
           <h2 className="text-lg font-semibold px-2 text-slate-300">
-            Mis Postulaciones ({applications.length})
+            {TITLES.MY_APPLICATIONS} ({applications.length})
           </h2>
           {applications.length > 0 ? (
             applications.map((app) => (
@@ -337,10 +337,10 @@ const CandidateDashboard = () => {
             <div className="text-center py-10 px-4 rounded-lg bg-slate-800/50 border border-slate-700 border-dashed">
               <AlertCircle className="mx-auto h-10 w-10 text-slate-500" />
               <h3 className="mt-2 text-sm font-medium text-slate-300">
-                No tienes postulaciones
+                {MESSAGES.NO_APPLICATIONS}
               </h3>
               <p className="mt-1 text-sm text-slate-500">
-                Cuando postules a un trabajo, aparecerá aquí.
+                {MESSAGES.NO_APPLICATIONS_DESC}
               </p>
               <Button
                 onClick={() => router.push("/")}
@@ -348,7 +348,7 @@ const CandidateDashboard = () => {
                 size="sm"
                 variant="secondary"
               >
-                Buscar trabajos
+                {BUTTONS.SEARCH_JOBS}
               </Button>
             </div>
           )}
@@ -377,7 +377,7 @@ const CandidateDashboard = () => {
                       </Badge>
                       {selectedApplication.interview_status === "invited" && (
                         <Badge className="bg-cyan-500 text-black hover:bg-cyan-400">
-                          Acción Requerida
+                          {LABELS.ACTION_REQUIRED}
                         </Badge>
                       )}
                     </div>
@@ -404,7 +404,7 @@ const CandidateDashboard = () => {
                     variant="outline"
                     className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white shrink-0"
                   >
-                    <Eye className="w-4 h-4 mr-2" /> Ver Vacante
+                    <Eye className="w-4 h-4 mr-2" /> {BUTTONS.VIEW_JOB}
                   </Button>
                 </div>
 
@@ -428,7 +428,7 @@ const CandidateDashboard = () => {
                     <Card className="glass-effect border-slate-700/80">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-base">
-                          Tu Información
+                          {TITLES.YOUR_INFO}
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3 text-sm">
@@ -439,13 +439,14 @@ const CandidateDashboard = () => {
                         <div className="flex items-center gap-3">
                           <FileText className="w-4 h-4 text-cyan-400" />
                           <p className="text-slate-300">
-                            Doc: {profile?.document_number || "N/A"}
+                            {LABELS.DOC_SHORT}:{" "}
+                            {profile?.document_number || "N/A"}
                           </p>
                         </div>
                         <div className="flex items-center gap-3">
                           <Clock className="w-4 h-4 text-cyan-400" />
                           <p className="text-slate-300">
-                            Aplicado:{" "}
+                            {LABELS.APPLIED_DATE}:{" "}
                             {new Date(
                               selectedApplication.applied_at
                             ).toLocaleDateString()}
@@ -455,7 +456,9 @@ const CandidateDashboard = () => {
                     </Card>
                     <Card className="glass-effect border-slate-700/80">
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-base">Agenda</CardTitle>
+                        <CardTitle className="text-base">
+                          {TITLES.SCHEDULE}
+                        </CardTitle>
                       </CardHeader>
                       <CardContent>
                         <InterviewSchedule
@@ -475,21 +478,20 @@ const CandidateDashboard = () => {
                   <Sparkles className="w-10 h-10 text-slate-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-slate-200">
-                  Bienvenido a tu panel
+                  {MESSAGES.WELCOME_DASHBOARD}
                 </h2>
                 <p className="text-slate-500 mt-2 max-w-md">
-                  Aquí podrás ver el estado de tus postulaciones y realizar tus
-                  entrevistas.
+                  {MESSAGES.DASHBOARD_DESC}
                   {applications.length > 0
-                    ? " Selecciona una postulación del menú para ver detalles."
-                    : " Aún no tienes postulaciones activas."}
+                    ? ` ${MESSAGES.SELECT_APP_DESC}`
+                    : ` ${MESSAGES.NO_ACTIVE_APPS}`}
                 </p>
                 {applications.length === 0 && (
                   <Button
                     onClick={() => router.push("/")}
                     className="mt-6 bg-cyan-600 hover:bg-cyan-500 text-white"
                   >
-                    Explorar Vacantes
+                    {BUTTONS.EXPLORE_JOBS}
                   </Button>
                 )}
               </div>

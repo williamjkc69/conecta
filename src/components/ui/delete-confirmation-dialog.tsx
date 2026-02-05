@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
+import { TITLES, MESSAGES, BUTTONS } from "@/constants/text";
 
 interface DeleteConfirmationDialogProps {
   isOpen: boolean;
@@ -35,13 +36,15 @@ export const DeleteConfirmationDialog: React.FC<
   isOpen,
   onClose,
   onConfirm,
-  title = "¿Confirmar eliminación?",
-  description = "Esta acción no se puede deshacer.",
+  title = TITLES.CONFIRM_DELETE_USER, // Using a generic one or existing
+  description = MESSAGES.SOMETHING_WENT_WRONG, // Will add generic later if needed
   isDeleting = false,
-  confirmText = "Sí, eliminar",
-  cancelText = "Cancelar"
+  confirmText = BUTTONS.CONFIRM_DELETE,
+  cancelText = BUTTONS.CANCEL
 }) => {
   if (!isOpen) return null;
+
+  const loadingText = BUTTONS.DELETING;
 
   return (
     <AnimatePresence>
@@ -77,7 +80,7 @@ export const DeleteConfirmationDialog: React.FC<
               variant="destructive"
               onClick={onConfirm}
               isLoading={isDeleting}
-              loadingText="Eliminando..."
+              loadingText={loadingText}
               className="flex-1"
             >
               {confirmText}

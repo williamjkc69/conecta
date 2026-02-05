@@ -6,6 +6,9 @@ import { supabase } from "@/lib/supabase";
 import { Loader2, CheckCircle, XCircle, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { BUTTONS, TITLES, MESSAGES } from "@/constants/text";
+import { ROUTES, API_ROUTES } from "@/constants/routes";
+import { ROLES } from "@/constants/roles";
 
 function VerifyEmailContent() {
   const { toast } = useToast();
@@ -18,9 +21,7 @@ function VerifyEmailContent() {
     "verifying" | "success" | "error" | "unverified"
   >(token ? "verifying" : "verifying");
 
-  const [message, setMessage] = useState(
-    "Verificando tu correo electrónico..."
-  );
+  const [message, setMessage] = useState<string>(MESSAGES.VERIFYING_EMAIL_MSG);
   const [resending, setResending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [userEmail, setUserEmail] = useState<string | null>(null); // Store email for resend
@@ -36,7 +37,7 @@ function VerifyEmailContent() {
   }, [cooldown]);
 
   const justRegistered = searchParams.get("justRegistered");
-  const [redirectUrl, setRedirectUrl] = useState("/");
+  const [redirectUrl, setRedirectUrl] = useState<string>(ROUTES.HOME);
 
   useEffect(() => {
     // Only start cooldown if user just registered
@@ -60,7 +61,7 @@ function VerifyEmailContent() {
 
           if (data === true) {
             setStatus("success");
-            setMessage("¡Tu correo ha sido verificado correctamente!");
+            setMessage(MESSAGES.EMAIL_VERIFIED);
 
             // Determine redirect URL
             const {
@@ -80,21 +81,21 @@ function VerifyEmailContent() {
 
               const roleName = (profileData as any)?.role?.name;
               const dashboard =
-                roleName === "company"
-                  ? "/company-dashboard"
-                  : "/candidate-dashboard";
+                roleName === ROLES.COMPANY
+                  ? ROUTES.COMPANY_DASHBOARD
+                  : ROUTES.CANDIDATE_DASHBOARD;
               setRedirectUrl(dashboard);
             } else {
-              setRedirectUrl("/?login=true");
+              setRedirectUrl(ROUTES.LOGIN);
             }
           } else {
             setStatus("error");
-            setMessage("El enlace de verificación es inválido o ha expirado.");
+            setMessage(MESSAGES.EMAIL_INVALID_LINK);
           }
         } catch (err: any) {
           console.error("Verification error:", err);
           setStatus("error");
-          setMessage("Hubo un error al verificar el token.");
+          setMessage(MESSAGES.GENERIC_ERROR);
         }
         return;
       }
@@ -120,7 +121,7 @@ function VerifyEmailContent() {
         if (userRecord?.verified_at) {
           // User IS verified - redirect to dashboard
           setStatus("success");
-          setMessage("Tu cuenta ya está verificada.");
+          setMessage(MESSAGES.ALREADY_VERIFIED_MSG);
 
           const { data: profileData } = await supabase
             .from("users")
@@ -130,9 +131,9 @@ function VerifyEmailContent() {
 
           const roleName = (profileData as any)?.role?.name;
           const dashboard =
-            roleName === "company"
-              ? "/company-dashboard"
-              : "/candidate-dashboard";
+            roleName === ROLES.COMPANY
+              ? ROUTES.COMPANY_DASHBOARD
+              : ROUTES.CANDIDATE_DASHBOARD;
 
           setRedirectUrl(dashboard);
 
@@ -143,15 +144,13 @@ function VerifyEmailContent() {
         } else {
           // User is NOT verified - show unverified state
           setStatus("unverified");
-          setMessage(
-            "Tu cuenta aún no ha sido verificada. Por favor, revisa tu correo electrónico para encontrar el enlace de verificación."
-          );
+          setMessage(MESSAGES.VERIFICATION_PENDING_MSG);
         }
       } else {
         // Not logged in and no token - redirect to home
         setStatus("error");
-        setMessage("Debes iniciar sesión para verificar tu cuenta.");
-        setTimeout(() => router.push("/?login=true"), 2000);
+        setMessage(MESSAGES.LOGIN_TO_VERIFY);
+        setTimeout(() => router.push(ROUTES.LOGIN), 2000);
       }
     };
 
@@ -178,14 +177,12 @@ function VerifyEmailContent() {
 
         if (fetchError) {
           console.error("Error fetching user record:", fetchError);
-          throw new Error("No se pudo obtener la información del usuario.");
+          throw new Error(MESSAGES.USER_INFO_ERROR);
         }
 
         if (!userRecord?.verification_token) {
           console.error("No verification token found for user");
-          throw new Error(
-            "No se encontró el token de verificación. Por favor contacta soporte."
-          );
+          throw new Error(MESSAGES.NO_TOKEN_ERROR);
         }
 
         emailToUse = userRecord.email;
@@ -200,21 +197,17 @@ function VerifyEmailContent() {
 
         if (fetchError) {
           console.error("Error fetching user by email:", fetchError);
-          throw new Error("No se pudo obtener la información del usuario.");
+          throw new Error(MESSAGES.USER_INFO_ERROR);
         }
 
         if (!userRecord?.verification_token) {
           console.error("No verification token found for email");
-          throw new Error(
-            "No se encontró el token de verificación. Por favor contacta soporte."
-          );
+          throw new Error(MESSAGES.NO_TOKEN_ERROR);
         }
 
         tokenToSend = userRecord.verification_token;
       } else {
-        throw new Error(
-          "No se pudo determinar tu correo electrónico. Por favor inicia sesión."
-        );
+        throw new Error(MESSAGES.NO_EMAIL_ERROR);
       }
 
       console.log(
@@ -224,9 +217,9 @@ function VerifyEmailContent() {
         tokenToSend
       );
 
-      const link = `${window.location.origin}/verify-email?token=${tokenToSend}`;
+      const link = `${window.location.origin}${ROUTES.VERIFY_EMAIL}?token=${tokenToSend}`;
 
-      const emailResponse = await fetch("/api/send-email", {
+      const emailResponse = await fetch(API_ROUTES.SEND_EMAIL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -237,13 +230,12 @@ function VerifyEmailContent() {
       });
 
       if (!emailResponse.ok) {
-        throw new Error("Error al enviar el correo.");
+        throw new Error(MESSAGES.RESEND_ERROR);
       }
 
       toast({
-        title: "Correo enviado",
-        description:
-          "Se ha enviado un nuevo enlace de verificación a tu correo."
+        title: MESSAGES.EMAIL_SENT,
+        description: MESSAGES.RESEND_SUCCESS
       });
 
       const isProduction = process.env.NODE_ENV === "production";
@@ -252,8 +244,8 @@ function VerifyEmailContent() {
       console.error("Resend email error:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message || "No se pudo enviar el correo."
+        title: TITLES.ERROR,
+        description: error.message || MESSAGES.RESEND_ERROR
       });
     } finally {
       setResending(false);
@@ -264,7 +256,7 @@ function VerifyEmailContent() {
     if (status === "success" && redirectUrl) {
       router.push(redirectUrl);
     } else {
-      router.push("/");
+      router.push(ROUTES.HOME);
     }
   };
 
@@ -273,7 +265,7 @@ function VerifyEmailContent() {
       {status === "verifying" && (
         <>
           <Loader2 className="w-16 h-16 text-cyan-400 animate-spin mx-auto" />
-          <h1 className="text-2xl font-bold">Verificando...</h1>
+          <h1 className="text-2xl font-bold">{BUTTONS.VERIFYING}</h1>
           <p className="text-slate-400">{message}</p>
         </>
       )}
@@ -281,13 +273,15 @@ function VerifyEmailContent() {
       {status === "success" && (
         <>
           <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
-          <h1 className="text-2xl font-bold text-green-400">¡Verificado!</h1>
+          <h1 className="text-2xl font-bold text-green-400">
+            {TITLES.VERIFIED}
+          </h1>
           <p className="text-slate-300">{message}</p>
           <Button
             onClick={handleAction}
             className="w-full bg-cyan-600 hover:bg-cyan-500"
           >
-            Continuar al Dashboard
+            {BUTTONS.GO_TO_DASHBOARD}
           </Button>
         </>
       )}
@@ -295,14 +289,14 @@ function VerifyEmailContent() {
       {status === "error" && (
         <>
           <XCircle className="w-16 h-16 text-red-500 mx-auto" />
-          <h1 className="text-2xl font-bold text-red-400">Error</h1>
+          <h1 className="text-2xl font-bold text-red-400">{TITLES.ERROR}</h1>
           <p className="text-slate-300 mb-4">{message}</p>
           <Button
-            onClick={() => router.push("/")}
+            onClick={() => router.push(ROUTES.HOME)}
             variant="outline"
             className="w-full border-slate-600 hover:bg-slate-700"
           >
-            Volver al Inicio
+            {BUTTONS.BACK_HOME}
           </Button>
         </>
       )}
@@ -311,7 +305,7 @@ function VerifyEmailContent() {
         <>
           <Mail className="w-16 h-16 text-yellow-500 mx-auto animate-pulse" />
           <h1 className="text-2xl font-bold text-yellow-400">
-            Verificación Pendiente
+            {TITLES.VERIFY_EMAIL}
           </h1>
           <p className="text-slate-300">{message}</p>
           <div className="space-y-3 pt-4">
@@ -323,20 +317,20 @@ function VerifyEmailContent() {
               {resending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Enviando...
+                  {BUTTONS.SENDING}
                 </>
               ) : cooldown > 0 ? (
-                `Reenviar en ${cooldown}s`
+                `${MESSAGES.RESEND_IN} ${cooldown}s`
               ) : (
-                "Reenviar correo de verificación"
+                BUTTONS.RESEND_EMAIL
               )}
             </Button>
             <Button
-              onClick={() => router.push("/")}
+              onClick={() => router.push(ROUTES.HOME)}
               variant="ghost"
               className="w-full text-slate-400 hover:text-white"
             >
-              Volver al inicio
+              {BUTTONS.BACK_HOME}
             </Button>
           </div>
         </>

@@ -21,6 +21,17 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import LoginModal from "@/components/features/LoginModal";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  LANDING_HERO,
+  LANDING_FEATURES,
+  LANDING_STEPS,
+  LANDING_COMPARISON,
+  LANDING_TESTIMONIALS,
+  LANDING_CTA,
+  LANDING_FOOTER,
+  LANDING_NAV,
+  LANDING_SECTIONS
+} from "@/constants/landing";
 
 interface HomePageProps {
   onNavigate: (path: string) => void;
@@ -67,75 +78,68 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
   const features = [
     {
       icon: <Zap className="w-8 h-8" />,
-      title: "Automatización Total",
-      description:
-        "Desde la vacante hasta la entrevista, todo en un solo lugar sin intervención manual."
+      title: LANDING_FEATURES[0].TITLE,
+      description: LANDING_FEATURES[0].DESC
     },
     {
       icon: <Clock className="w-8 h-8" />,
-      title: "Entrevistas 24/7",
-      description:
-        "El agente de IA entrevista sin pausas ni horarios, disponible siempre."
+      title: LANDING_FEATURES[1].TITLE,
+      description: LANDING_FEATURES[1].DESC
     },
     {
       icon: <Target className="w-8 h-8" />,
-      title: "Evaluaciones Objetivas",
-      description:
-        "IA analiza las respuestas sin sesgos humanos, garantizando imparcialidad."
+      title: LANDING_FEATURES[2].TITLE,
+      description: LANDING_FEATURES[2].DESC
     },
     {
       icon: <TrendingUp className="w-8 h-8" />,
-      title: "Escalabilidad Real",
-      description:
-        "Entrevista 10 o 10,000 candidatos sin aumentar tu equipo de RRHH."
+      title: LANDING_FEATURES[3].TITLE,
+      description: LANDING_FEATURES[3].DESC
     }
   ];
 
   const steps = [
     {
-      number: "01",
-      title: "Crea una Vacante",
-      description:
-        "Define requisitos, preguntas y criterios de evaluación en minutos."
+      number: LANDING_STEPS[0].NUMBER,
+      title: LANDING_STEPS[0].TITLE,
+      description: LANDING_STEPS[0].DESC
     },
     {
-      number: "02",
-      title: "Registra Candidatos",
-      description:
-        "Invita candidatos o permite aplicaciones directas a tus ofertas."
+      number: LANDING_STEPS[1].NUMBER,
+      title: LANDING_STEPS[1].TITLE,
+      description: LANDING_STEPS[1].DESC
     },
     {
-      number: "03",
-      title: "IA Entrevista y Analiza",
-      description:
-        "El agente de voz entrevista y entrega reportes detallados automáticamente."
+      number: LANDING_STEPS[2].NUMBER,
+      title: LANDING_STEPS[2].TITLE,
+      description: LANDING_STEPS[2].DESC
     }
   ];
 
   const comparison = [
     {
-      metric: "Tiempo promedio",
-      traditional: "5-7 días",
-      ai: "24 horas",
-      improvement: "85% más rápido"
+      metric: LANDING_COMPARISON.ROWS[0].METRIC,
+      traditional: LANDING_COMPARISON.ROWS[0].TRADITIONAL,
+      ai: LANDING_COMPARISON.ROWS[0].AI,
+      improvement: LANDING_COMPARISON.ROWS[0].IMPROVEMENT
     },
     {
-      metric: "Costo por entrevista",
-      traditional: "$150-300",
-      ai: "$5-10",
-      improvement: "95% reducción"
+      metric: LANDING_COMPARISON.ROWS[1].METRIC,
+      traditional: LANDING_COMPARISON.ROWS[1].TRADITIONAL,
+      ai: LANDING_COMPARISON.ROWS[1].AI,
+      improvement: LANDING_COMPARISON.ROWS[1].IMPROVEMENT
     },
     {
-      metric: "Tasa de respuesta",
-      traditional: "45%",
-      ai: "78%",
-      improvement: "+73% engagement"
+      metric: LANDING_COMPARISON.ROWS[2].METRIC,
+      traditional: LANDING_COMPARISON.ROWS[2].TRADITIONAL,
+      ai: LANDING_COMPARISON.ROWS[2].AI,
+      improvement: LANDING_COMPARISON.ROWS[2].IMPROVEMENT
     },
     {
-      metric: "Calidad de evaluación",
-      traditional: "Variable",
-      ai: "Consistente",
-      improvement: "100% objetiva"
+      metric: LANDING_COMPARISON.ROWS[3].METRIC,
+      traditional: LANDING_COMPARISON.ROWS[3].TRADITIONAL,
+      ai: LANDING_COMPARISON.ROWS[3].AI,
+      improvement: LANDING_COMPARISON.ROWS[3].IMPROVEMENT
     }
   ];
 
@@ -152,7 +156,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
               <Sparkles className="w-6 h-6 text-slate-900" />
             </div>
             <span className="text-xl font-bold gradient-text">
-              CONECTA by Virtualiza
+              {LANDING_NAV.BRAND}
             </span>
           </div>
 
@@ -163,14 +167,14 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
               className="text-slate-100 hover:bg-blue-500/10"
             >
               <UserCircle className="w-4 h-4 mr-2" />
-              Soy Candidato
+              {LANDING_HERO.BUTTON_CANDIDATE}
             </Button>
             <Button
               onClick={() => handleGetStarted("company")}
               className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white"
             >
               <Building2 className="w-4 h-4 mr-2" />
-              Soy Empresa
+              {LANDING_HERO.BUTTON_COMPANY}
             </Button>
           </div>
         </div>
@@ -188,22 +192,20 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
           >
             <div className="inline-block px-4 py-2 rounded-full glass-effect border border-blue-500/30 mb-4">
               <span className="text-sm text-cyan-300">
-                🚀 Revoluciona tu proceso de selección
+                {LANDING_HERO.BADGE}
               </span>
             </div>
 
             <h1 className="text-5xl md:text-7xl font-black leading-tight text-slate-50">
-              Entrevistas laborales con IA:
+              {LANDING_HERO.TITLE_PREFIX}
               <br />
               <span className="gradient-text">
-                más rápidas, imparciales y efectivas
+                {LANDING_HERO.TITLE_GRADIENT}
               </span>
             </h1>
 
             <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto">
-              Automatiza tu proceso de selección con entrevistas por voz
-              conducidas por IA. Crea vacantes, registra candidatos y entrevista
-              sin agendar ni esperar. Asegura tener el mejor recurso humano.
+              {LANDING_HERO.DESCRIPTION}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
@@ -213,21 +215,20 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                 className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white text-lg px-8 py-6 glow-effect"
               >
                 <Play className="w-5 h-5 mr-2" />
-                Probar Gratis
+                {LANDING_HERO.BUTTON_PRIMARY}
               </Button>
               <Button
                 size="lg"
                 variant="outline"
                 onClick={() =>
                   toast({
-                    title: "🚧 Demo disponible próximamente",
-                    description:
-                      "Estamos preparando demos personalizadas. ¡Vuelve pronto!"
+                    title: LANDING_HERO.DEMO_TOAST_TITLE,
+                    description: LANDING_HERO.DEMO_TOAST_DESC
                   })
                 }
                 className="border-2 border-blue-500/50 text-slate-100 hover:bg-blue-500/10 text-lg px-8 py-6"
               >
-                Solicitar Demo
+                {LANDING_HERO.BUTTON_SECONDARY}
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </div>
@@ -258,11 +259,13 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-4 text-slate-50">
-              <span className="gradient-text">Ventajas que transforman</span> tu
-              reclutamiento
+              <span className="gradient-text">
+                {LANDING_SECTIONS.FEATURES.TITLE_PREFIX}
+              </span>{" "}
+              {LANDING_SECTIONS.FEATURES.TITLE_SUFFIX}
             </h2>
             <p className="text-xl text-slate-300">
-              Tecnología de vanguardia al servicio de tu equipo
+              {LANDING_SECTIONS.FEATURES.SUBTITLE}
             </p>
           </motion.div>
 
@@ -299,8 +302,10 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-4 text-slate-50">
-              ¿Cómo funciona?{" "}
-              <span className="gradient-text">Simple y poderoso</span>
+              {LANDING_SECTIONS.STEPS.TITLE_PREFIX}{" "}
+              <span className="gradient-text">
+                {LANDING_SECTIONS.STEPS.TITLE_SUFFIX}
+              </span>
             </h2>
           </motion.div>
 
@@ -343,10 +348,12 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-4 text-slate-50">
-              <span className="gradient-text">IA vs Proceso Tradicional</span>
+              <span className="gradient-text">
+                {LANDING_COMPARISON.TITLE_PREFIX}
+              </span>
             </h2>
             <p className="text-xl text-slate-300">
-              Los números hablan por sí solos
+              {LANDING_COMPARISON.SUBTITLE}
             </p>
           </motion.div>
 
@@ -361,16 +368,16 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                 <thead className="bg-gradient-to-r from-blue-900/50 to-cyan-900/50">
                   <tr>
                     <th className="px-6 py-4 text-left text-sm font-bold text-slate-100">
-                      Métrica
+                      {LANDING_COMPARISON.HEADERS[0]}
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-bold text-slate-100">
-                      Proceso Tradicional
+                      {LANDING_COMPARISON.HEADERS[1]}
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-bold text-slate-100">
-                      Con IA
+                      {LANDING_COMPARISON.HEADERS[2]}
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-bold text-slate-100">
-                      Mejora
+                      {LANDING_COMPARISON.HEADERS[3]}
                     </th>
                   </tr>
                 </thead>
@@ -417,35 +424,15 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-4 text-slate-50">
-              Lo que dicen{" "}
-              <span className="gradient-text">nuestros clientes</span>
+              {LANDING_TESTIMONIALS.TITLE_PREFIX}{" "}
+              <span className="gradient-text">
+                {LANDING_TESTIMONIALS.TITLE_GRADIENT}
+              </span>
             </h2>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                quote:
-                  "Gracias a esta plataforma, reducimos el tiempo de contratación en un 65%. ¡Increíble!",
-                author: "María González",
-                role: "Jefe de RRHH, TechCompany",
-                rating: 5
-              },
-              {
-                quote:
-                  "La objetividad de las evaluaciones nos ayudó a encontrar talento que antes pasábamos por alto.",
-                author: "Carlos Ruiz",
-                role: "Director de Talento, StartupHub",
-                rating: 5
-              },
-              {
-                quote:
-                  "Escalamos de 50 a 500 entrevistas mensuales sin contratar más personal. Impresionante.",
-                author: "Ana Martínez",
-                role: "CEO, GrowthCo",
-                rating: 5
-              }
-            ].map((testimonial, index) => (
+            {LANDING_TESTIMONIALS.ITEMS.map((testimonial, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
@@ -455,7 +442,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                 className="glass-effect rounded-2xl p-6 border border-blue-400/10"
               >
                 <div className="flex gap-1 mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
+                  {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
                       className="w-5 h-5 fill-yellow-400 text-yellow-400"
@@ -463,13 +450,13 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                   ))}
                 </div>
                 <p className="text-slate-300 mb-4 italic">
-                  "{testimonial.quote}"
+                  "{testimonial.QUOTE}"
                 </p>
                 <div>
                   <p className="font-semibold text-slate-100">
-                    {testimonial.author}
+                    {testimonial.AUTHOR}
                   </p>
-                  <p className="text-sm text-slate-400">{testimonial.role}</p>
+                  <p className="text-sm text-slate-400">{testimonial.ROLE}</p>
                 </div>
               </motion.div>
             ))}
@@ -486,12 +473,14 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             className="glass-effect rounded-3xl p-12 border-2 border-blue-500/30 glow-effect text-center"
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-6 text-slate-50">
-              ¿Listo para <span className="gradient-text">revolucionar</span> tu
-              reclutamiento?
+              {LANDING_CTA.TITLE_PREFIX}{" "}
+              <span className="gradient-text">
+                {LANDING_CTA.TITLE_GRADIENT}
+              </span>{" "}
+              {LANDING_CTA.TITLE_SUFFIX}
             </h2>
             <p className="text-xl text-slate-300 mb-8">
-              Únete a cientos de empresas que ya están contratando más rápido y
-              mejor con IA
+              {LANDING_CTA.DESCRIPTION}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
@@ -499,20 +488,20 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                 onClick={() => handleGetStarted("company")}
                 className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white text-lg px-8 py-6"
               >
-                Empieza Hoy Gratis
+                {LANDING_CTA.BUTTON_PRIMARY}
               </Button>
               <Button
                 size="lg"
                 variant="outline"
                 onClick={() =>
                   toast({
-                    title: "📧 Contacto",
-                    description: "Escríbenos a: contacto@aiinterview.com"
+                    title: LANDING_CTA.CONTACT_TOAST_TITLE,
+                    description: LANDING_CTA.CONTACT_TOAST_DESC
                   })
                 }
                 className="border-2 border-blue-500/50 text-slate-100 hover:bg-blue-500/10 text-lg px-8 py-6"
               >
-                Hablar con el Equipo
+                {LANDING_CTA.BUTTON_SECONDARY}
               </Button>
             </div>
           </motion.div>
@@ -527,32 +516,33 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
                   <Sparkles className="w-5 h-5 text-slate-900" />
                 </div>
-                <span className="font-bold gradient-text">AI Interview</span>
+                <span className="font-bold gradient-text">
+                  {LANDING_NAV.BRAND}
+                </span>
               </div>
               <p className="text-sm text-slate-400">
-                IA para entrevistas laborales. Plataforma simple, poderosa y sin
-                sesgos.
+                {LANDING_FOOTER.BRAND_DESC}
               </p>
             </div>
 
             <div>
               <span className="font-semibold mb-3 block text-slate-100">
-                Producto
+                {LANDING_FOOTER.SECTIONS.PRODUCT}
               </span>
               <ul className="space-y-2 text-sm text-slate-400">
                 <li>
                   <a href="#" className="hover:text-cyan-400 transition-colors">
-                    Características
+                    {LANDING_FOOTER.LINKS.FEATURES}
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-cyan-400 transition-colors">
-                    Precios
+                    {LANDING_FOOTER.LINKS.PRICING}
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-cyan-400 transition-colors">
-                    Casos de uso
+                    {LANDING_FOOTER.LINKS.USE_CASES}
                   </a>
                 </li>
               </ul>
@@ -560,22 +550,22 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
 
             <div>
               <span className="font-semibold mb-3 block text-slate-100">
-                Empresa
+                {LANDING_FOOTER.SECTIONS.COMPANY}
               </span>
               <ul className="space-y-2 text-sm text-slate-400">
                 <li>
                   <a href="#" className="hover:text-cyan-400 transition-colors">
-                    Sobre nosotros
+                    {LANDING_FOOTER.LINKS.ABOUT}
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-cyan-400 transition-colors">
-                    Blog
+                    {LANDING_FOOTER.LINKS.BLOG}
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-cyan-400 transition-colors">
-                    Carreras
+                    {LANDING_FOOTER.LINKS.CAREERS}
                   </a>
                 </li>
               </ul>
@@ -583,22 +573,22 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
 
             <div>
               <span className="font-semibold mb-3 block text-slate-100">
-                Legal
+                {LANDING_FOOTER.SECTIONS.LEGAL}
               </span>
               <ul className="space-y-2 text-sm text-slate-400">
                 <li>
                   <a href="#" className="hover:text-cyan-400 transition-colors">
-                    Términos de servicio
+                    {LANDING_FOOTER.LINKS.TERMS}
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-cyan-400 transition-colors">
-                    Política de privacidad
+                    {LANDING_FOOTER.LINKS.PRIVACY}
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-cyan-400 transition-colors">
-                    Soporte
+                    {LANDING_FOOTER.LINKS.SUPPORT}
                   </a>
                 </li>
               </ul>
@@ -607,7 +597,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
 
           <div className="pt-8 border-t border-blue-400/10 text-center text-sm text-slate-400">
             <p>
-              © 2025 AI Interview Platform. Todos los derechos reservados.{" "}
+              {LANDING_FOOTER.COPYRIGHT}{" "}
               <Link
                 href="/admin-login"
                 className="text-slate-600 hover:text-slate-500"

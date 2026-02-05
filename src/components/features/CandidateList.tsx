@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { BUTTONS, TITLES, MESSAGES, LABELS } from "@/constants/text";
+import { CANDIDATE_STATUS_LABELS } from "@/constants/options";
 
 interface StatusConfigItem {
   icon: ReactNode;
@@ -24,32 +26,32 @@ interface StatusConfigItem {
 const statusConfig: Record<string, StatusConfigItem> = {
   applied: {
     icon: <Clock className="w-4 h-4" />,
-    text: "Aplicado",
+    text: CANDIDATE_STATUS_LABELS.applied,
     color: "bg-yellow-500/20 text-yellow-400"
   },
   invited: {
     icon: <Send className="w-4 h-4" />,
-    text: "Invitado",
+    text: CANDIDATE_STATUS_LABELS.invited,
     color: "bg-blue-500/20 text-blue-300"
   },
   interviewing: {
     icon: <Briefcase className="w-4 h-4" />,
-    text: "En Entrevista",
+    text: CANDIDATE_STATUS_LABELS.interviewing,
     color: "bg-purple-500/20 text-purple-300"
   },
   reviewed: {
     icon: <Check className="w-4 h-4" />,
-    text: "Completada",
+    text: CANDIDATE_STATUS_LABELS.reviewed,
     color: "bg-green-500/20 text-green-400"
   },
   rejected: {
     icon: <X className="w-4 h-4" />,
-    text: "Rechazado",
+    text: CANDIDATE_STATUS_LABELS.rejected,
     color: "bg-red-500/20 text-red-400"
   },
   hired: {
     icon: <Check className="w-4 h-4" />,
-    text: "Contratado",
+    text: CANDIDATE_STATUS_LABELS.hired,
     color: "bg-emerald-500/20 text-emerald-400"
   }
 };
@@ -78,19 +80,15 @@ const CandidateList: React.FC<CandidateListProps> = ({ candidates, jobs }) => {
 
   const getJobTitle = (jobId: string) => {
     const job = jobs.find((j) => j.id === jobId);
-    return job ? job.title : "Vacante no encontrada";
+    return job ? job.title : MESSAGES.JOB_NOT_FOUND;
   };
 
   if (candidates.length === 0) {
     return (
       <div className="text-center py-12">
         <Users className="w-16 h-16 mx-auto mb-4 text-slate-600" />
-        <p className="text-slate-400">
-          No hay candidatos para tus vacantes aún.
-        </p>
-        <p className="text-sm text-slate-500">
-          Invita a candidatos para empezar el proceso de selección.
-        </p>
+        <p className="text-slate-400">{MESSAGES.NO_CANDIDATES}</p>
+        <p className="text-sm text-slate-500">{MESSAGES.NO_CANDIDATES_DESC}</p>
       </div>
     );
   }
@@ -139,7 +137,7 @@ const CandidateList: React.FC<CandidateListProps> = ({ candidates, jobs }) => {
                 </div>
 
                 <div className="flex flex-wrap gap-2 items-center">
-                  <span className="text-sm text-slate-400">Vacante:</span>
+                  <span className="text-sm text-slate-400">{LABELS.JOB}:</span>
                   <span className="text-sm font-semibold text-cyan-400">
                     {getJobTitle(candidate.job_id)}
                   </span>
@@ -157,32 +155,30 @@ const CandidateList: React.FC<CandidateListProps> = ({ candidates, jobs }) => {
                   <Button
                     onClick={() =>
                       toast({
-                        title: "🚧 Función no implementada",
-                        description:
-                          "Esta función estará disponible próximamente para recordar a los candidatos."
+                        title: TITLES.NOT_IMPLEMENTED,
+                        description: MESSAGES.RESEND_FEATURE_DESC
                       })
                     }
                     variant="outline"
                     className="border-blue-500/50 text-cyan-400 hover:bg-blue-500/10"
                   >
                     <Send className="w-4 h-4 mr-2" />
-                    Reenviar
+                    {BUTTONS.RESEND}
                   </Button>
                 )}
                 {candidate.status === "reviewed" && (
                   <Button
                     onClick={() =>
                       toast({
-                        title: "🚧 Función no implementada",
-                        description:
-                          "Visualización de resultados disponible próximamente."
+                        title: TITLES.NOT_IMPLEMENTED,
+                        description: MESSAGES.COMING_SOON_FEATURE
                       })
                     }
                     variant="outline"
                     className="border-green-500/50 text-green-400 hover:bg-green-500/10"
                   >
                     <Eye className="w-4 h-4 mr-2" />
-                    Ver Análisis
+                    {BUTTONS.VIEW_ANALYSIS}
                   </Button>
                 )}
               </div>

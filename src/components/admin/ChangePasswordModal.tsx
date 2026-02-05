@@ -13,6 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Key } from "lucide-react";
+import {
+  TITLES,
+  MESSAGES,
+  BUTTONS,
+  LABELS,
+  PLACEHOLDERS
+} from "@/constants/text";
 
 interface User {
   id: string;
@@ -39,8 +46,8 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
 
     if (!password) {
       toast({
-        title: "Error",
-        description: "La contraseña no puede estar vacía.",
+        title: TITLES.ERROR,
+        description: MESSAGES.PASSWORD_EMPTY_ERROR,
         variant: "destructive"
       });
       return;
@@ -53,14 +60,14 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
 
     if (error) {
       toast({
-        title: "Error al cambiar la contraseña",
+        title: TITLES.CHANGE_PASSWORD_ERROR,
         description: error.message,
         variant: "destructive"
       });
     } else {
       toast({
-        title: "Éxito",
-        description: `Contraseña actualizada para ${user.email}.`
+        title: TITLES.SUCCESS,
+        description: `${MESSAGES.JOB_UPDATED_DESC} ${user.email}.`
       });
       setPassword("");
       onOpenChange(false);
@@ -74,14 +81,14 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-slate-900 border-slate-700 text-slate-200">
         <DialogHeader>
-          <DialogTitle>Cambiar Contraseña</DialogTitle>
+          <DialogTitle>{TITLES.CHANGE_PASSWORD}</DialogTitle>
           <DialogDescription>
-            Estás cambiando la contraseña para el usuario{" "}
+            {MESSAGES.CHANGE_PASSWORD_DESC}{" "}
             <span className="font-bold text-cyan-400">{user.email}</span>.
           </DialogDescription>
         </DialogHeader>
         <div className="py-4 space-y-2">
-          <Label htmlFor="new-password">Nueva Contraseña</Label>
+          <Label htmlFor="new-password">{LABELS.NEW_PASSWORD}</Label>
           <div className="relative">
             <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
             <Input
@@ -90,17 +97,17 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="pl-10 bg-slate-800 border-slate-600"
-              placeholder="Ingresa la nueva contraseña"
+              placeholder={PLACEHOLDERS.ENTER_NEW_PASSWORD_PH}
             />
           </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancelar
+            {BUTTONS.CANCEL}
           </Button>
           <Button onClick={handlePasswordChange} disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Actualizar Contraseña
+            {BUTTONS.UPDATE_PASSWORD}
           </Button>
         </DialogFooter>
       </DialogContent>

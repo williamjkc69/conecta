@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Lock, Eye, EyeOff } from "lucide-react";
+import { BUTTONS, TITLES, MESSAGES, LABELS } from "@/constants/text";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -37,8 +38,8 @@ export default function ResetPasswordPage() {
     if (password !== confirmPassword) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Las contraseñas no coinciden."
+        title: TITLES.ERROR,
+        description: TITLES.PASSWORDS_DO_NOT_MATCH
       });
       return;
     }
@@ -51,8 +52,8 @@ export default function ResetPasswordPage() {
       if (error) throw error;
 
       toast({
-        title: "¡Éxito!",
-        description: "Tu contraseña ha sido actualizada. Redirigiendo..."
+        title: TITLES.SUCCESS,
+        description: MESSAGES.PASSWORD_UPDATED
       });
 
       setTimeout(() => {
@@ -62,8 +63,8 @@ export default function ResetPasswordPage() {
       console.error("Update password error:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message || "No se pudo actualizar la contraseña."
+        title: TITLES.ERROR,
+        description: error.message || MESSAGES.PASSWORD_UPDATE_ERROR
       });
     } finally {
       setLoading(false);
@@ -78,15 +79,15 @@ export default function ResetPasswordPage() {
             <Lock className="w-8 h-8" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">
-            Nueva Contraseña
+            {TITLES.NEW_PASSWORD}
           </h1>
-          <p className="text-slate-400">Ingresa tu nueva contraseña segura.</p>
+          <p className="text-slate-400">{MESSAGES.ENTER_NEW_PASSWORD}</p>
         </div>
 
         <form onSubmit={handleUpdate} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="password" className="text-slate-200">
-              Nueva Contraseña
+              {LABELS.NEW_PASSWORD}
             </Label>
             <div className="relative">
               <Input
@@ -116,7 +117,7 @@ export default function ResetPasswordPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="confirmPassword" className="text-slate-200">
-              Confirmar Contraseña
+              {LABELS.CONFIRM_PASSWORD}
             </Label>
             <div className="relative">
               <Input
@@ -149,7 +150,7 @@ export default function ResetPasswordPage() {
             className="w-full bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-900/20"
             disabled={loading}
           >
-            {loading ? "Actualizando..." : "Actualizar Contraseña"}
+            {loading ? BUTTONS.UPDATING : BUTTONS.UPDATE_PASSWORD}
           </Button>
         </form>
       </div>

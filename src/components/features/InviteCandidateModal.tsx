@@ -20,6 +20,13 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Search, UserPlus, Briefcase } from "lucide-react";
+import {
+  TITLES,
+  MESSAGES,
+  BUTTONS,
+  LABELS,
+  PLACEHOLDERS
+} from "@/constants/text";
 
 interface InviteCandidateModalProps {
   isOpen: boolean;
@@ -80,8 +87,8 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
       console.error("Error fetching jobs:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "No se pudieron cargar las vacantes disponibles."
+        title: TITLES.ERROR,
+        description: MESSAGES.ERROR_LOADING_JOBS
       });
     }
   };
@@ -107,8 +114,8 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
         setFoundCandidate(null);
         toast({
           variant: "destructive",
-          title: "No encontrado",
-          description: "No se encontró un candidato con ese correo electrónico."
+          title: MESSAGES.CANDIDATE_NOT_FOUND_TITLE,
+          description: MESSAGES.CANDIDATE_NOT_FOUND_DESC
         });
       } else {
         const candidate = {
@@ -117,8 +124,8 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
         };
         setFoundCandidate(candidate);
         toast({
-          title: "Candidato encontrado",
-          description: `${candidate.full_name} está disponible para invitación.`
+          title: MESSAGES.CANDIDATE_FOUND_TITLE,
+          description: `${candidate.full_name} ${MESSAGES.CANDIDATE_FOUND_MSG}`
         });
       }
     } catch (error) {
@@ -147,8 +154,8 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
     if (!selectedJobId) {
       toast({
         variant: "destructive",
-        title: "Campos incompletos",
-        description: "Debes seleccionar una vacante."
+        title: MESSAGES.FIELDS_INCOMPLETE_TITLE,
+        description: MESSAGES.FIELDS_INCOMPLETE_DESC
       });
       return;
     }
@@ -157,8 +164,8 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
     if (!emailToInvite) {
       toast({
         variant: "destructive",
-        title: "Email requerido",
-        description: "No se ha especificado un email."
+        title: MESSAGES.EMAIL_REQUIRED_TITLE,
+        description: MESSAGES.EMAIL_REQUIRED_DESC
       });
       return;
     }
@@ -194,9 +201,8 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
           if (existingApp) {
             toast({
               variant: "destructive",
-              title: "Ya invitado",
-              description:
-                "Este candidato ya tiene una aplicación para esta vacante."
+              title: MESSAGES.ALREADY_INVITED_TITLE,
+              description: MESSAGES.ALREADY_INVITED_DESC
             });
             setLoading(false);
             return;
@@ -234,8 +240,8 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
           });
 
           toast({
-            title: "Invitación enviada",
-            description: "El candidato ha sido notificado."
+            title: MESSAGES.INVITATION_SENT_TITLE,
+            description: MESSAGES.INVITATION_SENT_DESC
           });
         } else {
           // Exists but we don't have object. Just notify.
@@ -252,8 +258,8 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
             })
           });
           toast({
-            title: "Aviso enviado",
-            description: "El usuario ya existe, se le ha notificado."
+            title: MESSAGES.NOTICE_SENT_TITLE,
+            description: MESSAGES.NOTICE_SENT_DESC
           });
         }
       } else {
@@ -277,7 +283,7 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
 
         if (inviteError) {
           console.error("Error creating invitation:", inviteError);
-          throw new Error("Error al guardar la invitación.");
+          throw new Error(MESSAGES.INVITATION_SAVE_ERROR);
         }
 
         await fetch("/api/send-email", {
@@ -296,8 +302,8 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
         });
 
         toast({
-          title: "Invitación enviada",
-          description: "Se ha enviado un correo de registro al nuevo usuario."
+          title: MESSAGES.INVITATION_SENT_TITLE,
+          description: MESSAGES.NEW_USER_INVITE_DESC
         });
       }
 
@@ -308,8 +314,8 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
       console.error("Invitation error:", error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message || "No se pudo enviar la invitación."
+        title: TITLES.ERROR,
+        description: error.message || MESSAGES.INVITATION_SEND_ERROR
       });
     } finally {
       setLoading(false);
@@ -322,18 +328,17 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <UserPlus className="w-5 h-5 text-cyan-400" />
-            Invitar Candidato
+            {TITLES.INVITE_CANDIDATE}
           </DialogTitle>
           <DialogDescription className="text-slate-400">
-            Asigna una vacante a un candidato para iniciar el proceso de
-            entrevista.
+            {MESSAGES.INVITE_DESC}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
           {/* Candidate Selection */}
           <div className="space-y-2">
-            <Label className="text-slate-200">Candidato</Label>
+            <Label className="text-slate-200">{LABELS.CANDIDATE}</Label>
             {initialCandidate ? (
               <div className="p-3 bg-slate-800 rounded-md border border-slate-700 flex items-center justify-between">
                 <div>
@@ -345,13 +350,13 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
                   </p>
                 </div>
                 <div className="bg-green-900/30 text-green-400 text-xs px-2 py-1 rounded border border-green-900/50">
-                  Seleccionado
+                  {LABELS.SELECTED}
                 </div>
               </div>
             ) : (
               <div className="flex gap-2">
                 <Input
-                  placeholder="Buscar por email..."
+                  placeholder={PLACEHOLDERS.SEARCH_BY_EMAIL}
                   value={emailSearch}
                   onChange={(e) => setEmailSearch(e.target.value)}
                   className="bg-slate-800 border-slate-700 text-slate-100"
@@ -374,21 +379,21 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
             {!initialCandidate && foundCandidate && (
               <div className="mt-2 p-2 bg-green-900/20 border border-green-900/50 rounded text-sm text-green-400 flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                Encontrado: {foundCandidate.full_name}
+                {LABELS.FOUND}: {foundCandidate.full_name}
               </div>
             )}
           </div>
 
           {/* Job Selection */}
           <div className="space-y-2">
-            <Label className="text-slate-200">Vacante</Label>
+            <Label className="text-slate-200">{LABELS.JOB}</Label>
             <Select
               value={String(selectedJobId)} // ensure string for Select
               onValueChange={(val) => setSelectedJobId(Number(val) || val)} // handle number
               disabled={!!initialJob}
             >
               <SelectTrigger className="bg-slate-800 border-slate-700 text-slate-100">
-                <SelectValue placeholder="Seleccionar vacante" />
+                <SelectValue placeholder={PLACEHOLDERS.SELECT_JOB} />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-700 text-slate-100">
                 {jobs.map((job) => (
@@ -410,7 +415,7 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
             onClick={onClose}
             className="text-slate-400 hover:text-white hover:bg-slate-800"
           >
-            Cancelar
+            {BUTTONS.CANCEL}
           </Button>
           <Button
             onClick={handleInvite}
@@ -423,12 +428,12 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Invitando...
+                {BUTTONS.INVITING}
               </>
             ) : (
               <>
                 <UserPlus className="mr-2 h-4 w-4" />
-                Enviar Invitación
+                {BUTTONS.SEND_INVITATION}
               </>
             )}
           </Button>

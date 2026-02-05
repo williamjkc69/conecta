@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, Mail } from "lucide-react";
 import Link from "next/link";
+import { BUTTONS, TITLES, MESSAGES, LABELS } from "@/constants/text";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -37,9 +38,8 @@ export default function ForgotPasswordPage() {
 
       setSent(true);
       toast({
-        title: "Correo enviado",
-        description:
-          "Revisa tu bandeja de entrada para restablecer tu contraseña."
+        title: MESSAGES.RESET_SENT_TOAST,
+        description: MESSAGES.RESET_SUCCESS_DESC
       });
 
       // OPTIONAL: If we were sending custom email (bypassing Supabase email),
@@ -51,8 +51,7 @@ export default function ForgotPasswordPage() {
       toast({
         variant: "destructive",
         title: "Error",
-        description:
-          error.message || "No se pudo enviar el correo de recuperación."
+        description: error.message || MESSAGES.SEND_RESET_ERROR
       });
     } finally {
       setLoading(false);
@@ -66,16 +65,14 @@ export default function ForgotPasswordPage() {
           href="/"
           className="inline-flex items-center text-slate-400 hover:text-white mb-6 transition-colors"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" /> Volver al Inicio
+          <ArrowLeft className="w-4 h-4 mr-2" /> {BUTTONS.BACK_HOME}
         </Link>
 
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-400 mb-2">
-            Recuperar Contraseña
+            {TITLES.FORGOT_PASSWORD}
           </h1>
-          <p className="text-slate-400">
-            Ingresa tu email y te enviaremos un enlace para recuperar tu cuenta.
-          </p>
+          <p className="text-slate-400">{MESSAGES.FORGOT_DESC_1}</p>
         </div>
 
         {sent ? (
@@ -84,24 +81,24 @@ export default function ForgotPasswordPage() {
               <Mail className="w-8 h-8" />
             </div>
             <h2 className="text-xl font-semibold text-white">
-              ¡Correo Enviado!
+              {TITLES.EMAIL_SENT_TITLE}
             </h2>
             <p className="text-slate-300">
-              Hemos enviado las instrucciones a <strong>{email}</strong>.
+              {MESSAGES.FORGOT_INSTRUCTIONS} <strong>{email}</strong>.
             </p>
             <Button
               variant="outline"
               className="w-full mt-4 border-slate-600 text-slate-200 hover:bg-slate-700"
               onClick={() => setSent(false)}
             >
-              Intentar con otro correo
+              {BUTTONS.TRY_ANOTHER_EMAIL}
             </Button>
           </div>
         ) : (
           <form onSubmit={handleReset} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-slate-200">
-                Correo Electrónico
+                {LABELS.EMAIL}
               </Label>
               <Input
                 id="email"
@@ -118,7 +115,7 @@ export default function ForgotPasswordPage() {
               className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-lg shadow-blue-900/20"
               disabled={loading}
             >
-              {loading ? "Enviando..." : "Enviar Enlace de Recuperación"}
+              {loading ? BUTTONS.SENDING : BUTTONS.SEND_RESET_LINK}
             </Button>
           </form>
         )}

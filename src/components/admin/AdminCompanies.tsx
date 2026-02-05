@@ -20,6 +20,13 @@ import { fetchUsersWithStats } from "@/lib/adminStats";
 import { supabase } from "@/lib/supabase";
 import ChangePasswordModal from "./ChangePasswordModal";
 import Pagination from "./Pagination";
+import {
+  TITLES,
+  MESSAGES,
+  PLACEHOLDERS,
+  LABELS,
+  BUTTONS
+} from "@/constants/text";
 
 interface AdminCompany {
   id: string;
@@ -56,8 +63,8 @@ const AdminCompanies = () => {
         setTotalPages(Math.ceil(count / limit));
       } catch (error) {
         toast({
-          title: "Error",
-          description: "No se pudieron cargar las empresas.",
+          title: TITLES.ERROR,
+          description: MESSAGES.ERROR_LOADING_COMPANIES,
           variant: "destructive"
         });
       }
@@ -86,12 +93,12 @@ const AdminCompanies = () => {
     });
     if (error) {
       toast({
-        title: "Error",
-        description: `No se pudo eliminar a la empresa ${userEmail}.`,
+        title: TITLES.ERROR,
+        description: MESSAGES.ERROR_DELETING_COMPANY,
         variant: "destructive"
       });
     } else {
-      toast({ title: "Éxito", description: `Empresa ${userEmail} eliminada.` });
+      toast({ title: TITLES.SUCCESS, description: MESSAGES.COMPANY_DELETED });
       fetchCompanies(searchTerm, currentPage);
     }
     setDeletingId(null);
@@ -105,12 +112,12 @@ const AdminCompanies = () => {
   return (
     <div className="space-y-6">
       <h2 className="text-3xl font-bold text-slate-100 flex items-center gap-3">
-        <Building /> Gestión de Empresas
+        <Building /> {TITLES.COMPANY_MANAGEMENT}
       </h2>
       <div className="relative w-full max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
         <Input
-          placeholder="Buscar por nombre o email..."
+          placeholder={PLACEHOLDERS.SEARCH_NAME_EMAIL}
           className="pl-10 bg-slate-800 border-slate-700"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -121,11 +128,15 @@ const AdminCompanies = () => {
           <table className="w-full text-left">
             <thead className="bg-slate-800">
               <tr>
-                <th className="p-4 font-semibold">Empresa</th>
-                <th className="p-4 font-semibold">Email</th>
-                <th className="p-4 font-semibold text-center">Entrevistas</th>
-                <th className="p-4 font-semibold">Fecha de Registro</th>
-                <th className="p-4 font-semibold text-right">Acciones</th>
+                <th className="p-4 font-semibold">{LABELS.COMPANY}</th>
+                <th className="p-4 font-semibold">{LABELS.EMAIL}</th>
+                <th className="p-4 font-semibold text-center">
+                  {LABELS.INTERVIEWS}
+                </th>
+                <th className="p-4 font-semibold">{LABELS.REGISTERED_DATE}</th>
+                <th className="p-4 font-semibold text-right">
+                  {LABELS.ACTIONS}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -173,23 +184,24 @@ const AdminCompanies = () => {
                         </AlertDialogTrigger>
                         <AlertDialogContent className="bg-slate-900 border-slate-700 text-slate-200">
                           <AlertDialogHeader>
-                            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                            <AlertDialogTitle>
+                              {TITLES.CONFIRM_DELETE_USER}
+                            </AlertDialogTitle>
                             <AlertDialogDescription>
-                              Esta acción es irreversible. Se eliminará
-                              permanentemente la empresa{" "}
-                              <strong>{user.company_name}</strong> y todos sus
-                              datos asociados (vacantes, aplicaciones, etc.).
+                              {MESSAGES.DELETE_COMPANY_WARNING}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogCancel>
+                              {BUTTONS.CANCEL}
+                            </AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() =>
                                 handleDeleteUser(user.id, user.email)
                               }
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
-                              Sí, eliminar
+                              {BUTTONS.DELETE}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import PerformanceReport from "@/components/interview/PerformanceReport";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { BUTTONS } from "@/constants/text";
 
 interface InterviewSummaryPageProps {
   reportData: any;
@@ -43,7 +44,7 @@ const InterviewSummaryPage: React.FC<InterviewSummaryPageProps> = ({
         className="mt-8 bg-transparent border-slate-600 hover:bg-slate-800 text-slate-300 hover:text-white"
       >
         <ArrowLeft size={16} className="mr-2" />
-        Volver al Panel
+        {BUTTONS.BACK_DASHBOARD}
       </Button>
     </div>
   );

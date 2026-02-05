@@ -15,6 +15,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
+import {
+  BUTTONS,
+  TITLES,
+  MESSAGES,
+  LABELS,
+  PLACEHOLDERS
+} from "@/constants/text";
 
 interface CompanyOnboardingModalProps {
   userId: number; // The public.users id (integer)
@@ -79,8 +86,8 @@ const CompanyOnboardingModal: React.FC<CompanyOnboardingModalProps> = ({
       console.log("User successfully linked to company");
 
       toast({
-        title: "¡Empresa Creada!",
-        description: "Tu perfil de empresa ha sido configurado correctamente."
+        title: TITLES.COMPANY_CREATED_SUCCESS,
+        description: MESSAGES.COMPANY_CREATED_DESC
       });
 
       // Wait a moment for the database to update, then trigger refetch
@@ -92,9 +99,8 @@ const CompanyOnboardingModal: React.FC<CompanyOnboardingModalProps> = ({
     } catch (error: any) {
       console.error("Error onboarding company:", error);
       toast({
-        title: "Error",
-        description:
-          error.message || "No se pudo guardar la información de la empresa.",
+        title: TITLES.ERROR,
+        description: error.message || MESSAGES.COMPANY_SAVE_ERROR,
         variant: "destructive"
       });
     } finally {
@@ -111,22 +117,22 @@ const CompanyOnboardingModal: React.FC<CompanyOnboardingModalProps> = ({
       >
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold gradient-text text-center">
-            Configura tu Empresa
+            {TITLES.COMPANY_SETUP}
           </DialogTitle>
           <p className="text-slate-400 text-center text-sm">
-            Para continuar, necesitamos algunos detalles sobre tu organización.
+            {MESSAGES.COMPANY_SETUP_DESC}
           </p>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="space-y-2">
             <Label htmlFor="name" className="text-slate-300">
-              Nombre de la Empresa *
+              {LABELS.COMPANY_NAME} *
             </Label>
             <Input
               id="name"
               name="name"
-              placeholder="Ej. Tech Solutions Inc."
+              placeholder={PLACEHOLDERS.COMPANY_NAME_PH}
               value={formData.name}
               onChange={handleChange}
               className="bg-blue-950/20 border-blue-400/20 text-slate-100"
@@ -136,12 +142,12 @@ const CompanyOnboardingModal: React.FC<CompanyOnboardingModalProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="description" className="text-slate-300">
-              Descripción
+              {LABELS.DESCRIPTION}
             </Label>
             <Textarea
               id="description"
               name="description"
-              placeholder="Cuéntanos brevemente qué hace tu empresa..."
+              placeholder={PLACEHOLDERS.COMPANY_DESC_PH}
               value={formData.description}
               onChange={handleChange}
               className="bg-blue-950/20 border-blue-400/20 text-slate-100 min-h-[80px]"
@@ -151,12 +157,12 @@ const CompanyOnboardingModal: React.FC<CompanyOnboardingModalProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="phone" className="text-slate-300">
-                Teléfono
+                {LABELS.PHONE}
               </Label>
               <Input
                 id="phone"
                 name="phone"
-                placeholder="+52 555..."
+                placeholder={PLACEHOLDERS.PHONE_PH}
                 value={formData.phone}
                 onChange={handleChange}
                 className="bg-blue-950/20 border-blue-400/20 text-slate-100"
@@ -164,13 +170,13 @@ const CompanyOnboardingModal: React.FC<CompanyOnboardingModalProps> = ({
             </div>
             <div className="space-y-2">
               <Label htmlFor="email" className="text-slate-300">
-                Email de Contacto
+                {LABELS.CONTACT_EMAIL}
               </Label>
               <Input
                 id="email"
                 name="email"
                 type="email"
-                placeholder="contacto@empresa.com"
+                placeholder={PLACEHOLDERS.EMAIL_GENERIC}
                 value={formData.email}
                 onChange={handleChange}
                 className="bg-blue-950/20 border-blue-400/20 text-slate-100"
@@ -187,10 +193,11 @@ const CompanyOnboardingModal: React.FC<CompanyOnboardingModalProps> = ({
             >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Guardando...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
+                  {BUTTONS.SAVING}
                 </>
               ) : (
-                "Guardar y Continuar"
+                BUTTONS.SAVE_CONTINUE
               )}
             </Button>
           </DialogFooter>

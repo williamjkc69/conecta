@@ -4,6 +4,14 @@ import { X, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
+import {
+  BUTTONS,
+  TITLES,
+  MESSAGES,
+  LABELS,
+  PLACEHOLDERS
+} from "@/constants/text";
+import { LISTING_TYPE_PLACEHOLDER } from "@/constants/options";
 
 interface CreateJobModalProps {
   isOpen: boolean;
@@ -181,8 +189,8 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
 
     if (!formData.title?.trim()) {
       toast({
-        title: "⚠️ Título requerido",
-        description: "Por favor ingresa el título del puesto.",
+        title: MESSAGES.TITLE_REQUIRED_HEADER,
+        description: MESSAGES.TITLE_REQUIRED_DESC,
         variant: "destructive"
       });
       return;
@@ -190,8 +198,8 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
 
     if (formData.title.trim().length < 3) {
       toast({
-        title: "⚠️ Título muy corto",
-        description: "El título debe tener al menos 3 caracteres.",
+        title: MESSAGES.TITLE_TOO_SHORT_HEADER,
+        description: MESSAGES.TITLE_TOO_SHORT_DESC,
         variant: "destructive"
       });
       return;
@@ -199,8 +207,8 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
 
     if (!formData.description?.trim()) {
       toast({
-        title: "⚠️ Descripción requerida",
-        description: "Por favor ingresa una descripción del puesto.",
+        title: MESSAGES.DESC_REQUIRED_HEADER,
+        description: MESSAGES.DESC_REQUIRED_DESC,
         variant: "destructive"
       });
       return;
@@ -208,8 +216,8 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
 
     if (formData.description.trim().length < 50) {
       toast({
-        title: "⚠️ Descripción muy corta",
-        description: "La descripción debe tener al menos 50 caracteres.",
+        title: MESSAGES.DESC_TOO_SHORT_HEADER,
+        description: MESSAGES.DESC_TOO_SHORT_DESC,
         variant: "destructive"
       });
       return;
@@ -217,8 +225,8 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
 
     if (!formData.listing_type_id) {
       toast({
-        title: "⚠️ Tipo de contrato requerido",
-        description: "Por favor selecciona un tipo de contrato.",
+        title: MESSAGES.TYPE_REQUIRED_HEADER,
+        description: MESSAGES.TYPE_REQUIRED_DESC,
         variant: "destructive"
       });
       return;
@@ -229,8 +237,8 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
       parseFloat(formData.salary_range_min) <= 0
     ) {
       toast({
-        title: "⚠️ Salario mínimo inválido",
-        description: "Por favor ingresa un salario mínimo válido mayor a 0.",
+        title: MESSAGES.MIN_SALARY_INVALID_HEADER,
+        description: MESSAGES.MIN_SALARY_INVALID_DESC,
         variant: "destructive"
       });
       return;
@@ -242,8 +250,8 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
         parseFloat(formData.salary_range_min)
     ) {
       toast({
-        title: "⚠️ Rango salarial inválido",
-        description: "El salario máximo debe ser mayor o igual al mínimo.",
+        title: MESSAGES.SALARY_RANGE_INVALID_HEADER,
+        description: MESSAGES.SALARY_RANGE_INVALID_DESC,
         variant: "destructive"
       });
       return;
@@ -256,8 +264,8 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
 
     if (cleanedRequirements.length === 0) {
       toast({
-        title: "⚠️ Requisitos requeridos",
-        description: "Por favor agrega al menos un requisito o skill.",
+        title: MESSAGES.REQS_REQUIRED_HEADER,
+        description: MESSAGES.REQS_REQUIRED_DESC,
         variant: "destructive"
       });
       return;
@@ -320,7 +328,7 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
               </button>
 
               <h2 className="text-2xl sm:text-3xl font-bold gradient-text pr-8">
-                Crear Nueva Vacante
+                {TITLES.CREATE_JOB}
               </h2>
             </div>
 
@@ -333,7 +341,7 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2 text-slate-300">
-                      Título del puesto *
+                      {LABELS.JOB_TITLE} *
                     </label>
                     <input
                       type="text"
@@ -341,14 +349,14 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
                       value={formData.title}
                       onChange={handleChange}
                       className="w-full px-4 py-3 rounded-lg bg-blue-950/20 border border-blue-400/20 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 text-sm"
-                      placeholder="ej: Desarrollador Full Stack Senior"
+                      placeholder={PLACEHOLDERS.JOB_TITLE}
                       required
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium mb-2 text-slate-300">
-                      Ubicación
+                      {LABELS.LOCATION}
                     </label>
                     <input
                       type="text"
@@ -356,14 +364,14 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
                       value={formData.location}
                       onChange={handleChange}
                       className="w-full px-4 py-3 rounded-lg bg-blue-950/20 border border-blue-400/20 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 text-sm"
-                      placeholder="ej: Remoto, Madrid, etc."
+                      placeholder={PLACEHOLDERS.LOCATION}
                     />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium mb-2 text-slate-300">
-                    Tipo de contrato *
+                    {LABELS.CONTRACT_TYPE} *
                   </label>
                   <select
                     name="listing_type_id"
@@ -372,7 +380,7 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
                     className="w-full px-4 py-3 rounded-lg bg-blue-950/20 border border-blue-400/20 text-slate-100 focus:outline-none focus:border-blue-500 text-sm"
                     required
                   >
-                    <option value="">Selecciona un tipo</option>
+                    <option value="">{LISTING_TYPE_PLACEHOLDER}</option>
                     {listingTypes.map((type) => (
                       <option key={type.id} value={type.id}>
                         {type.name}
@@ -383,7 +391,7 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
 
                 <div>
                   <label className="block text-sm font-medium mb-2 text-slate-300">
-                    Descripción * ({formData.description.length}/
+                    {LABELS.DESCRIPTION} * ({formData.description.length}/
                     {MAX_DESCRIPTION_LENGTH})
                   </label>
                   <textarea
@@ -393,7 +401,7 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
                     rows={4}
                     maxLength={MAX_DESCRIPTION_LENGTH}
                     className="w-full px-4 py-3 rounded-lg bg-blue-950/20 border border-blue-400/20 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none text-sm"
-                    placeholder="Describe el puesto, responsabilidades y lo que buscas..."
+                    placeholder={PLACEHOLDERS.DESCRIPTION}
                     required
                   />
                 </div>
@@ -401,7 +409,7 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="block text-sm font-medium mb-2 text-slate-300">
-                      Salario mínimo *
+                      {LABELS.SALARY_MIN} *
                     </label>
                     <input
                       type="number"
@@ -411,14 +419,14 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
                       min="0"
                       step="0.01"
                       className="w-full px-3 py-3 rounded-lg bg-blue-950/20 border border-blue-400/20 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 text-sm"
-                      placeholder="50000"
+                      placeholder={PLACEHOLDERS.SALARY_MIN}
                       required
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium mb-2 text-slate-300">
-                      Salario máximo
+                      {LABELS.SALARY_MAX}
                     </label>
                     <input
                       type="number"
@@ -428,13 +436,13 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
                       min="0"
                       step="0.01"
                       className="w-full px-3 py-3 rounded-lg bg-blue-950/20 border border-blue-400/20 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 text-sm"
-                      placeholder="70000"
+                      placeholder={PLACEHOLDERS.SALARY_MAX}
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium mb-2 text-slate-300">
-                      Moneda *
+                      {LABELS.CURRENCY} *
                     </label>
                     <select
                       name="currency"
@@ -454,11 +462,10 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
 
                 <div>
                   <label className="block text-sm font-medium mb-2 text-slate-300">
-                    Requisitos (Skills)
+                    {LABELS.REQUIREMENTS}
                   </label>
                   <p className="text-xs text-slate-400 mb-3">
-                    Escribe para buscar skills existentes o crear nuevas.
-                    Presiona Enter para agregar.
+                    {MESSAGES.SKILL_HELP}
                   </p>
 
                   {/* Selected Skills Pills */}
@@ -493,7 +500,7 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
                         setTimeout(() => setShowSuggestions(false), 200);
                       }}
                       className="w-full px-4 py-2 rounded-lg bg-blue-950/20 border border-blue-400/20 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 text-sm"
-                      placeholder="ej: React, TypeScript, Node.js (presiona Enter)"
+                      placeholder={PLACEHOLDERS.SKILLS}
                     />
 
                     {/* Suggestions Dropdown */}
@@ -516,11 +523,10 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
 
                 <div>
                   <label className="block text-sm font-medium mb-2 text-slate-300">
-                    Preguntas para la IA
+                    {LABELS.AI_QUESTIONS}
                   </label>
                   <p className="text-xs text-slate-400 mb-3">
-                    Estas preguntas serán usadas por el agente de IA durante la
-                    entrevista
+                    {MESSAGES.AI_QUESTIONS_DESC}
                   </p>
                   <div className="space-y-2">
                     {formData.questions.map((question, index) => (
@@ -536,7 +542,7 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
                             )
                           }
                           className="flex-1 px-4 py-2 rounded-lg bg-blue-950/20 border border-blue-400/20 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 text-sm"
-                          placeholder="ej: ¿Cuál es tu experiencia con TypeScript?"
+                          placeholder={PLACEHOLDERS.QUESTION_EXAMPLE}
                         />
                         {formData.questions.length > 1 && (
                           <Button
@@ -557,7 +563,7 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
                       className="w-full border-blue-500/50 text-cyan-400 hover:bg-blue-500/10 text-sm"
                     >
                       <Plus className="w-4 h-4 mr-2" />
-                      Agregar Pregunta
+                      {BUTTONS.ADD_QUESTION}
                     </Button>
                   </div>
                 </div>
@@ -572,14 +578,14 @@ const CreateJobModal: React.FC<CreateJobModalProps> = ({
                   onClick={onClose}
                   className="flex-1 border-slate-100/20 text-slate-100 hover:bg-slate-100/10"
                 >
-                  Cancelar
+                  {BUTTONS.CANCEL}
                 </Button>
                 <Button
                   type="submit"
                   form="create-job-form"
                   className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white"
                 >
-                  Crear Vacante
+                  {BUTTONS.CREATE_JOB}
                 </Button>
               </div>
             </div>

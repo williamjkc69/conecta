@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Bot } from "lucide-react";
+import { LABELS } from "@/constants/text";
 
 interface AgentAvatarProps {
   isSpeaking: boolean;
@@ -18,7 +19,7 @@ const AgentAvatar: React.FC<AgentAvatarProps> = ({ isSpeaking }) => {
       </motion.div>
 
       <p className="text-sm text-slate-400 mt-2">
-        {isSpeaking ? "Hablando…" : "Esperando…"}
+        {isSpeaking ? LABELS.SPEAKING : LABELS.WAITING}
       </p>
     </div>
   );

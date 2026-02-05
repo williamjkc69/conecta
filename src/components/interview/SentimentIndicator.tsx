@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Smile, Meh, Frown } from "lucide-react";
+import { LABELS } from "@/constants/text";
 
 interface SentimentConfig {
   icon: JSX.Element;
@@ -9,10 +10,14 @@ interface SentimentConfig {
 }
 
 const sentimentConfig: Record<string, SentimentConfig> = {
-  positive: { icon: <Smile />, color: "text-green-400", label: "Positivo" },
-  neutral: { icon: <Meh />, color: "text-yellow-400", label: "Neutral" },
-  negative: { icon: <Frown />, color: "text-red-400", label: "Negativo" },
-  idle: { icon: <Meh />, color: "text-slate-500", label: "Analizando..." }
+  positive: {
+    icon: <Smile />,
+    color: "text-green-400",
+    label: LABELS.POSITIVE
+  },
+  neutral: { icon: <Meh />, color: "text-yellow-400", label: LABELS.NEUTRAL },
+  negative: { icon: <Frown />, color: "text-red-400", label: LABELS.NEGATIVE },
+  idle: { icon: <Meh />, color: "text-slate-500", label: LABELS.ANALYZING }
 };
 
 interface SentimentIndicatorProps {
