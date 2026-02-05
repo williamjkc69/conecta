@@ -35,6 +35,18 @@ function VerifyEmailContent() {
     return () => clearInterval(timer);
   }, [cooldown]);
 
+  const justRegistered = searchParams.get("justRegistered");
+  const [redirectUrl, setRedirectUrl] = useState("/");
+
+  useEffect(() => {
+    // Only start cooldown if user just registered
+    if (justRegistered === "true" && status === "unverified") {
+      setCooldown(60);
+    }
+  }, [justRegistered, status]);
+
+  // ... (timer useEffect remains the same)
+
   useEffect(() => {
     const verify = async () => {
       // If token is present, try to verify with token
@@ -50,15 +62,30 @@ function VerifyEmailContent() {
             setStatus("success");
             setMessage("¡Tu correo ha sido verificado correctamente!");
 
-            // Try to update auth session if logged in
-            // Or at least update user metadata so middleware knows
+            // Determine redirect URL
             const {
               data: { session }
             } = await supabase.auth.getSession();
+
             if (session) {
               await supabase.auth.updateUser({
                 data: { verified: true }
               });
+
+              const { data: profileData } = await supabase
+                .from("users")
+                .select("role:roles(name)")
+                .eq("auth_user_id", session.user.id)
+                .single();
+
+              const roleName = (profileData as any)?.role?.name;
+              const dashboard =
+                roleName === "company"
+                  ? "/company-dashboard"
+                  : "/candidate-dashboard";
+              setRedirectUrl(dashboard);
+            } else {
+              setRedirectUrl("/?login=true");
             }
           } else {
             setStatus("error");
@@ -95,19 +122,22 @@ function VerifyEmailContent() {
           setStatus("success");
           setMessage("Tu cuenta ya está verificada.");
 
-          // Redirect to appropriate dashboard after a short delay
-          setTimeout(async () => {
-            const { data: profileData } = await supabase
-              .from("users")
-              .select("role:roles(name)")
-              .eq("auth_user_id", session.user.id)
-              .single();
+          const { data: profileData } = await supabase
+            .from("users")
+            .select("role:roles(name)")
+            .eq("auth_user_id", session.user.id)
+            .single();
 
-            const roleName = (profileData as any)?.role?.name;
-            const dashboard =
-              roleName === "company"
-                ? "/company-dashboard"
-                : "/candidate-dashboard";
+          const roleName = (profileData as any)?.role?.name;
+          const dashboard =
+            roleName === "company"
+              ? "/company-dashboard"
+              : "/candidate-dashboard";
+
+          setRedirectUrl(dashboard);
+
+          // Redirect to appropriate dashboard after a short delay
+          setTimeout(() => {
             router.push(dashboard);
           }, 2000);
         } else {
@@ -231,8 +261,8 @@ function VerifyEmailContent() {
   };
 
   const handleAction = () => {
-    if (status === "success") {
-      router.push("/candidate-dashboard");
+    if (status === "success" && redirectUrl) {
+      router.push(redirectUrl);
     } else {
       router.push("/");
     }

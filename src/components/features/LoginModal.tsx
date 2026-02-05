@@ -237,7 +237,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
 
       // Redirect to verify-email page where middleware will catch them
       setTimeout(() => {
-        window.location.href = "/verify-email";
+        window.location.href = "/verify-email?justRegistered=true";
       }, 1500);
     } else if (error?.message?.includes("User already registered")) {
       toast({

@@ -52,6 +52,11 @@ const CompanyDashboard: React.FC = () => {
   const [loadingData, setLoadingData] = useState(true);
   const [statsData, setStatsData] = useState({ interviews: 0, applicants: 0 });
 
+  // Loading states for async operations
+  const [isCreatingJob, setIsCreatingJob] = useState(false);
+  const [isUpdatingJob, setIsUpdatingJob] = useState(false);
+  const [isDeletingJob, setIsDeletingJob] = useState(false);
+
   const handleLogout = async () => {
     await authSignOut();
     router.push("/");
@@ -195,6 +200,7 @@ const CompanyDashboard: React.FC = () => {
   }, [fetchCompanyData]);
 
   const handleCreateJob = async (jobData: any) => {
+    setIsCreatingJob(true);
     try {
       if (!profile?.company) throw new Error("No company profile found");
 
@@ -354,10 +360,13 @@ const CompanyDashboard: React.FC = () => {
           "No se pudo crear la vacante. Verifica tu perfil y vuelve a intentarlo.",
         variant: "destructive"
       });
+    } finally {
+      setIsCreatingJob(false);
     }
   };
 
   const handleUpdateJob = async (jobData: any) => {
+    setIsUpdatingJob(true);
     try {
       const { id, requirements, questions, ...updateData } = jobData;
 
@@ -453,29 +462,37 @@ const CompanyDashboard: React.FC = () => {
         description: `No se pudo actualizar la vacante: ${error.message}`,
         variant: "destructive"
       });
+    } finally {
+      setIsUpdatingJob(false);
     }
   };
 
   const handleDeleteJob = async (jobId: string) => {
-    // Delete listing (cascade deletes applications)
-    const { error: jobError } = await supabase
-      .from("listings")
-      .delete()
-      .eq("id", jobId);
+    setIsDeletingJob(true);
+    try {
+      // Delete listing (cascade deletes applications)
+      const { error: jobError } = await supabase
+        .from("listings")
+        .delete()
+        .eq("id", jobId);
 
-    if (jobError) {
-      toast({
-        title: "Error",
-        description: `No se pudo eliminar la vacante: ${jobError.message}`,
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "🗑️ Vacante eliminada",
-        description: "La vacante y sus aplicaciones han sido eliminadas."
-      });
-      setSelectedJob(null);
-      fetchCompanyData();
+      if (jobError) {
+        toast({
+          title: "Error",
+          description: `No se pudo eliminar la vacante: ${jobError.message}`,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "🗑️ Vacante eliminada",
+          description: "La vacante y sus aplicaciones han sido eliminadas."
+        });
+        setSelectedJob(null);
+        setJobToEdit(null);
+        fetchCompanyData();
+      }
+    } finally {
+      setIsDeletingJob(false);
     }
   };
 
@@ -733,6 +750,7 @@ const CompanyDashboard: React.FC = () => {
         onClose={() => setShowCreateJob(false)}
         onSubmit={handleCreateJob}
         mode="create"
+        isLoading={isCreatingJob}
       />
       <InviteCandidateModal
         isOpen={showInviteCandidate}
@@ -758,6 +776,7 @@ const CompanyDashboard: React.FC = () => {
             setSelectedJob(null);
           }}
           onDelete={handleDeleteJob}
+          isDeleting={isDeletingJob}
         />
       )}
 
@@ -770,6 +789,8 @@ const CompanyDashboard: React.FC = () => {
           onSubmit={handleUpdateJob}
           onDelete={handleDeleteJob}
           mode="edit"
+          isLoading={isUpdatingJob}
+          isDeleting={isDeletingJob}
         />
       )}
 

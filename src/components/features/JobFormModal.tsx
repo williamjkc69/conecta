@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, Trash2 } from "lucide-react";
+import { X, Plus, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
@@ -12,6 +12,8 @@ interface JobFormModalProps {
   onDelete?: (id: string) => void;
   job?: any; // If provided, we're editing; otherwise creating
   mode?: "create" | "edit";
+  isLoading?: boolean; // Loading state for submit button
+  isDeleting?: boolean; // Loading state for delete button
 }
 
 interface FormData {
@@ -47,7 +49,9 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
   onSubmit,
   onDelete,
   job,
-  mode = job ? "edit" : "create"
+  mode = job ? "edit" : "create",
+  isLoading = false,
+  isDeleting = false
 }) => {
   const { toast } = useToast();
   const [listingTypes, setListingTypes] = useState<ListingType[]>([]);
@@ -648,6 +652,7 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                     type="button"
                     variant="outline"
                     onClick={onClose}
+                    disabled={isLoading || isDeleting}
                     className="flex-1 border-slate-100/20 text-slate-100 hover:bg-slate-100/10"
                   >
                     Cancelar
@@ -657,17 +662,37 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                       type="button"
                       variant="destructive"
                       onClick={() => setShowDeleteConfirm(true)}
+                      disabled={isLoading || isDeleting}
                     >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Eliminar
+                      {isDeleting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Eliminando...
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Eliminar
+                        </>
+                      )}
                     </Button>
                   )}
                   <Button
                     type="submit"
                     form="job-form"
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white"
+                    disabled={isLoading || isDeleting}
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {mode === "create" ? "Crear Vacante" : "Guardar Cambios"}
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        {mode === "create" ? "Creando..." : "Guardando..."}
+                      </>
+                    ) : mode === "create" ? (
+                      "Crear Vacante"
+                    ) : (
+                      "Guardar Cambios"
+                    )}
                   </Button>
                 </div>
               </div>
@@ -700,6 +725,7 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
               <Button
                 variant="outline"
                 onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
                 className="flex-1"
               >
                 Cancelar
@@ -707,9 +733,17 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
               <Button
                 variant="destructive"
                 onClick={handleDelete}
+                disabled={isDeleting}
                 className="flex-1"
               >
-                Sí, eliminar
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Eliminando...
+                  </>
+                ) : (
+                  "Sí, eliminar"
+                )}
               </Button>
             </div>
           </motion.div>

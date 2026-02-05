@@ -7,7 +7,8 @@ import {
   MapPin,
   Briefcase,
   DollarSign,
-  Calendar
+  Calendar,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -17,6 +18,7 @@ interface JobDetailsModalProps {
   job: any;
   onEdit: () => void;
   onDelete: (id: string) => void;
+  isDeleting?: boolean;
 }
 
 const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
@@ -24,7 +26,8 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
   onClose,
   job,
   onEdit,
-  onDelete
+  onDelete,
+  isDeleting = false
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -187,9 +190,19 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
                     type="button"
                     variant="destructive"
                     onClick={() => setShowDeleteConfirm(true)}
+                    disabled={isDeleting}
                   >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Eliminar
+                    {isDeleting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Eliminando...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Eliminar
+                      </>
+                    )}
                   </Button>
                   <Button
                     type="button"
@@ -230,6 +243,7 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
               <Button
                 variant="outline"
                 onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
                 className="flex-1"
               >
                 Cancelar
@@ -237,9 +251,17 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
               <Button
                 variant="destructive"
                 onClick={handleDelete}
+                disabled={isDeleting}
                 className="flex-1"
               >
-                Sí, eliminar
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Eliminando...
+                  </>
+                ) : (
+                  "Sí, eliminar"
+                )}
               </Button>
             </div>
           </motion.div>
