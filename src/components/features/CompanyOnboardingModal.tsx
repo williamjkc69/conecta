@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, UploadCloud } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface CompanyOnboardingModalProps {
   userId: number; // The public.users id (integer)
@@ -33,18 +33,11 @@ const CompanyOnboardingModal: React.FC<CompanyOnboardingModalProps> = ({
     phone: "",
     email: ""
   });
-  const [logoFile, setLogoFile] = useState<File | null>(null);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setLogoFile(e.target.files[0]);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,25 +46,6 @@ const CompanyOnboardingModal: React.FC<CompanyOnboardingModalProps> = ({
 
     try {
       let logoUrl = null;
-
-      // 1. Upload Logo if present
-      if (logoFile) {
-        const fileExt = logoFile.name.split(".").pop();
-        const fileName = `${userId}-${Date.now()}.${fileExt}`;
-        const filePath = `${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("company-logos")
-          .upload(filePath, logoFile);
-
-        if (uploadError) throw uploadError;
-
-        const { data: publicUrlData } = supabase.storage
-          .from("company-logos")
-          .getPublicUrl(filePath);
-
-        logoUrl = publicUrlData.publicUrl;
-      }
 
       // 2. Create Company Record
       const { data: companyData, error: insertError } = await supabase
@@ -202,24 +176,6 @@ const CompanyOnboardingModal: React.FC<CompanyOnboardingModalProps> = ({
                 className="bg-blue-950/20 border-blue-400/20 text-slate-100"
                 required
               />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="logo" className="text-slate-300">
-              Logo de la Empresa
-            </Label>
-            <div className="flex items-center gap-4">
-              <div className="relative w-full">
-                <Input
-                  id="logo"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="bg-blue-950/20 border-blue-400/20 text-slate-100 cursor-pointer file:text-cyan-400 file:bg-blue-950/50 file:border-0 file:rounded-md file:mr-4 file:px-2 file:py-1"
-                />
-                <UploadCloud className="absolute right-3 top-2.5 h-5 w-5 text-slate-500 pointer-events-none" />
-              </div>
             </div>
           </div>
 
