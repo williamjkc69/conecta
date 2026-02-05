@@ -202,7 +202,11 @@ const JobDetailModal: React.FC<JobDetailModalProps> = ({
                     {!isEditing ? (
                       <Button
                         type="button"
-                        onClick={() => setIsEditing(true)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setIsEditing(true);
+                        }}
                         className="bg-blue-600 hover:bg-blue-700 text-white"
                       >
                         <Edit className="w-4 h-4 mr-2" /> Editar

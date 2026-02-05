@@ -18,11 +18,11 @@ import {
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import CreateJobModal from "@/components/features/CreateJobModal";
+import JobFormModal from "@/components/features/JobFormModal";
+import JobDetailsModal from "@/components/features/JobDetailsModal";
 import JobCard from "@/components/features/JobCard";
 import CandidateList from "@/components/features/CandidateList";
 import { supabase } from "@/lib/supabase";
-import JobDetailModal from "@/components/features/JobDetailModal";
 import InviteCandidateModal from "@/components/features/InviteCandidateModal";
 import AssignCandidateModal from "@/components/features/AssignCandidateModal";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
@@ -47,6 +47,7 @@ const CompanyDashboard: React.FC = () => {
   const [showInviteCandidate, setShowInviteCandidate] = useState(false);
   const [showAssignCandidate, setShowAssignCandidate] = useState(false);
   const [selectedJob, setSelectedJob] = useState<any>(null);
+  const [jobToEdit, setJobToEdit] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [loadingData, setLoadingData] = useState(true);
   const [statsData, setStatsData] = useState({ interviews: 0, applicants: 0 });
@@ -61,14 +62,44 @@ const CompanyDashboard: React.FC = () => {
     setLoadingData(true);
 
     try {
+      // Fetch listings with all related data
       const { data: listingsData, error: listingsError } = await supabase
         .from("listings")
-        .select(`*`)
+        .select(
+          `
+          *,
+          listing_type:listing_types(id, name),
+          listing_skills(
+            skill:skills(id, name)
+          ),
+          listing_questions(id, question)
+        `
+        )
         .eq("company_id", profile.company.id);
 
       if (listingsError) throw listingsError;
 
-      const listingIds = listingsData.map((j: any) => j.id);
+      // Transform the data to match the expected format
+      const transformedListings = listingsData.map((listing: any) => ({
+        ...listing,
+        type: listing.listing_type?.name || "Full-time",
+        salary:
+          listing.salary_range_min && listing.salary_range_max
+            ? `${listing.salary_currency || "USD"} ${listing.salary_range_min.toLocaleString()} - ${listing.salary_range_max.toLocaleString()}`
+            : listing.salary_range_min
+              ? `${listing.salary_currency || "USD"} ${listing.salary_range_min.toLocaleString()}+`
+              : "-",
+        requirements:
+          listing.listing_skills
+            ?.map((ls: any) => ls.skill?.name)
+            .filter(Boolean) || [],
+        questions:
+          listing.listing_questions
+            ?.map((lq: any) => lq.question)
+            .filter(Boolean) || []
+      }));
+
+      const listingIds = transformedListings.map((j: any) => j.id);
       let appsData: any[] = [];
 
       if (listingIds.length > 0) {
@@ -81,7 +112,7 @@ const CompanyDashboard: React.FC = () => {
         appsData = fetchedApps || [];
       }
 
-      const listingsWithCounts = listingsData.map((listing: any) => ({
+      const listingsWithCounts = transformedListings.map((listing: any) => ({
         ...listing,
         applicants: appsData.filter((app) => app.listing_id === listing.id)
           .length
@@ -167,38 +198,144 @@ const CompanyDashboard: React.FC = () => {
     try {
       if (!profile?.company) throw new Error("No company profile found");
 
-      // Map type text to ID
-      const { data: typeData } = await supabase
-        .from("listing_types")
-        .select("id")
-        .eq("name", jobData.type) // assuming jobData.type is 'remote', etc.
-        .single();
+      // Backend validation
+      if (!jobData.title || jobData.title.trim().length < 3) {
+        throw new Error("El título debe tener al menos 3 caracteres");
+      }
 
-      const typeId = typeData?.id || 1; // Default or error?
+      if (!jobData.description || jobData.description.trim().length < 50) {
+        throw new Error("La descripción debe tener al menos 50 caracteres");
+      }
 
-      // Direct Insert
-      const { data, error } = await supabase
+      if (
+        !jobData.listing_type_id ||
+        typeof jobData.listing_type_id !== "number"
+      ) {
+        throw new Error("Tipo de contrato inválido");
+      }
+
+      if (!jobData.salary_range_min || jobData.salary_range_min <= 0) {
+        throw new Error("Salario mínimo inválido");
+      }
+
+      if (
+        jobData.salary_range_max &&
+        jobData.salary_range_max < jobData.salary_range_min
+      ) {
+        throw new Error("El salario máximo debe ser mayor al mínimo");
+      }
+
+      if (
+        !jobData.currency ||
+        !["USD", "EUR", "MXN", "COP", "ARS", "CLP", "PEN"].includes(
+          jobData.currency
+        )
+      ) {
+        throw new Error("Moneda inválida");
+      }
+
+      if (!jobData.requirements || jobData.requirements.length === 0) {
+        throw new Error("Debes agregar al menos un requisito");
+      }
+
+      console.log("Creating job with data:", jobData);
+
+      // 1. Create the listing
+      const { data: listingData, error: listingError } = await supabase
         .from("listings")
         .insert({
           company_id: profile.company.id,
-          title: jobData.title,
-          description: jobData.description,
-          location: jobData.location,
-          listing_type_id: typeId,
-          salary_range_min: jobData.salaryMin, // Assuming UI sends this
-          salary_range_max: jobData.salaryMax,
+          title: jobData.title.trim(),
+          description: jobData.description.trim(),
+          location: jobData.location?.trim() || null,
+          listing_type_id: jobData.listing_type_id,
+          salary_range_min: jobData.salary_range_min,
+          salary_range_max: jobData.salary_range_max,
+          salary_currency: jobData.currency,
           status: "active"
         })
-        .select();
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (listingError) throw listingError;
+      if (!listingData) throw new Error("Failed to create listing");
 
-      // Skills?
-      // If jobData.requirements (array of strings) exists:
-      if (jobData.requirements && data) {
-        const newListingId = data[0].id;
-        // Handle skills insertion (omitted for brevity, or need logic)
-        // For now, simply toast success.
+      const listingId = listingData.id;
+      console.log("Listing created with ID:", listingId);
+
+      // 2. Handle Skills (Requirements)
+      if (jobData.requirements && jobData.requirements.length > 0) {
+        for (const skillName of jobData.requirements) {
+          if (!skillName.trim()) continue;
+
+          // Check if skill exists
+          const { data: existingSkill, error: searchError } = await supabase
+            .from("skills")
+            .select("id")
+            .ilike("name", skillName.trim())
+            .maybeSingle();
+
+          let skillId: number;
+
+          if (existingSkill) {
+            skillId = existingSkill.id;
+            console.log(
+              "Found existing skill:",
+              skillName,
+              "with ID:",
+              skillId
+            );
+          } else {
+            // Create new skill
+            const { data: newSkill, error: skillError } = await supabase
+              .from("skills")
+              .insert({ name: skillName.trim() })
+              .select()
+              .single();
+
+            if (skillError) {
+              console.error("Error creating skill:", skillError);
+              continue; // Skip this skill but continue with others
+            }
+
+            if (!newSkill) {
+              console.error("Failed to create skill:", skillName);
+              continue;
+            }
+
+            skillId = newSkill.id;
+            console.log("Created new skill:", skillName, "with ID:", skillId);
+          }
+
+          // Link skill to listing
+          const { error: linkError } = await supabase
+            .from("listing_skills")
+            .insert({
+              listing_id: listingId,
+              skill_id: skillId
+            });
+
+          if (linkError) {
+            console.error("Error linking skill to listing:", linkError);
+          }
+        }
+      }
+
+      // 3. Handle Questions
+      if (jobData.questions && jobData.questions.length > 0) {
+        const questionsToInsert = jobData.questions.map((question: string) => ({
+          listing_id: listingId,
+          question: question.trim()
+        }));
+
+        const { error: questionsError } = await supabase
+          .from("listing_questions")
+          .insert(questionsToInsert);
+
+        if (questionsError) {
+          console.error("Error inserting questions:", questionsError);
+          // Don't throw, just log - questions are not critical
+        }
       }
 
       toast({
@@ -221,31 +358,101 @@ const CompanyDashboard: React.FC = () => {
   };
 
   const handleUpdateJob = async (jobData: any) => {
-    const { id, ...updateData } = jobData; // id is listing id
-    // Map fields if needed
-    const { error } = await supabase
-      .from("listings")
-      .update({
-        title: updateData.title,
-        description: updateData.description,
-        location: updateData.location
-        // Add type mapping if allowing type update
-      })
-      .eq("id", id);
+    try {
+      const { id, requirements, questions, ...updateData } = jobData;
 
-    if (error) {
+      // 1. Update the listing
+      const { error: listingError } = await supabase
+        .from("listings")
+        .update({
+          title: updateData.title,
+          description: updateData.description,
+          location: updateData.location,
+          listing_type_id: updateData.listing_type_id,
+          salary_range_min: updateData.salary_range_min,
+          salary_range_max: updateData.salary_range_max,
+          salary_currency: updateData.currency,
+          status: updateData.status
+        })
+        .eq("id", id);
+
+      if (listingError) throw listingError;
+
+      // 2. Update Skills - Delete existing and insert new ones
+      if (requirements && requirements.length > 0) {
+        // Delete existing skills for this listing
+        await supabase.from("listing_skills").delete().eq("listing_id", id);
+
+        // Insert new skills
+        for (const skillName of requirements) {
+          if (!skillName.trim()) continue;
+
+          // Check if skill exists
+          const { data: existingSkill } = await supabase
+            .from("skills")
+            .select("id")
+            .ilike("name", skillName.trim())
+            .maybeSingle();
+
+          let skillId: number;
+
+          if (existingSkill) {
+            skillId = existingSkill.id;
+          } else {
+            // Create new skill
+            const { data: newSkill, error: skillError } = await supabase
+              .from("skills")
+              .insert({ name: skillName.trim() })
+              .select()
+              .single();
+
+            if (skillError || !newSkill) {
+              console.error("Error creating skill:", skillError);
+              continue;
+            }
+
+            skillId = newSkill.id;
+          }
+
+          // Link skill to listing
+          await supabase.from("listing_skills").insert({
+            listing_id: id,
+            skill_id: skillId
+          });
+        }
+      }
+
+      // 3. Update Questions - Delete existing and insert new ones
+      if (questions && questions.length > 0) {
+        // Delete existing questions
+        await supabase.from("listing_questions").delete().eq("listing_id", id);
+
+        // Insert new questions
+        const questionsToInsert = questions
+          .filter((q: string) => q.trim() !== "")
+          .map((question: string) => ({
+            listing_id: id,
+            question: question.trim()
+          }));
+
+        if (questionsToInsert.length > 0) {
+          await supabase.from("listing_questions").insert(questionsToInsert);
+        }
+      }
+
+      toast({
+        title: "✅ Vacante actualizada",
+        description: "Los cambios han sido guardados."
+      });
+      setJobToEdit(null);
+      fetchCompanyData();
+    } catch (error: any) {
+      console.error("[handleUpdateJob] Error:", error);
       toast({
         title: "Error",
         description: `No se pudo actualizar la vacante: ${error.message}`,
         variant: "destructive"
       });
-    } else {
-      toast({
-        title: "✅ Vacante actualizada",
-        description: "Los cambios han sido guardados."
-      });
-      setSelectedJob(null);
-      fetchCompanyData();
     }
   };
 
@@ -521,10 +728,11 @@ const CompanyDashboard: React.FC = () => {
           </div>
         </div>
       </div>
-      <CreateJobModal
+      <JobFormModal
         isOpen={showCreateJob}
         onClose={() => setShowCreateJob(false)}
         onSubmit={handleCreateJob}
+        mode="create"
       />
       <InviteCandidateModal
         isOpen={showInviteCandidate}
@@ -538,13 +746,30 @@ const CompanyDashboard: React.FC = () => {
         onAssignmentSuccess={fetchCompanyData}
         jobs={jobs.filter((j) => j.status === "active")}
       />
+
+      {/* Details Modal (Read-only) */}
       {selectedJob && (
-        <JobDetailModal
+        <JobDetailsModal
           isOpen={!!selectedJob}
           onClose={() => setSelectedJob(null)}
           job={selectedJob}
+          onEdit={() => {
+            setJobToEdit(selectedJob);
+            setSelectedJob(null);
+          }}
+          onDelete={handleDeleteJob}
+        />
+      )}
+
+      {/* Edit Modal */}
+      {jobToEdit && (
+        <JobFormModal
+          isOpen={!!jobToEdit}
+          onClose={() => setJobToEdit(null)}
+          job={jobToEdit}
           onSubmit={handleUpdateJob}
           onDelete={handleDeleteJob}
+          mode="edit"
         />
       )}
 
