@@ -22,16 +22,56 @@ export const useApplicationRealtime = (applicationId) => {
         setLoading(true);
         const { data, error } = await supabase
           .from('applications')
-          .select('*, jobs(*)')
+          .select(`
+            *,
+            listing:listings (
+              id,
+              title,
+              description,
+              location,
+              company:companies(id, name)
+            ),
+            status:application_statuses(name)
+          `)
           .eq('id', applicationId)
           .single();
 
         if (error) throw error;
         
         if (isMounted) {
-          setApplication(data);
+          // Transform data to match expected format
+          const statusName = Array.isArray(data.status) 
+            ? data.status[0]?.name 
+            : data.status?.name;
+          
+          // Derive interview_status from status
+          let interviewStatus = "pending";
+          if (statusName === "completed") {
+            interviewStatus = "completed";
+          } else if (statusName === "invited") {
+            interviewStatus = "invited";
+          } else if (statusName === "interviewing") {
+            interviewStatus = "in_progress";
+          } else if (data.call_id) {
+            interviewStatus = "in_progress";
+          }
+
+          const transformedData = {
+            ...data,
+            status: statusName || "pending",
+            interview_status: interviewStatus,
+            // Add backward compatibility fields
+            jobs: data.listing ? {
+              title: data.listing.title,
+              description: data.listing.description,
+              location: data.listing.location,
+              company: data.listing.company
+            } : null
+          };
+
+          setApplication(transformedData);
           setError(null);
-          console.log(`[${new Date().toISOString()}] [useApplicationRealtime] Initial data loaded. Status: ${data.interview_status}`);
+          console.log(`[${new Date().toISOString()}] [useApplicationRealtime] Initial data loaded. Status: ${interviewStatus}`);
         }
       } catch (err) {
         console.error(`[${new Date().toISOString()}] [useApplicationRealtime] Error:`, err);
@@ -56,17 +96,17 @@ export const useApplicationRealtime = (applicationId) => {
         },
         (payload) => {
           if (isMounted) {
-            const newStatus = payload.new.interview_status;
-            console.log(`[${new Date().toISOString()}] [useApplicationRealtime] Update received. New Interview Status: ${newStatus}`);
+            console.log(`[${new Date().toISOString()}] [useApplicationRealtime] Update received:`, payload.new);
             
             setApplication((prev) => {
               if (!prev) return null;
-              // Preserve the jobs relation when merging updates
+              // Preserve the listing/jobs relation when merging updates
               // Realtime updates don't include relations, so we need to keep them
               return { 
                 ...prev, 
                 ...payload.new,
-                jobs: prev.jobs // Explicitly preserve jobs relation
+                listing: prev.listing, // Explicitly preserve listing relation
+                jobs: prev.jobs // Explicitly preserve backward compat jobs
               };
             });
           }

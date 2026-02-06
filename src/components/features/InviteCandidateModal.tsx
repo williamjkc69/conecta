@@ -76,10 +76,39 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
 
   const fetchJobs = async () => {
     try {
+      // First, get the current user's company_id
+      const {
+        data: { user }
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        console.error("No authenticated user found");
+        return;
+      }
+
+      // Get the user's profile to find their company_id
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("company_id")
+        .eq("auth_user_id", user.id)
+        .single();
+
+      if (userError || !userData?.company_id) {
+        console.error("Error fetching user company:", userError);
+        toast({
+          variant: "destructive",
+          title: TITLES.ERROR,
+          description: MESSAGES.ERROR_LOADING_JOBS
+        });
+        return;
+      }
+
+      // Now fetch only listings for this company
       const { data, error } = await supabase
         .from("listings")
         .select("id, title, company_id, company:companies(name)")
-        .eq("status", "active");
+        .eq("status", "active")
+        .eq("company_id", userData.company_id);
 
       if (error) throw error;
       setJobs(data || []);
@@ -98,19 +127,46 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
 
     setSearching(true);
     try {
+      // First, get the candidate role_id
+      const { data: roleData } = await supabase
+        .from("roles")
+        .select("id")
+        .eq("name", "candidate")
+        .single();
+
+      if (!roleData) {
+        console.error("Candidate role not found in database");
+        toast({
+          variant: "destructive",
+          title: TITLES.ERROR,
+          description: MESSAGES.SEARCH_ERROR_DESC
+        });
+        setSearching(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from("users")
         .select(
           `
-            id, name, lastname, email, auth_user_id,
-            role:roles!inner(name)
+            id, name, lastname, email, auth_user_id, role_id,
+            role:roles(name)
         `
         )
         .eq("email", emailSearch.trim())
-        .eq("role.name", "candidate")
-        .single();
+        .eq("role_id", roleData.id)
+        .maybeSingle();
 
       if (error) {
+        console.error("Error searching candidate:", error);
+        setFoundCandidate(null);
+        toast({
+          variant: "destructive",
+          title: TITLES.ERROR,
+          description: MESSAGES.SEARCH_ERROR_DESC
+        });
+      } else if (!data) {
+        // No candidate found
         setFoundCandidate(null);
         toast({
           variant: "destructive",
@@ -118,6 +174,7 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
           description: MESSAGES.CANDIDATE_NOT_FOUND_DESC
         });
       } else {
+        // Candidate found
         const candidate = {
           ...data,
           full_name: `${data.name || ""} ${data.lastname || ""}`.trim()
@@ -129,7 +186,13 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
         });
       }
     } catch (error) {
-      console.error("Error searching candidate:", error);
+      console.error("Unexpected error searching candidate:", error);
+      setFoundCandidate(null);
+      toast({
+        variant: "destructive",
+        title: TITLES.ERROR,
+        description: MESSAGES.SEARCH_ERROR_DESC
+      });
     } finally {
       setSearching(false);
     }
@@ -191,12 +254,17 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
 
         if (foundCandidate && candidateId) {
           // Check existing
-          const { data: existingApp } = await supabase
+          const { data: existingApp, error: checkError } = await supabase
             .from("applications")
             .select("id")
             .eq("user_id", candidateId)
             .eq("listing_id", selectedJobId)
-            .single();
+            .maybeSingle();
+
+          if (checkError) {
+            console.error("Error checking existing application:", checkError);
+            throw checkError;
+          }
 
           if (existingApp) {
             toast({

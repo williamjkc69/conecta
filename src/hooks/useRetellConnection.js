@@ -159,9 +159,21 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
 
     try {
       console.log("[Retell] Updating application status to interviewing...");
+      
+      // Get the 'interviewing' status ID
+      const { data: statusData } = await supabase
+        .from('application_statuses')
+        .select('id')
+        .eq('name', 'interviewing')
+        .single();
+
+      if (!statusData) {
+        throw new Error('[Retell] Could not find interviewing status');
+      }
+
       const { error: updateError } = await supabase
         .from(TABLES.APPLICATIONS)
-        .update({ status: APPLICATION_STATUS.INTERVIEWING })
+        .update({ status_id: statusData.id })
         .eq('id', application.id);
 
       if (updateError) throw new Error(`[Retell] DB Error: ${updateError.message}`);
@@ -410,10 +422,17 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
       console.log("[Retell] Saving full interview data to Supabase...");
       setIsSaving(true);
       try {
+        // Get the 'completed' status ID
+        const { data: completedStatus } = await supabase
+          .from('application_statuses')
+          .select('id')
+          .eq('name', 'completed')
+          .single();
+
         const updatePayload = {
-          status: APPLICATION_STATUS.REVIEWED,
+          status_id: completedStatus?.id,
           call_id: callDetails.call_id,
-          duration: callDetails.duration,
+          interview_duration: callDetails.duration,
           recording_url: callDetails.recording_url,
           retell_llm_response_data: callDetails,
         };

@@ -10,7 +10,9 @@ interface Metadata {
   applicationId?: string;
   candidateName?: string;
   jobTitle?: string;
-  jobRequirements?: string[];
+  language?: string;
+  jobRequirements?: string | string[];
+  jobQuestions?: string;
 }
 
 interface RetellWebCallResponse {
@@ -78,8 +80,28 @@ export async function POST(req: NextRequest) {
       metadata
     };
 
-    // Optional: Add custom data to pass to the agent
-    requestBody.retell_llm_dynamic_variables = metadata;
+    // Convert all metadata values to strings for Retell dynamic variables
+    // Retell requires all values to be strings
+    const dynamicVariables: Record<string, string> = {};
+    if (metadata.userId) dynamicVariables.userId = String(metadata.userId);
+    if (metadata.applicationId)
+      dynamicVariables.applicationId = String(metadata.applicationId);
+    if (metadata.candidateName)
+      dynamicVariables.candidateName = String(metadata.candidateName);
+    if (metadata.jobTitle)
+      dynamicVariables.jobTitle = String(metadata.jobTitle);
+    if (metadata.language)
+      dynamicVariables.language = String(metadata.language);
+    if (metadata.jobRequirements) {
+      dynamicVariables.jobRequirements = Array.isArray(metadata.jobRequirements)
+        ? metadata.jobRequirements.join(", ")
+        : String(metadata.jobRequirements);
+    }
+    if (metadata.jobQuestions) {
+      dynamicVariables.jobQuestions = String(metadata.jobQuestions);
+    }
+
+    requestBody.retell_llm_dynamic_variables = dynamicVariables;
 
     console.log("[create-web-call] Request body:", JSON.stringify(requestBody));
 

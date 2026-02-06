@@ -238,12 +238,20 @@ export const useOpenAIRealtimeInterview = ({
     isPlayingRef.current = false;
     
     try {
-      // Update status to in_progress
-      log('DB', 'Updating status to in_progress');
-      await supabase.from('applications').update({ 
-          interview_status: 'in_progress',
-          status: 'interviewing'
-      }).eq('id', application?.id);
+      // Update status to interviewing
+      log('DB', 'Updating status to interviewing');
+      
+      const { data: statusData } = await supabase
+        .from('application_statuses')
+        .select('id')
+        .eq('name', 'interviewing')
+        .single();
+
+      if (statusData) {
+        await supabase.from('applications').update({ 
+          status_id: statusData.id
+        }).eq('id', application?.id);
+      }
 
       log('AUTH', 'Creating OpenAI session');
       
@@ -348,12 +356,18 @@ export const useOpenAIRealtimeInterview = ({
                 const currentTranscript = transcriptRef.current;
                 log("DB", "Saving transcript...", { items: currentTranscript.length });
 
+                // Get the 'completed' status ID
+                const { data: completedStatus } = await supabase
+                  .from('application_statuses')
+                  .select('id')
+                  .eq('name', 'completed')
+                  .single();
+
                 const { error } = await supabase
                     .from('applications')
                     .update({
                         transcript: currentTranscript,
-                        interview_status: 'completed',
-                        status: 'reviewed'
+                        status_id: completedStatus?.id
                     })
                     .eq('id', application.id);
 

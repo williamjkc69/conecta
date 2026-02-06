@@ -164,7 +164,7 @@ const CandidateDashboard = () => {
   const { user, profile, signOut, fetchProfile } = useAuthStore();
   const router = useRouter();
 
-  const { applications, loading } = useCandidateApplications(user?.id);
+  const { applications, loading } = useCandidateApplications(profile?.id);
 
   const [selectedApplication, setSelectedApplication] = useState<any>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -325,7 +325,13 @@ const CandidateDashboard = () => {
                     variant="outline"
                     className="text-[10px] border-slate-600 text-slate-400"
                   >
-                    {new Date(app.applied_at).toLocaleDateString()}
+                    {app.created_at
+                      ? new Date(app.created_at).toLocaleDateString("es-ES", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric"
+                        })
+                      : "N/A"}
                   </Badge>
                   {app.interview_status === "invited" && (
                     <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></span>
@@ -447,9 +453,15 @@ const CandidateDashboard = () => {
                           <Clock className="w-4 h-4 text-cyan-400" />
                           <p className="text-slate-300">
                             {LABELS.APPLIED_DATE}:{" "}
-                            {new Date(
-                              selectedApplication.applied_at
-                            ).toLocaleDateString()}
+                            {selectedApplication.created_at
+                              ? new Date(
+                                  selectedApplication.created_at
+                                ).toLocaleDateString("es-ES", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric"
+                                })
+                              : "N/A"}
                           </p>
                         </div>
                       </CardContent>

@@ -115,11 +115,28 @@ export const useInterviewState = ({
         console.log(
           `[${new Date().toISOString()}] [useInterviewState] Updating status from 'invited' to 'in_progress'`
         );
+
+        // Get the 'interviewing' status ID
+        const { data: statusData } = await supabase
+          .from("application_statuses")
+          .select("id")
+          .eq("name", "interviewing")
+          .single();
+
+        if (!statusData) {
+          console.error("Could not find interviewing status");
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "No se pudo iniciar la entrevista."
+          });
+          return;
+        }
+
         const { error } = await supabase
           .from(TABLES.APPLICATIONS)
           .update({
-            interview_status: INTERVIEW_STATUS.IN_PROGRESS,
-            status: APPLICATION_STATUS.INTERVIEWING
+            status_id: statusData.id
           })
           .eq("id", application.id);
 
