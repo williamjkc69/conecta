@@ -116,41 +116,37 @@ export const useInterviewState = ({
           `[${new Date().toISOString()}] [useInterviewState] Updating status from 'invited' to 'in_progress'`
         );
 
-        // Get the 'interviewing' status ID
-        const { data: statusData } = await supabase
-          .from("application_statuses")
-          .select("id")
-          .eq("name", "interviewing")
-          .single();
+        // Use API to update status (id 6) -> More reliable than client side RLS
+        const statusId = 6;
+        console.log(
+          `[useInterviewState] Calling API to set status ${statusId} (interviewing)`
+        );
 
-        if (!statusData) {
-          console.error("Could not find interviewing status");
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "No se pudo iniciar la entrevista."
+        try {
+          const response = await fetch("/api/set-application-status", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              applicationId: application.id,
+              status: statusId
+            })
           });
-          return;
-        }
 
-        const { error } = await supabase
-          .from(TABLES.APPLICATIONS)
-          .update({
-            status_id: statusData.id
-          })
-          .eq("id", application.id);
-
-        if (error) {
+          if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error || "Failed to update status via API");
+          }
+        } catch (apiError: any) {
           console.error(
-            `[${new Date().toISOString()}] [useInterviewState] Error updating status:`,
-            error
+            "[useInterviewState] Status Update API failed:",
+            apiError
           );
           toast({
             variant: "destructive",
             title: "Error",
-            description: "No se pudo iniciar la entrevista."
+            description:
+              "No se pudo actualizar el estado. Continuando de todos modos..."
           });
-          return;
         }
       }
 

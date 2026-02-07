@@ -39,25 +39,30 @@ const statusConfig: Record<string, StatusConfigItem> = {
     text: CANDIDATE_STATUS_LABELS.interviewing,
     color: "bg-purple-500/20 text-purple-300"
   },
-  reviewed: {
+  completed: {
+    icon: <Clock className="w-4 h-4" />,
+    text: "En Revisión",
+    color: "bg-orange-500/20 text-orange-400"
+  },
+  approved: {
     icon: <Check className="w-4 h-4" />,
-    text: CANDIDATE_STATUS_LABELS.reviewed,
+    text: "Aprobado",
     color: "bg-green-500/20 text-green-400"
   },
   rejected: {
     icon: <X className="w-4 h-4" />,
-    text: CANDIDATE_STATUS_LABELS.rejected,
+    text: "Rechazado",
     color: "bg-red-500/20 text-red-400"
   },
-  hired: {
-    icon: <Check className="w-4 h-4" />,
-    text: CANDIDATE_STATUS_LABELS.hired,
-    color: "bg-emerald-500/20 text-emerald-400"
+  pending: {
+    icon: <Clock className="w-4 h-4" />,
+    text: "Pendiente",
+    color: "bg-gray-500/20 text-gray-400"
   }
 };
 
 interface Candidate {
-  id: string;
+  id: string; // application id
   status: string;
   candidateName: string;
   candidateEmail: string;
@@ -73,9 +78,14 @@ interface Job {
 interface CandidateListProps {
   candidates: Candidate[];
   jobs: Job[];
+  onViewCandidate?: (candidate: Candidate) => void;
 }
 
-const CandidateList: React.FC<CandidateListProps> = ({ candidates, jobs }) => {
+const CandidateList: React.FC<CandidateListProps> = ({
+  candidates,
+  jobs,
+  onViewCandidate
+}) => {
   const { toast } = useToast();
 
   const getJobTitle = (jobId: string) => {
@@ -102,13 +112,21 @@ const CandidateList: React.FC<CandidateListProps> = ({ candidates, jobs }) => {
           color: "bg-gray-500/20 text-gray-400"
         };
 
+        // Show view button for completed, approved, rejected
+        const showViewButton = ["completed", "approved", "rejected"].includes(
+          candidate.status
+        );
+
         return (
           <motion.div
             key={candidate.id}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
-            className="bg-slate-800/50 rounded-xl p-6 border border-slate-700 hover:border-cyan-500/50 transition-all"
+            onClick={() =>
+              showViewButton && onViewCandidate && onViewCandidate(candidate)
+            }
+            className={`bg-slate-800/50 rounded-xl p-6 border border-slate-700 transition-all ${showViewButton ? "hover:border-cyan-500/50 cursor-pointer" : ""}`}
           >
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex-1">
@@ -153,12 +171,13 @@ const CandidateList: React.FC<CandidateListProps> = ({ candidates, jobs }) => {
               <div className="flex gap-2">
                 {candidate.status === "invited" && (
                   <Button
-                    onClick={() =>
+                    onClick={(e) => {
+                      e.stopPropagation();
                       toast({
                         title: TITLES.NOT_IMPLEMENTED,
                         description: MESSAGES.RESEND_FEATURE_DESC
-                      })
-                    }
+                      });
+                    }}
                     variant="outline"
                     className="border-blue-500/50 text-cyan-400 hover:bg-blue-500/10"
                   >
@@ -166,19 +185,16 @@ const CandidateList: React.FC<CandidateListProps> = ({ candidates, jobs }) => {
                     {BUTTONS.RESEND}
                   </Button>
                 )}
-                {candidate.status === "reviewed" && (
+                {showViewButton && (
                   <Button
                     onClick={() =>
-                      toast({
-                        title: TITLES.NOT_IMPLEMENTED,
-                        description: MESSAGES.COMING_SOON_FEATURE
-                      })
+                      onViewCandidate && onViewCandidate(candidate)
                     }
                     variant="outline"
                     className="border-green-500/50 text-green-400 hover:bg-green-500/10"
                   >
                     <Eye className="w-4 h-4 mr-2" />
-                    {BUTTONS.VIEW_ANALYSIS}
+                    {"Ver Entrevista"}
                   </Button>
                 )}
               </div>

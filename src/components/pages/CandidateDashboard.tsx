@@ -47,44 +47,96 @@ import { CANDIDATE_STATUS_LABELS } from "@/constants/options";
 */
 
 const StatusTimeline = ({ status }: { status: string }) => {
-  const statuses = ["applied", "interviewing", "reviewed", "hired"];
-  const currentStatusIndex = statuses.indexOf(status);
+  // Visualization steps requested by user
+  // Postulado = invited
+  // En Entrevista = interviewing
+  // En Revisión = completed
+  // Contratado/Rechazado = approved/rejected
 
-  const getStatusLabel = (s: string) => {
-    return (
-      CANDIDATE_STATUS_LABELS[s as keyof typeof CANDIDATE_STATUS_LABELS] || s
-    );
-  };
+  const steps = [
+    { id: "invited", label: "Postulado" },
+    { id: "interviewing", label: "En Entrevista" },
+    { id: "completed", label: "En Revisión" },
+    { id: "decision", label: "Respuesta" } // Will display Contratado/Rechazado dynamically
+  ];
+
+  let currentStepIndex = 0;
+  let decisionLabel = "Respuesta";
+  let decisionColor = "bg-slate-700"; // Default gray
+
+  if (status === "invited") {
+    currentStepIndex = 0;
+  } else if (status === "interviewing") {
+    currentStepIndex = 1;
+  } else if (status === "completed") {
+    currentStepIndex = 2;
+  } else if (status === "approved") {
+    currentStepIndex = 3;
+    decisionLabel = "Contratado";
+    decisionColor = "bg-green-500";
+  } else if (status === "rejected") {
+    currentStepIndex = 3;
+    decisionLabel = "No Seleccionado";
+    decisionColor = "bg-red-500";
+  } else if (status === "pending") {
+    // Treat 'pending' as equivalent to invited or just applied for now
+    currentStepIndex = 0;
+  }
 
   return (
     <div className="flex items-center space-x-2 md:space-x-4">
-      {statuses.map((s, index) => (
-        <React.Fragment key={s}>
-          <div className="flex flex-col items-center">
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
-                index <= currentStatusIndex ? "bg-cyan-500" : "bg-slate-700"
-              }`}
-            >
-              {index < currentStatusIndex ? (
-                <Check className="w-4 h-4 text-white" />
-              ) : index === currentStatusIndex ? (
-                <div className="w-2 h-2 rounded-full bg-white" />
-              ) : null}
+      {steps.map((step, index) => {
+        const isCompleted = index < currentStepIndex;
+        const isCurrent = index === currentStepIndex;
+
+        let circleColor = "bg-slate-700";
+        if (isCompleted) circleColor = "bg-cyan-500";
+        else if (isCurrent) {
+          if (step.id === "decision" && status === "rejected")
+            circleColor = "bg-red-500";
+          else if (step.id === "decision" && status === "approved")
+            circleColor = "bg-green-500";
+          else circleColor = "bg-cyan-500";
+        }
+
+        const label =
+          step.id === "decision" &&
+          (status === "approved" || status === "rejected")
+            ? decisionLabel
+            : step.label;
+
+        return (
+          <React.Fragment key={step.id}>
+            <div className="flex flex-col items-center">
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${circleColor}`}
+              >
+                {isCompleted ? (
+                  <Check className="w-4 h-4 text-white" />
+                ) : isCurrent ? (
+                  <div className="w-2 h-2 rounded-full bg-white" />
+                ) : null}
+              </div>
+              <span
+                className={`mt-2 text-xs text-center ${
+                  index <= currentStepIndex
+                    ? "text-slate-100 font-semibold"
+                    : "text-slate-400"
+                }`}
+              >
+                {label}
+              </span>
             </div>
-            <span
-              className={`mt-2 text-xs text-center ${index <= currentStatusIndex ? "text-slate-100 font-semibold" : "text-slate-400"}`}
-            >
-              {getStatusLabel(s)}
-            </span>
-          </div>
-          {index < statuses.length - 1 && (
-            <div
-              className={`flex-1 h-1 rounded-full transition-all duration-300 ${index < currentStatusIndex ? "bg-cyan-500" : "bg-slate-700"}`}
-            />
-          )}
-        </React.Fragment>
-      ))}
+            {index < steps.length - 1 && (
+              <div
+                className={`flex-1 h-1 rounded-full transition-all duration-300 ${
+                  index < currentStepIndex ? "bg-cyan-500" : "bg-slate-700"
+                }`}
+              />
+            )}
+          </React.Fragment>
+        );
+      })}
     </div>
   );
 };

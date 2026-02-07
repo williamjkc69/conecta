@@ -37,34 +37,61 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
   const interviewStatus = application.interview_status || "pending";
   const mainStatus = application.status;
 
-  // 1. Completed / Reviewed / Hired / Rejected
+  // 1. Completed / Reviewed / Approved / Rejected
   if (
     interviewStatus === "completed" ||
-    mainStatus === "reviewed" ||
-    mainStatus === "hired" ||
+    mainStatus === "completed" ||
+    mainStatus === "approved" ||
     mainStatus === "rejected"
   ) {
+    let badgeText = "En Revisión";
+    let badgeColor = "border-blue-500/50 text-blue-400 bg-blue-900/10";
+    let titleText = "En Revisión";
+    let descText =
+      "Tu entrevista ha finalizado. Estamos revisando tus resultados.";
+    let icon = <Clock className="w-6 h-6 text-blue-500" />;
+
+    if (mainStatus === "approved") {
+      badgeText = "Contratado";
+      badgeColor = "border-green-500/50 text-green-400 bg-green-900/10";
+      titleText = "¡Felicidades!";
+      descText =
+        "Has sido seleccionado para esta posición. Nos pondremos en contacto contigo pronto.";
+      icon = <CheckCircle className="w-6 h-6 text-green-500" />;
+    } else if (mainStatus === "rejected") {
+      badgeText = "No Seleccionado";
+      badgeColor = "border-red-500/50 text-red-400 bg-red-900/10";
+      titleText = "Proceso Finalizado";
+      descText =
+        "Gracias por tu interés, pero hemos decidido avanzar con otros candidatos.";
+      icon = <CheckCircle className="w-6 h-6 text-red-500" />; // Or X icon if available, standardizing on CheckCircle for completed process implies 'Done'
+    } else {
+      // Default completed/reviewed
+      badgeText = "En Revisión";
+      titleText = "Proceso Finalizado";
+      descText =
+        "Tu entrevista ha finalizado. El equipo está revisando tu perfil.";
+      icon = <CheckCircle className="w-6 h-6 text-blue-500" />;
+    }
+
     console.log(
-      `[${new Date().toISOString()}] [ApplicationCard] Rendering COMPLETED branch`
+      `[${new Date().toISOString()}] [ApplicationCard] Rendering COMPLETED/DECISION branch: ${mainStatus}`
     );
     return (
       <Card className="glass-effect border-slate-700/80 relative overflow-hidden">
         <div className="absolute top-0 right-0 p-2">
-          <Badge
-            variant="outline"
-            className="border-green-500/50 text-green-400 bg-green-900/10"
-          >
-            {LABELS.COMPLETED_BADGE}
+          <Badge variant="outline" className={badgeColor}>
+            {badgeText}
           </Badge>
         </div>
         <CardHeader>
           <CardTitle className="text-slate-200 flex items-center gap-2">
-            <CheckCircle className="w-6 h-6 text-green-500" />
-            {TITLES.PROCESS_FINISHED}
+            {icon}
+            {titleText}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-slate-400">{MESSAGES.PROCESS_FINISHED_DESC}</p>
+          <p className="text-slate-400">{descText}</p>
         </CardContent>
       </Card>
     );

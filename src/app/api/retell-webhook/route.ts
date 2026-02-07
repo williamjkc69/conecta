@@ -64,11 +64,17 @@ export async function POST(request: NextRequest) {
         // Call info
         call_id: call.call_id,
         recording_url: call.recording_url,
-        interview_duration: Math.round((call.duration_ms || 0) / 60000), // minutes
+        interview_duration: Math.round((call.duration_ms || 0) / 1000), // seconds
+        transcript:
+          typeof transcript === "string"
+            ? transcript
+            : JSON.stringify(transcript), // Save transcript to applications
 
         // High-level feedback
         interview_decision: analysis.recommendation.decision,
-        feedback: analysis.recommendation.reasoning, // Short summary or reasoning
+        feedback: analysis.recommendation.reasoning,
+        ai_summary: analysis.recommendation.reasoning, // Duplicate for consistency
+        ai_score: analysis.overall_assessment.technical_competency_score,
 
         updated_at: new Date().toISOString()
       })

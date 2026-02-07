@@ -22,6 +22,7 @@ import JobFormModal from "@/components/features/JobFormModal";
 import JobDetailsModal from "@/components/features/JobDetailsModal";
 import JobCard from "@/components/features/JobCard";
 import CandidateList from "@/components/features/CandidateList";
+import CompanyCandidateModal from "@/components/features/CompanyCandidateModal";
 import { supabase } from "@/lib/supabase";
 import InviteCandidateModal from "@/components/features/InviteCandidateModal";
 import AssignCandidateModal from "@/components/features/AssignCandidateModal";
@@ -61,6 +62,8 @@ const CompanyDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [loadingData, setLoadingData] = useState(true);
   const [statsData, setStatsData] = useState({ interviews: 0, applicants: 0 });
+
+  const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
 
   // Loading states for async operations
   const [isCreatingJob, setIsCreatingJob] = useState(false);
@@ -155,9 +158,7 @@ const CompanyDashboard: React.FC = () => {
       setStatsData({
         applicants: appsData.length,
         interviews: appsData.filter((app: any) =>
-          ["interviewing", "completed", "approved"].includes(
-            app.status?.name || ""
-          )
+          ["completed", "approved", "rejected"].includes(app.status?.name || "")
         ).length
       });
 
@@ -179,14 +180,23 @@ const CompanyDashboard: React.FC = () => {
           const fullName = user
             ? `${user.name || ""} ${user.lastname || ""}`.trim()
             : "Nombre no disponible";
+          const relatedJob = listingsWithCounts.find(
+            (j: any) => j.id === app.listing_id
+          );
 
           return {
             id: app.id,
             status: app.status?.name || "pending",
-            job_id: app.listing_id, // map back for UI consistency if needed
+            job_id: app.listing_id,
+            jobTitle: relatedJob?.title || "Vacante",
             appliedAt: app.created_at,
             candidateName: fullName || "Nombre no disponible",
-            candidateEmail: user?.email || "Email no disponible"
+            candidateEmail: user?.email || "Email no disponible",
+            interview_duration: app.interview_duration,
+            transcript: app.transcript,
+            ai_score: app.ai_score,
+            ai_summary: app.ai_summary,
+            messages_count: app.messages_count
           };
         });
         setCandidates(formattedCandidates);
@@ -204,6 +214,60 @@ const CompanyDashboard: React.FC = () => {
       setLoadingData(false);
     }
   }, [profile, toast]);
+
+  const updateCandidateStatus = async (
+    applicationId: string,
+    statusName: string,
+    successMessage: string
+  ) => {
+    try {
+      const { data: statusData, error: statusError } = await supabase
+        .from("application_statuses")
+        .select("id")
+        .eq("name", statusName)
+        .single();
+
+      if (statusError || !statusData)
+        throw new Error(`Status '${statusName}' not found`);
+
+      const { error: updateError } = await supabase
+        .from("applications")
+        .update({ status_id: statusData.id })
+        .eq("id", applicationId);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: TITLES.SUCCESS,
+        description: successMessage,
+        className:
+          statusName === "rejected"
+            ? "bg-red-900 border-red-800 text-white"
+            : "bg-green-900 border-green-800 text-white"
+      });
+
+      fetchCompanyData();
+    } catch (error: any) {
+      console.error(`Error updating status to ${statusName}:`, error);
+      toast({
+        title: TITLES.ERROR,
+        description: "No se pudo actualizar el estado del candidato.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleApproveCandidate = async (appId: string) => {
+    await updateCandidateStatus(
+      appId,
+      "approved",
+      "Candidato aprobado correctamente."
+    );
+  };
+
+  const handleRejectCandidate = async (appId: string) => {
+    await updateCandidateStatus(appId, "rejected", "Candidato rechazado.");
+  };
 
   useEffect(() => {
     fetchCompanyData();
@@ -503,8 +567,8 @@ const CompanyDashboard: React.FC = () => {
     }
   };
 
-  const pendingInterviewsCount = candidates.filter(
-    (c) => c.status === "applied"
+  const pendingInterviewsCount = candidates.filter((c) =>
+    ["invited", "interviewing", "pending"].includes(c.status)
   ).length;
 
   const stats = [
@@ -738,7 +802,11 @@ const CompanyDashboard: React.FC = () => {
                   </div>
                 )}
                 {activeTab === "candidates" && (
-                  <CandidateList candidates={candidates} jobs={jobs} />
+                  <CandidateList
+                    candidates={candidates}
+                    jobs={jobs}
+                    onViewCandidate={setSelectedCandidate}
+                  />
                 )}
                 {activeTab === "analytics" && (
                   <div className="flex flex-col items-center justify-center text-center h-64">
@@ -802,6 +870,15 @@ const CompanyDashboard: React.FC = () => {
           isDeleting={isDeletingJob}
         />
       )}
+
+      {/* Candidate Modal */}
+      <CompanyCandidateModal
+        isOpen={!!selectedCandidate}
+        onClose={() => setSelectedCandidate(null)}
+        candidate={selectedCandidate}
+        onApprove={handleApproveCandidate}
+        onReject={handleRejectCandidate}
+      />
 
       {!loadingProfile && profile && !profile.company && profile?.id && (
         <CompanyOnboardingModal

@@ -147,6 +147,18 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
     onInterviewCompleted
   });
 
+  const isCallActive = callState === "connecting" || callState === "connected";
+
+  const handleStartInterview = async (deviceId?: string) => {
+    const confirmed = window.confirm(
+      "⚠️ AVISO IMPORTANTE:\n\nUna vez que inicies la entrevista, no podrás pausarla ni reanudarla.\nSi sales de la página o finalizas la llamada antes de tiempo, tu postulación se marcará automáticamente como completada/finalizada.\n\n¿Estás listo para comenzar?"
+    );
+
+    if (confirmed) {
+      await startInterview(deviceId);
+    }
+  };
+
   // 7) Add logging to show application.interview_status and callState
   useEffect(() => {
     const timestamp = new Date().toISOString();
@@ -157,7 +169,36 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
     );
     console.log(`   - Call State: ${callState}`);
     console.log(`   - Can Interview: ${canInterview}`);
-  }, [application, callState, canInterview, applicationId]);
+
+    // Redirection Logic
+    if (!loading && application) {
+      const status = (application as any).interview_status;
+      const isInvited = status === INTERVIEW_STATUS.INVITED;
+      const isInProgress = status === INTERVIEW_STATUS.IN_PROGRESS;
+
+      // Check if we are locally active.
+      // connecting/connected means we are in session.
+
+      // 1. If not invited and not in progress (e.g. completed/reviewed) -> Redirect
+      if (!isInvited && !isInProgress) {
+        console.warn("[InterviewPage] Status invalid for entry:", status);
+        router.push("/candidate-dashboard");
+        return;
+      }
+
+      // 2. If in progress but call not active locally (e.g. page refresh) -> Redirect
+      // Be careful: when starting, status might update before callState?
+      // Typically callState updates to connecting immediately on button click.
+      // But if we load page and status IS in_progress (from DB), callState IS idle. Redirect. Correct.
+      if (isInProgress && !isCallActive && callState !== "ended") {
+        console.warn(
+          "[InterviewPage] In progress but call idle (refresh detected). Redirecting."
+        );
+        router.push("/candidate-dashboard");
+        return;
+      }
+    }
+  }, [application, callState, canInterview, applicationId, loading, router]);
 
   const candidateName = user?.user_metadata?.full_name || "Candidato";
   const interviewDate = new Date().toLocaleDateString("es-ES", {
@@ -282,27 +323,19 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
       />
 
       <header className="w-full max-w-4xl text-center mb-6 relative">
-        <Button
-          variant="ghost"
-          className="absolute left-0 top-0 text-slate-400 hover:text-white hidden md:flex"
-          onClick={() => {
-            // If call is active, show confirmation
-            if (callState === "connected" || callState === "connecting") {
-              const confirmed = window.confirm(
-                MESSAGES.CONFIRM_LEAVE_INTERVIEW
-              );
-              if (!confirmed) return;
-
-              // End the call before leaving
-              if (stopInterview) {
-                stopInterview(false);
-              }
-            }
-            router.push("/candidate-dashboard");
-          }}
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" /> {BUTTONS.EXIT}
-        </Button>
+        {/* Hide back button if call is active (connecting or connected) */}
+        {!isCallActive && (
+          <Button
+            variant="ghost"
+            className="absolute left-0 top-0 text-slate-400 hover:text-white hidden md:flex"
+            onClick={() => {
+              // Standard navigation back
+              router.push("/candidate-dashboard");
+            }}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" /> {BUTTONS.EXIT}
+          </Button>
+        )}
         <h1 className="text-2xl md:text-3xl font-bold gradient-text">
           {(application as any)?.jobs?.title || TITLES.EVALUATION_INTERVIEW}
         </h1>
@@ -344,7 +377,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
           ) : (
             <InterviewControls
               callState={callState as any}
-              startInterview={startInterview}
+              startInterview={handleStartInterview}
               stopInterview={stopInterview}
               interviewStatus={(application as any)?.interview_status}
               canInterview={canInterview}

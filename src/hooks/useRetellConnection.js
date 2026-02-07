@@ -93,25 +93,39 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
   }, []);
 
   // Warn user when leaving page during active call
-  // Warn user when leaving page during active call
   useEffect(() => {
     const handleBeforeUnload = (e) => {
-      // Use ref to get current state without re-running effect
       const currentState = callStateRef.current;
       if (currentState === CALL_STATES.CONNECTED || currentState === CALL_STATES.CONNECTING) {
-        const message = 'Tienes una entrevista en curso. Si sales ahora, perderás todo el progreso. ¿Estás seguro?';
+        const message = 'Tienes una entrevista en curso. Si sales ahora, se marcará como completa. ¿Estás seguro?';
         e.preventDefault();
         e.returnValue = message;
         return message;
       }
     };
 
+    const handleUnload = () => {
+      const currentState = callStateRef.current;
+      if (currentState === CALL_STATES.CONNECTED || currentState === CALL_STATES.CONNECTING) {
+         // Send Beacon to mark as completed (ID 2)
+         const payload = JSON.stringify({ 
+             applicationId: application?.id, 
+             status: 2 // Send ID directly
+         });
+         const blob = new Blob([payload], { type: 'application/json' });
+         navigator.sendBeacon('/api/set-application-status', blob);
+      }
+    };
+
     window.addEventListener('beforeunload', handleBeforeUnload);
+    // Use pagehide for broader compatibility (mobile/desktop) for cleanup on navigation
+    window.addEventListener('pagehide', handleUnload);
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('pagehide', handleUnload);
     };
-  }, []);
+  }, [application?.id]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -158,25 +172,18 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
     setTranscript([]);
 
     try {
-      console.log("[Retell] Updating application status to interviewing...");
+      console.log("[Retell] Updating application status to interviewing (ID: 6)...");
       
-      // Get the 'interviewing' status ID
-      const { data: statusData } = await supabase
-        .from('application_statuses')
-        .select('id')
-        .eq('name', 'interviewing')
-        .single();
-
-      if (!statusData) {
-        throw new Error('[Retell] Could not find interviewing status');
-      }
-
       const { error: updateError } = await supabase
         .from(TABLES.APPLICATIONS)
-        .update({ status_id: statusData.id })
+        .update({ status_id: 6 }) // Hardcoded ID 6
         .eq('id', application.id);
 
-      if (updateError) throw new Error(`[Retell] DB Error: ${updateError.message}`);
+      if (updateError) {
+          console.error(`[Retell] DB Error updating status to 6: ${updateError.message}`);
+          // Don't throw, proceed with interview start even if status update fails (e.g. RLS issues)
+          // throw new Error(`[Retell] DB Error: ${updateError.message}`);
+      }
 
       console.log("[Retell] Initializing Retell client...");
       const client = new RetellWebClient();
@@ -415,48 +422,51 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
       retellClientRef.current.stopCall();
     }
 
-    // Only save and trigger completion if we have valid call details
-    const hasValidCallData = callDetails && (callDetails.call_id || callDetails.transcript);
-    
-    if (application?.id && hasValidCallData) {
-      console.log("[Retell] Saving full interview data to Supabase...");
-      setIsSaving(true);
-      try {
-        // Get the 'completed' status ID
-        const { data: completedStatus } = await supabase
-          .from('application_statuses')
-          .select('id')
-          .eq('name', 'completed')
-          .single();
+    // Always try to set status to completed (2) when stopping, unless it was just a connection error
+    if (application?.id) {
+       const completedStatusId = 2;
+       
+       const hasValidCallData = callDetails && (callDetails.call_id || callDetails.transcript);
+       
+       const payload = {
+          applicationId: application.id,
+          status: completedStatusId, // Send ID 2 directly
+          ...(hasValidCallData ? {
+             call_id: callDetails.call_id,
+             interview_duration: callDetails.duration,
+             recording_url: callDetails.recording_url,
+             retell_llm_response_data: callDetails,
+          } : {})
+       };
 
-        const updatePayload = {
-          status_id: completedStatus?.id,
-          call_id: callDetails.call_id,
-          interview_duration: callDetails.duration,
-          recording_url: callDetails.recording_url,
-          retell_llm_response_data: callDetails,
-        };
+       try {
+          // Use sendBeacon if we are unloading or simple fetch?
+          // prefer fetch to handle response/errors if we are still on page.
+          // IF the page is about to close, stopInterview usually isn't the trigger (handleUnload is).
+          // But "Finalizar" calls stopInterview.
+          const response = await fetch('/api/set-application-status', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+          });
+          
+          if (!response.ok) {
+             const resJson = await response.json();
+             throw new Error(resJson.error || "API failed");
+          }
+          
+          if (hasValidCallData) {
+             onInterviewCompleted({ transcript: callDetails?.transcript });
+          }
 
-        const { error: updateError } = await supabase
-          .from(TABLES.APPLICATIONS)
-          .update(updatePayload)
-          .eq('id', application.id);
-
-        if (updateError) throw updateError;
-        console.log("[Retell] Interview data saved successfully.");
-        
-        // Only call completion callback if we successfully saved
-        onInterviewCompleted({ transcript: callDetails?.transcript });
-      } catch (err) {
-        console.error("[Retell] Failed to save interview data:", err);
-      } finally {
+       } catch (err) {
+          console.error("[Retell] Failed to save interview data via API:", err);
+          // Fallback to sendBeacon?
+          // const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+          // navigator.sendBeacon('/api/set-application-status', blob);
+       } finally {
         setIsSaving(false);
-      }
-    } else {
-      console.log("[Retell] No valid call data to save. Call may have ended prematurely.");
-      if (!hasValidCallData) {
-        console.warn("[Retell] Call ended without valid data - this might indicate an error or immediate disconnect");
-      }
+       }
     }
 
     cleanup();

@@ -34,32 +34,32 @@ export const useApplicationRealtime = (applicationId) => {
             status:application_statuses(name)
           `)
           .eq('id', applicationId)
+          .in('status_id', [1, 6, 2]) // Allow Invited (1), Interviewing (6), Completed (2)
           .single();
 
-        if (error) throw error;
+        if (error) {
+          if (error.code === 'PGRST116') {
+             // PGRST116 is "The result contains 0 rows"
+             throw new Error("Application not found or access denied (Status not Invited/Interviewing/Completed)");
+          }
+          throw error;
+        }
         
         if (isMounted) {
-          // Transform data to match expected format
-          const statusName = Array.isArray(data.status) 
-            ? data.status[0]?.name 
-            : data.status?.name;
-          
-          // Derive interview_status from status
-          let interviewStatus = "pending";
-          if (statusName === "completed") {
-            interviewStatus = "completed";
-          } else if (statusName === "invited") {
-            interviewStatus = "invited";
-          } else if (statusName === "interviewing") {
-            interviewStatus = "in_progress";
-          } else if (data.call_id) {
-            interviewStatus = "in_progress";
-          }
+          // Helper to derive status strings from ID
+          const deriveStatus = (statusId) => {
+             if (statusId === 1) return { status: 'invited', interview_status: 'invited' };
+             if (statusId === 6) return { status: 'interviewing', interview_status: 'in_progress' };
+             if (statusId === 2) return { status: 'completed', interview_status: 'completed' };
+             return { status: 'pending', interview_status: 'pending' };
+          };
+
+          const { status, interview_status } = deriveStatus(data.status_id);
 
           const transformedData = {
             ...data,
-            status: statusName || "pending",
-            interview_status: interviewStatus,
+            status,
+            interview_status,
             // Add backward compatibility fields
             jobs: data.listing ? {
               title: data.listing.title,
@@ -71,7 +71,7 @@ export const useApplicationRealtime = (applicationId) => {
 
           setApplication(transformedData);
           setError(null);
-          console.log(`[${new Date().toISOString()}] [useApplicationRealtime] Initial data loaded. Status: ${interviewStatus}`);
+          console.log(`[${new Date().toISOString()}] [useApplicationRealtime] Initial data loaded. StatusId: ${data.status_id} -> ${interview_status}`);
         }
       } catch (err) {
         console.error(`[${new Date().toISOString()}] [useApplicationRealtime] Error:`, err);
@@ -83,7 +83,7 @@ export const useApplicationRealtime = (applicationId) => {
 
     fetchApplication();
 
-    // Try to set up realtime subscription, but don't fail if it doesn't work
+    // Try to set up realtime subscription
     const channel = supabase
       .channel(`application-${applicationId}`)
       .on(
@@ -100,13 +100,23 @@ export const useApplicationRealtime = (applicationId) => {
             
             setApplication((prev) => {
               if (!prev) return null;
-              // Preserve the listing/jobs relation when merging updates
-              // Realtime updates don't include relations, so we need to keep them
+              
+              const deriveStatus = (statusId) => {
+                 if (statusId === 1) return { status: 'invited', interview_status: 'invited' };
+                 if (statusId === 6) return { status: 'interviewing', interview_status: 'in_progress' };
+                 if (statusId === 2) return { status: 'completed', interview_status: 'completed' };
+                 return { status: 'pending', interview_status: 'pending' };
+              };
+
+              const { status, interview_status } = deriveStatus(payload.new.status_id);
+
               return { 
                 ...prev, 
                 ...payload.new,
-                listing: prev.listing, // Explicitly preserve listing relation
-                jobs: prev.jobs // Explicitly preserve backward compat jobs
+                status,
+                interview_status,
+                listing: prev.listing, 
+                jobs: prev.jobs 
               };
             });
           }
