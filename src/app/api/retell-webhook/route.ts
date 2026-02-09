@@ -23,7 +23,18 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    //no trae nada, y no inserta nada, antes funcionaba, ahora ya no
+    console.log("applicationId", applicationId);
+    const { data: appData, error: appDatError } = await supabase
+      .from("applications")
+      .select("listing_id")
+      .eq("id", applicationId)
+      .single();
 
+    if (appDatError || !appData) {
+      console.error("Error fetching application listing_id:", appDatError);
+      throw new Error("Application not found");
+    }
     // Extract transcript
     const transcript = call.transcript_object || call.transcript || [];
 
@@ -38,86 +49,141 @@ export async function POST(request: NextRequest) {
     );
 
     console.log("[retell-webhook] Analysis complete:", {
-      decision: analysis.recommendation.decision,
-      score: analysis.overall_assessment.technical_competency_score
+      decision: analysis.recommendation?.decision,
+      score: analysis.overall_assessment?.technical_competency_score
     });
 
-    // 1. Fetch Request Status ID for 'completed'
-    // In a real scenario, cache this or use a constant if IDs are static.
-    // For now, we query.
+    // // 1. Get Application & Listing Info to link questions
+    // const { data: appData, error: appDatError } = await supabase
+    //   .from("applications")
+    //   .select("listing_id")
+    //   .eq("id", applicationId)
+    //   .single();
+
+    // if (appDatError || !appData) {
+    //   console.error("Error fetching application listing_id:", appDatError);
+    //   throw new Error("Application not found");
+    // }
+
+    const listingId = appData.listing_id;
+
+    // 2. Fetch Listing Questions for matching
+    const { data: listingQuestions } = await supabase
+      .from("listing_questions")
+      .select("id, question")
+      .eq("listing_id", listingId);
+
+    // 3. Store User Responses in interview_responses table
+    if (
+      analysis.custom_questions_evaluation &&
+      Array.isArray(analysis.custom_questions_evaluation)
+    ) {
+      const responsesToInsert = analysis.custom_questions_evaluation.map(
+        (evalItem: any) => {
+          // Find matching question ID by loose text match
+          const matchedQuestion = listingQuestions?.find(
+            (q) =>
+              q.question?.trim().toLowerCase() ===
+                evalItem.question?.trim().toLowerCase() ||
+              evalItem.question
+                ?.toLowerCase()
+                .includes(q.question?.toLowerCase())
+          );
+
+          return {
+            application_id: Number(applicationId),
+            question_id: matchedQuestion?.id || null,
+            question_text: evalItem.question,
+            response: evalItem.answer_summary || "No answer provided",
+            quality: evalItem.quality
+            // score: ? // LLM didn't return score per question in schema
+          };
+        }
+      );
+      console.log("responsesToInsert", responsesToInsert);
+
+      // if (responsesToInsert.length > 0) {
+      //   const { error: respError } = await supabase
+      //     .from("interview_responses")
+      //     .insert(responsesToInsert);
+
+      //   if (respError) console.error("Error inserting responses:", respError);
+      //   else
+      //     console.log(
+      //       `Inserted ${responsesToInsert.length} interview responses.`
+      //     );
+      // }
+    }
+
+    // 4. Fetch Status ID for 'completed'
     const { data: statusData } = await supabase
       .from("application_statuses")
       .select("id")
       .eq("name", "completed")
       .single();
 
-    const completedStatusId = statusData?.id;
+    const completedStatusId = statusData?.id || 2; // Default to 2 if not found
 
-    // 2. Update Application (Summary Data)
-    const { error: appError } = await supabase
-      .from("applications")
-      .update({
-        // Link fields
-        status_id: completedStatusId,
-        completed_at: new Date().toISOString(),
+    // 5. Update Application with Score and Decision
+    const techScore = analysis.overall_assessment?.technical_competency_score;
+    const applicationData = {
+      status_id: completedStatusId,
+      completed_at: new Date().toISOString(),
 
-        // Call info
-        call_id: call.call_id,
-        recording_url: call.recording_url,
-        interview_duration: Math.round((call.duration_ms || 0) / 1000), // seconds
-        transcript:
-          typeof transcript === "string"
-            ? transcript
-            : JSON.stringify(transcript), // Save transcript to applications
+      call_id: call.call_id,
+      recording_url: call.recording_url,
+      interview_duration: Math.round((call.duration_ms || 0) / 1000), // seconds
 
-        // High-level feedback
-        interview_decision: analysis.recommendation.decision,
-        feedback: analysis.recommendation.reasoning,
-        ai_summary: analysis.recommendation.reasoning, // Duplicate for consistency
-        ai_score: analysis.overall_assessment.technical_competency_score,
+      // transcript:
+      //   typeof transcript === "string"
+      //     ? transcript
+      //     : JSON.stringify(transcript),
 
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", applicationId); // Postgres casts string "123" to int 123 if needed
+      // New fields
+      technical_competency_score:
+        typeof techScore === "number" ? techScore : null,
+      interview_decision: analysis.recommendation?.decision,
+      feedback: analysis.recommendation?.reasoning,
 
-    if (appError) {
-      console.error("[retell-webhook] DB error (applications):", appError);
-      return NextResponse.json({ error: appError.message }, { status: 500 });
-    }
+      updated_at: new Date().toISOString()
+    };
+    console.log("applicationData", applicationData);
+    // const { error: appError } = await supabase
+    //   .from("applications")
+    //   .update(applicationData)
+    //   .eq("id", applicationId);
 
-    // 3. Insert/Upsert Detailed Report
-    const reportData = {
-      application_id: Number(applicationId), // Ensure number
-      json_data: {
-        transcript: transcript, // Store transcript here
-        technical_competency_score:
-          analysis.overall_assessment.technical_competency_score,
-        interview_confidence: analysis.recommendation.confidence,
-        formatted_analysis: {
-          technical_skills_evaluation: analysis.technical_skills_evaluation,
-          custom_questions_evaluation: analysis.custom_questions_evaluation,
-          overall_assessment: analysis.overall_assessment,
-          recommendation: analysis.recommendation
-        }
-      },
-      created_at: new Date().toISOString()
+    // if (appError) {
+    //   console.error("[retell-webhook] DB error (applications):", appError);
+    //   return NextResponse.json({ error: appError.message }, { status: 500 });
+    // }
+
+    // 6. Store Remaining Analysis in Reports (json_data)
+    const reportJsonData = {
+      transcript: transcript, // Keep backup
+      overall_assessment: analysis.overall_assessment,
+      recommendation: analysis.recommendation,
+      // We can include full analysis too just in case
+      full_analysis_dump: analysis
     };
 
-    const { error: reportError } = await supabase
-      .from("reports")
-      .upsert(reportData, { onConflict: "application_id" }); // overwrite if exists
+    const reportData = {
+      application_id: Number(applicationId),
+      json_data: reportJsonData,
+      created_at: new Date().toISOString()
+    };
+    console.log("reportData", reportData);
+    // const { error: reportError } = await supabase
+    //   .from("reports")
+    //   .upsert(reportData, { onConflict: "application_id" });
 
-    if (reportError) {
-      console.error("[retell-webhook] DB error (reports):", reportError);
-      // We don't fail the whole request if report fails, but we should log it.
-      // Or maybe we should return error?
-      return NextResponse.json({ error: reportError.message }, { status: 500 });
-    }
+    // if (reportError) {
+    //   console.error("[retell-webhook] DB error (reports):", reportError);
+    //   // Log error but success true as app update succeeded
+    // } else {
+    //   console.log("[retell-webhook] Report saved successfully.");
+    // }
 
-    console.log(
-      "[retell-webhook] Report saved for application:",
-      applicationId
-    );
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("[retell-webhook] Error:", error);

@@ -95,15 +95,6 @@ ${questionsArray.length > 0 ? `\nCUSTOM QUESTIONS ASKED:\n${questionsArray.map((
 
 Provide your analysis in the following JSON structure:
 {
-  "technical_skills_evaluation": [
-    {
-      "skill_name": "skill name",
-      "knowledge_level": "No knowledge" | "Basic" | "Intermediate" | "Advanced" | "Expert",
-      "score": 1-10,
-      "evidence": "specific examples from transcript showing their knowledge or lack thereof",
-      "red_flags": ["any concerning patterns like: vague answers, couldn't provide examples, asked for hints, etc."]
-    }
-  ],
   ${
     questionsArray.length > 0
       ? `"custom_questions_evaluation": [
@@ -111,7 +102,6 @@ Provide your analysis in the following JSON structure:
       "question": "the question text",
       "answer_summary": "brief summary of candidate's answer",
       "quality": "Poor" | "Fair" | "Good" | "Excellent",
-      "red_flags": ["any concerns about the answer"]
     }
   ],`
       : ""
@@ -173,6 +163,7 @@ Be objective and base your evaluation solely on evidence from the transcript.`;
       analysis.overall_assessment.technical_competency_score
     );
 
+    console.log(222, analysis);
     return analysis;
   } catch (error: any) {
     console.error("[OpenAI] Error analyzing transcript:", error);

@@ -25,11 +25,12 @@ export const useApplicationRealtime = (applicationId) => {
           .select(`
             *,
             listing:listings (
-              id,
-              title,
-              description,
-              location,
-              company:companies(id, name)
+              *,
+              company:companies(id, name),
+              listing_skills(
+                skill:skills(id, name)
+              ),
+              listing_questions(id, question)
             ),
             status:application_statuses(name)
           `)
@@ -55,6 +56,17 @@ export const useApplicationRealtime = (applicationId) => {
           };
 
           const { status, interview_status } = deriveStatus(data.status_id);
+          
+          // Map skills from relations or fallback to column
+          const skills = data.listing?.listing_skills?.map(ls => ls.skill?.name).filter(Boolean) 
+                        || data.listing?.requirements 
+                        || data.listing?.skills 
+                        || [];
+                        
+          // Map questions from relations or fallback to column
+          const questions = data.listing?.listing_questions?.map(lq => lq.question).filter(Boolean)
+                           || data.listing?.questions
+                           || [];
 
           const transformedData = {
             ...data,
@@ -65,7 +77,10 @@ export const useApplicationRealtime = (applicationId) => {
               title: data.listing.title,
               description: data.listing.description,
               location: data.listing.location,
-              company: data.listing.company
+              company: data.listing.company,
+              skills: skills,
+              requirements: skills, // Map to requirements too for compatibility
+              questions: questions
             } : null
           };
 

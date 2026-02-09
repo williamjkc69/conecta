@@ -291,7 +291,7 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
         "Candidato";
 
       const jobTitle = job?.title || "";
-      const jobRequirements = job?.requirements || [];
+      const jobRequirements = job?.skills || [];
       const jobQuestions = job?.questions || [];
 
       // Call Next.js API route
@@ -308,7 +308,7 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
             jobTitle,
             language: application?.language || "es",
             jobRequirements: jobRequirements?.join(", "),
-            jobQuestions: jobQuestions?.join(", ")
+            jobQuestions: jobQuestions?.map((q, i) => `Question ${i + 1}: ${q}`).join(", ")
           }
         })
       });
