@@ -102,17 +102,17 @@ export async function POST(request: NextRequest) {
       );
       console.log("responsesToInsert", responsesToInsert);
 
-      // if (responsesToInsert.length > 0) {
-      //   const { error: respError } = await supabase
-      //     .from("interview_responses")
-      //     .insert(responsesToInsert);
+      if (responsesToInsert.length > 0) {
+        const { error: respError } = await supabase
+          .from("interview_responses")
+          .insert(responsesToInsert);
 
-      //   if (respError) console.error("Error inserting responses:", respError);
-      //   else
-      //     console.log(
-      //       `Inserted ${responsesToInsert.length} interview responses.`
-      //     );
-      // }
+        if (respError) console.error("Error inserting responses:", respError);
+        else
+          console.log(
+            `Inserted ${responsesToInsert.length} interview responses.`
+          );
+      }
     }
 
     // 4. Fetch Status ID for 'completed'
@@ -134,29 +134,24 @@ export async function POST(request: NextRequest) {
       recording_url: call.recording_url,
       interview_duration: Math.round((call.duration_ms || 0) / 1000), // seconds
 
-      // transcript:
-      //   typeof transcript === "string"
-      //     ? transcript
-      //     : JSON.stringify(transcript),
-
       // New fields
       technical_competency_score:
-        typeof techScore === "number" ? techScore : null,
+        typeof techScore === "number" ? Math.round(techScore) : null,
       interview_decision: analysis.recommendation?.decision,
       feedback: analysis.recommendation?.reasoning,
 
       updated_at: new Date().toISOString()
     };
     console.log("applicationData", applicationData);
-    // const { error: appError } = await supabase
-    //   .from("applications")
-    //   .update(applicationData)
-    //   .eq("id", applicationId);
+    const { error: appError } = await supabase
+      .from("applications")
+      .update(applicationData)
+      .eq("id", applicationId);
 
-    // if (appError) {
-    //   console.error("[retell-webhook] DB error (applications):", appError);
-    //   return NextResponse.json({ error: appError.message }, { status: 500 });
-    // }
+    if (appError) {
+      console.error("[retell-webhook] DB error (applications):", appError);
+      return NextResponse.json({ error: appError.message }, { status: 500 });
+    }
 
     // 6. Store Remaining Analysis in Reports (json_data)
     const reportJsonData = {
@@ -173,16 +168,16 @@ export async function POST(request: NextRequest) {
       created_at: new Date().toISOString()
     };
     console.log("reportData", reportData);
-    // const { error: reportError } = await supabase
-    //   .from("reports")
-    //   .upsert(reportData, { onConflict: "application_id" });
+    const { error: reportError } = await supabase
+      .from("reports")
+      .upsert(reportData, { onConflict: "application_id" });
 
-    // if (reportError) {
-    //   console.error("[retell-webhook] DB error (reports):", reportError);
-    //   // Log error but success true as app update succeeded
-    // } else {
-    //   console.log("[retell-webhook] Report saved successfully.");
-    // }
+    if (reportError) {
+      console.error("[retell-webhook] DB error (reports):", reportError);
+      // Log error but success true as app update succeeded
+    } else {
+      console.log("[retell-webhook] Report saved successfully.");
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

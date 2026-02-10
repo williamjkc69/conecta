@@ -237,6 +237,37 @@ const CompanyDashboard: React.FC = () => {
 
       if (updateError) throw updateError;
 
+      // Send email notification for approved/rejected status
+      if (statusName === "approved" || statusName === "rejected") {
+        const candidate = candidates.find((c) => c.id === applicationId);
+        if (candidate && candidate.candidateEmail) {
+          console.log(
+            `Sending ${statusName} email to ${candidate.candidateEmail}`
+          );
+          // Fire and forget - don't block UI on email sending
+          fetch("/api/send-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type:
+                statusName === "approved"
+                  ? "decision_approved"
+                  : "decision_rejected",
+              to: candidate.candidateEmail,
+              payload: {
+                candidateName: candidate.candidateName || "Candidato",
+                jobTitle: candidate.jobTitle || "la vacante"
+              }
+            })
+          }).catch((err) => console.error("Failed to send email:", err));
+        } else {
+          console.warn(
+            "Candidate email not found for application:",
+            applicationId
+          );
+        }
+      }
+
       toast({
         title: TITLES.SUCCESS,
         description: successMessage,

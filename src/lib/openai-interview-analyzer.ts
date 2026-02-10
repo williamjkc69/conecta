@@ -74,6 +74,12 @@ export async function analyzeInterviewTranscript(
           .filter((q) => q.length > 0)
       : [];
 
+    // Determine output language (default to Spanish)
+    const outputLanguage =
+      language && language.toLowerCase().startsWith("en")
+        ? "English"
+        : "Spanish";
+
     const systemPrompt = `You are an expert technical recruiter analyzing interview transcripts. Your job is to evaluate the candidate's technical skills, communication ability, and overall fit for the position.
 
 Position: ${jobTitle}
@@ -81,7 +87,8 @@ Required Skills: ${requiredSkills}
 Interview Language: ${language}
 ${questionsArray.length > 0 ? `Custom Questions: ${customQuestions}` : ""}
 
-Analyze the transcript and provide a detailed, objective evaluation in JSON format.`;
+Analyze the transcript and provide a detailed, objective evaluation in JSON format.
+IMPORTANT: You MUST write your COMPLETE analysis (reasoning, summary, feedback, strengths, weaknesses etc.) in ${outputLanguage}.`;
 
     const userPrompt = `Analyze this technical interview transcript and provide a comprehensive evaluation:
 

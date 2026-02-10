@@ -6,7 +6,9 @@ import {
   inviteExistingUserTemplate,
   resetPasswordTemplate,
   interviewCompletedTemplate,
-  inviteAcceptedTemplate
+  inviteAcceptedTemplate,
+  decisionApprovedTemplate,
+  decisionRejectedTemplate
 } from "@/lib/email-templates";
 
 export async function POST(req: NextRequest) {
@@ -51,6 +53,20 @@ export async function POST(req: NextRequest) {
           payload.candidateEmail,
           payload.jobTitle,
           payload.companyName
+        );
+        break;
+      case "decision_approved":
+        subject = `¡Felicidades! Has sido seleccionado para ${payload.jobTitle}`;
+        html = decisionApprovedTemplate(
+          payload.candidateName,
+          payload.jobTitle
+        );
+        break;
+      case "decision_rejected":
+        subject = `Actualización sobre tu aplicación para ${payload.jobTitle}`;
+        html = decisionRejectedTemplate(
+          payload.candidateName,
+          payload.jobTitle
         );
         break;
       default:

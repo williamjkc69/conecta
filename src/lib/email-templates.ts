@@ -78,3 +78,33 @@ export const inviteAcceptedTemplate = (
   </div>
 </div>
 `;
+
+export const decisionApprovedTemplate = (
+  candidateName: string,
+  jobTitle: string
+) => `
+<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+  <h2 style="color: #10b981; text-align: center;">¡Buenas noticias, ${candidateName}!</h2>
+  <p>Nos complace informarte que has sido seleccionado para avanzar a la siguiente etapa o ser contratado para la posición de <strong>${jobTitle}</strong> en Conecta.</p>
+  <p>Nuestro equipo de Recursos Humanos se pondrá en contacto contigo muy pronto para discutir los siguientes pasos y detalles de tu incorporación.</p>
+  <p>¡Bienvenido a bordo!</p>
+  <br/>
+  <p>Atentamente,<br/>El equipo de Conecta</p>
+</div>
+`;
+
+export const decisionRejectedTemplate = (
+  candidateName: string,
+  jobTitle: string
+) => `
+<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+  <h2 style="color: #0f172a; text-align: center;">Actualización sobre tu aplicación</h2>
+  <p>Hola ${candidateName},</p>
+  <p>Gracias por tu interés en la posición de <strong>${jobTitle}</strong> y por tomarte el tiempo para completar nuestro proceso de entrevista con IA.</p>
+  <p>Después de revisar tu perfil y los resultados de la entrevista, hemos decidido no avanzar contigo en este proceso de selección por el momento.</p>
+  <p>Te agradecemos mucho tu participación y mantendremos tu perfil en nuestra base de talento para futuras oportunidades que se alineen mejor con tus habilidades.</p>
+  <p>Te deseamos mucho éxito en tu búsqueda laboral.</p>
+  <br/>
+  <p>Atentamente,<br/>El equipo de Conecta</p>
+</div>
+`;
