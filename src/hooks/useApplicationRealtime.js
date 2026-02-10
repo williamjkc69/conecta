@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { TABLES } from '@/constants/supabase';
+import { CANDIDATE_STATUS, CANDIDATE_STATUS_IDS, INTERVIEW_STATUS } from '@/constants/status';
 
 export const useApplicationRealtime = (applicationId) => {
   const [application, setApplication] = useState(null);
@@ -21,21 +23,25 @@ export const useApplicationRealtime = (applicationId) => {
       try {
         setLoading(true);
         const { data, error } = await supabase
-          .from('applications')
+          .from(TABLES.APPLICATIONS)
           .select(`
             *,
-            listing:listings (
+            listing:${TABLES.LISTINGS} (
               *,
-              company:companies(id, name),
+              company:${TABLES.COMPANIES}(id, name),
               listing_skills(
                 skill:skills(id, name)
               ),
               listing_questions(id, question)
             ),
-            status:application_statuses(name)
+            status:${TABLES.APPLICATION_STATUSES}(name)
           `)
           .eq('id', applicationId)
-          .in('status_id', [1, 6, 2]) // Allow Invited (1), Interviewing (6), Completed (2)
+          .in('status_id', [
+            CANDIDATE_STATUS_IDS.INVITED,
+            CANDIDATE_STATUS_IDS.INTERVIEWING,
+            CANDIDATE_STATUS_IDS.COMPLETED
+          ]) // Allow Invited, Interviewing, Completed
           .single();
 
         if (error) {
@@ -49,10 +55,10 @@ export const useApplicationRealtime = (applicationId) => {
         if (isMounted) {
           // Helper to derive status strings from ID
           const deriveStatus = (statusId) => {
-             if (statusId === 1) return { status: 'invited', interview_status: 'invited' };
-             if (statusId === 6) return { status: 'interviewing', interview_status: 'in_progress' };
-             if (statusId === 2) return { status: 'completed', interview_status: 'completed' };
-             return { status: 'pending', interview_status: 'pending' };
+             if (statusId === CANDIDATE_STATUS_IDS.INVITED) return { status: CANDIDATE_STATUS.INVITED, interview_status: INTERVIEW_STATUS.INVITED };
+             if (statusId === CANDIDATE_STATUS_IDS.INTERVIEWING) return { status: CANDIDATE_STATUS.INTERVIEWING, interview_status: INTERVIEW_STATUS.IN_PROGRESS };
+             if (statusId === CANDIDATE_STATUS_IDS.COMPLETED) return { status: CANDIDATE_STATUS.COMPLETED, interview_status: INTERVIEW_STATUS.COMPLETED };
+             return { status: CANDIDATE_STATUS.PENDING, interview_status: INTERVIEW_STATUS.PENDING };
           };
 
           const { status, interview_status } = deriveStatus(data.status_id);
@@ -106,7 +112,7 @@ export const useApplicationRealtime = (applicationId) => {
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'applications',
+          table: TABLES.APPLICATIONS,
           filter: `id=eq.${applicationId}`,
         },
         (payload) => {
@@ -117,10 +123,10 @@ export const useApplicationRealtime = (applicationId) => {
               if (!prev) return null;
               
               const deriveStatus = (statusId) => {
-                 if (statusId === 1) return { status: 'invited', interview_status: 'invited' };
-                 if (statusId === 6) return { status: 'interviewing', interview_status: 'in_progress' };
-                 if (statusId === 2) return { status: 'completed', interview_status: 'completed' };
-                 return { status: 'pending', interview_status: 'pending' };
+                 if (statusId === CANDIDATE_STATUS_IDS.INVITED) return { status: CANDIDATE_STATUS.INVITED, interview_status: INTERVIEW_STATUS.INVITED };
+                 if (statusId === CANDIDATE_STATUS_IDS.INTERVIEWING) return { status: CANDIDATE_STATUS.INTERVIEWING, interview_status: INTERVIEW_STATUS.IN_PROGRESS };
+                 if (statusId === CANDIDATE_STATUS_IDS.COMPLETED) return { status: CANDIDATE_STATUS.COMPLETED, interview_status: INTERVIEW_STATUS.COMPLETED };
+                 return { status: CANDIDATE_STATUS.PENDING, interview_status: INTERVIEW_STATUS.PENDING };
               };
 
               const { status, interview_status } = deriveStatus(payload.new.status_id);

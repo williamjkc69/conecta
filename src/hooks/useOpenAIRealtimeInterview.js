@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
+import { OPENAI_API } from "@/constants/api";
+import { AI_ROLES, HTTP_METHODS, HTTP_HEADERS } from "@/constants/common";
+import { CALL_STATES, CANDIDATE_STATUS_IDS, CANDIDATE_STATUS } from "@/constants/status";
 
 export const useOpenAIRealtimeInterview = ({
   onInterviewEnd,
@@ -9,7 +12,7 @@ export const useOpenAIRealtimeInterview = ({
   application,
 }) => {
   const { toast } = useToast();
-  const [callState, setCallState] = useState("idle");
+  const [callState, setCallState] = useState(CALL_STATES.IDLE);
   const [isAgentSpeaking, setIsAgentSpeaking] = useState(false);
   const [transcript, setTranscript] = useState([]);
   const [error, setError] = useState(null);
@@ -26,8 +29,8 @@ export const useOpenAIRealtimeInterview = ({
   const analyserRef = useRef(null);
   const audioLevelFrameRef = useRef(null);
 
-  const REALTIME_URL = process.env.NEXT_PUBLIC_OPENAI_REALTIME_URL || "wss://api.openai.com/v1/realtime";
-  const REALTIME_MODEL = process.env.NEXT_PUBLIC_OPENAI_REALTIME_MODEL || "gpt-4o-realtime-preview-2024-10-01";
+  const REALTIME_URL = OPENAI_API.REALTIME_URL;
+  const REALTIME_MODEL = OPENAI_API.MODEL;
 
   // Logging Helper
   const log = useCallback((step, message, data) => {
@@ -42,7 +45,7 @@ export const useOpenAIRealtimeInterview = ({
   // Prevent tab close during interview
   useEffect(() => {
     const handleBeforeUnload = (e) => {
-      if (callState === 'connected' || callState === 'connecting') {
+      if (callState === CALL_STATES.CONNECTED || callState === CALL_STATES.CONNECTING) {
         e.preventDefault();
         e.returnValue = '';
       }
@@ -213,12 +216,12 @@ export const useOpenAIRealtimeInterview = ({
             if (last && last.role === "assistant") {
               return [...prev.slice(0, -1), { ...last, content: last.content + msg.delta }];
             }
-            return [...prev, { role: "assistant", content: msg.delta }];
+            return [...prev, { role: AI_ROLES.ASSISTANT, content: msg.delta }];
           });
-        } else if (msg.type === "conversation.item.created" && msg.item.type === "message" && msg.item.role === "user") {
+        } else if (msg.type === "conversation.item.created" && msg.item.type === "message" && msg.item.role === AI_ROLES.USER) {
              const content = msg.item.content?.[0]?.text || "(Audio del usuario)";
              log('TRANSCRIPT', 'User input detected', content);
-             setTranscript(prev => [...prev, { role: "user", content }]);
+             setTranscript(prev => [...prev, { role: AI_ROLES.USER, content }]);
         } else if (msg.type === "error") {
             log('ERROR', 'OpenAI Error received', msg.error);
         }
@@ -228,10 +231,10 @@ export const useOpenAIRealtimeInterview = ({
   }, [playNextInQueue, log]);
 
   const startInterview = useCallback(async () => {
-    if (callState !== "idle" && callState !== "ended" && callState !== "error") return;
+    if (callState !== CALL_STATES.IDLE && callState !== CALL_STATES.ENDED && callState !== CALL_STATES.ERROR) return;
 
     log('START', 'Starting interview sequence', { applicationId: application?.id });
-    setCallState("connecting");
+    setCallState(CALL_STATES.CONNECTING);
     setTranscript([]);
     setError(null);
     audioQueueRef.current = [];
@@ -244,7 +247,7 @@ export const useOpenAIRealtimeInterview = ({
       const { data: statusData } = await supabase
         .from('application_statuses')
         .select('id')
-        .eq('name', 'interviewing')
+        .eq('name', CANDIDATE_STATUS.INTERVIEWING)
         .single();
 
       if (statusData) {
@@ -307,12 +310,12 @@ export const useOpenAIRealtimeInterview = ({
             }));
 
             ws.send(JSON.stringify({ type: "response.create" }));
-            setCallState("connected");
+            setCallState(CALL_STATES.CONNECTED);
             log("STATE", "Call Connected");
         } catch (err) {
             log("ERROR", "Setup error", err);
             setError(err.message);
-            setCallState("error");
+            setCallState(CALL_STATES.ERROR);
             cleanup();
         }
       };
@@ -322,23 +325,23 @@ export const useOpenAIRealtimeInterview = ({
         log("WEBSOCKET", "Closed", { code: event.code });
         if(event.code !== 1000) { 
           setError("La conexión se cerró inesperadamente.");
-          setCallState("error");
+          setCallState(CALL_STATES.ERROR);
         } else {
-          setCallState("ended");
+          setCallState(CALL_STATES.ENDED);
         }
         cleanup(); 
       };
       ws.onerror = (err) => {
           log("WEBSOCKET", "Error", err);
           setError("Error en la conexión.");
-          setCallState("error");
+          setCallState(CALL_STATES.ERROR);
           cleanup();
       };
 
     } catch (err) {
       log("ERROR", "Initialization Error", err.message);
       setError(err.message);
-      setCallState("error");
+      setCallState(CALL_STATES.ERROR);
       cleanup();
     }
   }, [user, jobDetails, application, handleMessage, startMicAndProcessor, REALTIME_URL, REALTIME_MODEL, callState, log, cleanup]);
@@ -348,7 +351,7 @@ export const useOpenAIRealtimeInterview = ({
     cleanup();
 
     if (isFinal) {
-        setCallState("ended");
+        setCallState(CALL_STATES.ENDED);
         
         if (application?.id) {
             setIsSaving(true);
@@ -360,14 +363,14 @@ export const useOpenAIRealtimeInterview = ({
                 const { data: completedStatus } = await supabase
                   .from('application_statuses')
                   .select('id')
-                  .eq('name', 'completed')
+                  .eq('name', CANDIDATE_STATUS.COMPLETED)
                   .single();
 
                 const { error } = await supabase
                     .from('applications')
                     .update({
                         transcript: currentTranscript,
-                        status_id: completedStatus?.id
+                        status_id: CANDIDATE_STATUS_IDS.COMPLETED
                     })
                     .eq('id', application.id);
 

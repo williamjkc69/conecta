@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { CANDIDATE_STATUS, INTERVIEW_STATUS } from "@/constants/status";
 
 export const useCandidateApplications = (userId?: number) => {
   const [applications, setApplications] = useState<any[]>([]);
@@ -72,22 +73,22 @@ export const useCandidateApplications = (userId?: number) => {
                 .filter(Boolean) || [];
 
             // Derive interview_status from status and interview fields
-            let interviewStatus = "pending";
-            if (statusName === "completed") {
-              interviewStatus = "completed";
-            } else if (statusName === "invited") {
-              interviewStatus = "invited";
-            } else if (statusName === "interviewing") {
-              interviewStatus = "in_progress";
+            let interviewStatus: string = INTERVIEW_STATUS.PENDING;
+            if (statusName === CANDIDATE_STATUS.COMPLETED) {
+              interviewStatus = INTERVIEW_STATUS.COMPLETED;
+            } else if (statusName === CANDIDATE_STATUS.INVITED) {
+              interviewStatus = INTERVIEW_STATUS.INVITED;
+            } else if (statusName === CANDIDATE_STATUS.INTERVIEWING) {
+              interviewStatus = INTERVIEW_STATUS.IN_PROGRESS;
             } else if (app.call_id) {
               // Has started interview
-              interviewStatus = "in_progress";
+              interviewStatus = INTERVIEW_STATUS.IN_PROGRESS;
             }
 
             return {
               ...app,
               id: app.id,
-              status: statusName || "pending",
+              status: statusName || CANDIDATE_STATUS.PENDING,
               interview_status: interviewStatus,
               // Job/Listing info
               jobTitle: listing?.title,

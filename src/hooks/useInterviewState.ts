@@ -8,13 +8,15 @@ import { useOpenAIRealtimeInterview } from "@/hooks/useOpenAIRealtimeInterview";
 import { useRetellConnection } from "@/hooks/useRetellConnection";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
+import { USE_RETELL } from "@/constants/retell";
 import {
-  USE_RETELL,
   INTERVIEW_STATUS,
-  CALL_STATES,
-  APPLICATION_STATUS,
-  TABLES
-} from "@/constants";
+  CANDIDATE_STATUS,
+  CANDIDATE_STATUS_IDS
+} from "@/constants/status";
+import { CALL_STATES } from "@/constants/retell";
+import { TABLES } from "@/constants/supabase";
+import { HTTP_METHODS, HTTP_HEADERS } from "@/constants/common";
 
 interface UseInterviewStateProps {
   applicationId: string;
@@ -117,18 +119,17 @@ export const useInterviewState = ({
         );
 
         // Use API to update status (id 6) -> More reliable than client side RLS
-        const statusId = 6;
         console.log(
-          `[useInterviewState] Calling API to set status ${statusId} (interviewing)`
+          `[useInterviewState] Calling API to set status ${CANDIDATE_STATUS_IDS.INTERVIEWING} (interviewing)`
         );
 
         try {
           const response = await fetch("/api/set-application-status", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
+            method: HTTP_METHODS.POST,
+            headers: { "Content-Type": HTTP_HEADERS.CONTENT_TYPE_JSON },
             body: JSON.stringify({
               applicationId: application.id,
-              status: statusId
+              status: CANDIDATE_STATUS_IDS.INTERVIEWING
             })
           });
 

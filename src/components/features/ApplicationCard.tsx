@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { TITLES, MESSAGES, BUTTONS, LABELS } from "@/constants/text";
+import { CANDIDATE_STATUS, INTERVIEW_STATUS } from "@/constants/status";
 
 interface ApplicationCardProps {
   application: any;
@@ -34,43 +35,40 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
 
   if (!application) return null;
 
-  const interviewStatus = application.interview_status || "pending";
+  const interviewStatus =
+    application.interview_status || CANDIDATE_STATUS.PENDING;
   const mainStatus = application.status;
 
   // 1. Completed / Reviewed / Approved / Rejected
   if (
-    interviewStatus === "completed" ||
-    mainStatus === "completed" ||
-    mainStatus === "approved" ||
-    mainStatus === "rejected"
+    interviewStatus === CANDIDATE_STATUS.COMPLETED ||
+    mainStatus === CANDIDATE_STATUS.COMPLETED ||
+    mainStatus === CANDIDATE_STATUS.APPROVED ||
+    mainStatus === CANDIDATE_STATUS.REJECTED
   ) {
-    let badgeText = "En Revisión";
-    let badgeColor = "border-blue-500/50 text-blue-400 bg-blue-900/10";
-    let titleText = "En Revisión";
-    let descText =
-      "Tu entrevista ha finalizado. Estamos revisando tus resultados.";
+    let badgeText: string = LABELS.IN_REVIEW;
+    let badgeColor: string = "border-blue-500/50 text-blue-400 bg-blue-900/10";
+    let titleText: string = LABELS.IN_REVIEW;
+    let descText: string = MESSAGES.STATUS_IN_REVIEW_DESC;
     let icon = <Clock className="w-6 h-6 text-blue-500" />;
 
-    if (mainStatus === "approved") {
-      badgeText = "Contratado";
+    if (mainStatus === CANDIDATE_STATUS.APPROVED) {
+      badgeText = LABELS.HIRED;
       badgeColor = "border-green-500/50 text-green-400 bg-green-900/10";
-      titleText = "¡Felicidades!";
-      descText =
-        "Has sido seleccionado para esta posición. Nos pondremos en contacto contigo pronto.";
+      titleText = TITLES.CONGRATULATIONS;
+      descText = MESSAGES.STATUS_APPROVED_DESC;
       icon = <CheckCircle className="w-6 h-6 text-green-500" />;
-    } else if (mainStatus === "rejected") {
-      badgeText = "No Seleccionado";
+    } else if (mainStatus === CANDIDATE_STATUS.REJECTED) {
+      badgeText = LABELS.NOT_SELECTED;
       badgeColor = "border-red-500/50 text-red-400 bg-red-900/10";
-      titleText = "Proceso Finalizado";
-      descText =
-        "Gracias por tu interés, pero hemos decidido avanzar con otros candidatos.";
-      icon = <CheckCircle className="w-6 h-6 text-red-500" />; // Or X icon if available, standardizing on CheckCircle for completed process implies 'Done'
+      titleText = TITLES.PROCESS_FINISHED;
+      descText = MESSAGES.STATUS_REJECTED_DESC;
+      icon = <CheckCircle className="w-6 h-6 text-red-500" />;
     } else {
       // Default completed/reviewed
-      badgeText = "En Revisión";
-      titleText = "Proceso Finalizado";
-      descText =
-        "Tu entrevista ha finalizado. El equipo está revisando tu perfil.";
+      badgeText = LABELS.IN_REVIEW;
+      titleText = TITLES.PROCESS_FINISHED;
+      descText = MESSAGES.STATUS_IN_REVIEW_ALT_DESC;
       icon = <CheckCircle className="w-6 h-6 text-blue-500" />;
     }
 
@@ -98,7 +96,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
   }
 
   // 2. Invited -> Show "Realizar entrevista"
-  if (interviewStatus === "invited") {
+  if (interviewStatus === CANDIDATE_STATUS.INVITED) {
     console.log(
       `[${new Date().toISOString()}] [ApplicationCard] Rendering INVITED branch`
     );
@@ -130,7 +128,7 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
   }
 
   // 3. In Progress -> Show "Entrevista en curso"
-  if (interviewStatus === "in_progress") {
+  if (interviewStatus === INTERVIEW_STATUS.IN_PROGRESS) {
     console.log(
       `[${new Date().toISOString()}] [ApplicationCard] Rendering IN_PROGRESS branch`
     );

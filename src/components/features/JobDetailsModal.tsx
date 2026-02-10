@@ -11,7 +11,14 @@ import {
   Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BUTTONS, TITLES, MESSAGES, LABELS } from "@/constants/text";
+import {
+  BUTTONS,
+  TITLES,
+  MESSAGES,
+  LABELS,
+  PLACEHOLDERS
+} from "@/constants/text";
+import { JOB_STATUS } from "@/constants/status";
 
 interface JobDetailsModalProps {
   isOpen: boolean;
@@ -99,12 +106,12 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
                     <div className="flex items-center gap-1.5">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          job.status === "active"
+                          job.status === JOB_STATUS.ACTIVE
                             ? "bg-green-500/20 text-green-400"
                             : "bg-gray-500/20 text-gray-400"
                         }`}
                       >
-                        {job.status === "active"
+                        {job.status === JOB_STATUS.ACTIVE
                           ? LABELS.ACTIVE_JOB
                           : LABELS.INACTIVE_JOB}
                       </span>

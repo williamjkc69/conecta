@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { TITLES, MESSAGES, BUTTONS, LABELS } from "@/constants/text";
 import { JOB_STATUS_LABELS, CONTRACT_TYPE_LABELS } from "@/constants/options";
+import { JOB_STATUS } from "@/constants/status";
 
 interface FormData {
   id: string;
@@ -53,7 +54,7 @@ const JobDetailModal: React.FC<JobDetailModalProps> = ({
     salary: "",
     requirements: [""],
     questions: [""],
-    status: "active"
+    status: JOB_STATUS.ACTIVE
   });
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -70,7 +71,7 @@ const JobDetailModal: React.FC<JobDetailModalProps> = ({
         salary: job.salary || "",
         requirements: job.requirements || [""],
         questions: job.questions || [""],
-        status: job.status || "active"
+        status: job.status || JOB_STATUS.ACTIVE
       });
       setIsEditing(false); // Reset editing state when a new job is selected
     }
@@ -307,18 +308,18 @@ const JobDetailModal: React.FC<JobDetailModalProps> = ({
                           onChange={handleChange}
                           className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 appearance-none"
                         >
-                          <option value="active">
+                          <option value={JOB_STATUS.ACTIVE}>
                             {JOB_STATUS_LABELS.ACTIVE}
                           </option>
-                          <option value="inactive">
+                          <option value={JOB_STATUS.INACTIVE}>
                             {JOB_STATUS_LABELS.INACTIVE}
                           </option>
                         </select>
                       ) : (
                         <span
-                          className={`px-3 py-1.5 rounded-full text-sm font-semibold ${formData.status === "active" ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-400"}`}
+                          className={`px-3 py-1.5 rounded-full text-sm font-semibold ${formData.status === JOB_STATUS.ACTIVE ? "bg-green-500/20 text-green-400" : "bg-gray-500/20 text-gray-400"}`}
                         >
-                          {formData.status === "active"
+                          {formData.status === JOB_STATUS.ACTIVE
                             ? JOB_STATUS_LABELS.ACTIVE
                             : JOB_STATUS_LABELS.INACTIVE}
                         </span>

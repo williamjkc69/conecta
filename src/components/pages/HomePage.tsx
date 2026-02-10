@@ -32,6 +32,7 @@ import {
   LANDING_NAV,
   LANDING_SECTIONS
 } from "@/constants/landing";
+import { ASSETS } from "@/constants/assets";
 
 interface HomePageProps {
   onNavigate: (path: string) => void;
@@ -242,7 +243,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
               <div className="glass-effect rounded-2xl p-8 border-2 border-blue-500/30 glow-effect">
                 <img
                   alt="AI Interview Dashboard Preview"
-                  src="https://images.unsplash.com/photo-1686061592689-312bbfb5c055"
+                  src={ASSETS.DASHBOARD_PREVIEW}
                 />
               </div>
             </motion.div>

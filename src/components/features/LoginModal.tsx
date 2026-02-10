@@ -28,6 +28,7 @@ import {
 } from "@/constants/text";
 import { ROUTES, API_ROUTES } from "@/constants/routes";
 import { ROLES } from "@/constants/roles";
+import { HTTP_METHODS, HTTP_HEADERS } from "@/constants/common";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -194,8 +195,8 @@ const LoginModal: React.FC<LoginModalProps> = ({
       if (token && jobId && type === ROLES.CANDIDATE) {
         try {
           await fetch(API_ROUTES.ACCEPT_INVITE, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
+            method: HTTP_METHODS.POST,
+            headers: { "Content-Type": HTTP_HEADERS.CONTENT_TYPE_JSON },
             body: JSON.stringify({
               email: formData.email,
               token,
@@ -211,8 +212,8 @@ const LoginModal: React.FC<LoginModalProps> = ({
       // Send verification email
       try {
         const emailResponse = await fetch(API_ROUTES.SEND_EMAIL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: HTTP_METHODS.POST,
+          headers: { "Content-Type": HTTP_HEADERS.CONTENT_TYPE_JSON },
           body: JSON.stringify({
             type: "verification",
             to: formData.email,

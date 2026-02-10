@@ -1,11 +1,12 @@
 import OpenAI from "openai";
+import { AI_ROLES } from "@/constants/common";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
 interface TranscriptEntry {
-  role: "agent" | "user";
+  role: typeof AI_ROLES.AGENT | typeof AI_ROLES.USER;
   content: string;
 }
 
@@ -61,7 +62,7 @@ export async function analyzeInterviewTranscript(
       ? transcript
           .map(
             (entry) =>
-              `${entry.role === "agent" ? "Interviewer" : "Candidate"}: ${entry.content}`
+              `${entry.role === AI_ROLES.AGENT ? "Interviewer" : "Candidate"}: ${entry.content}`
           )
           .join("\n")
       : transcript;
@@ -148,8 +149,8 @@ Be objective and base your evaluation solely on evidence from the transcript.`;
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt }
+        { role: AI_ROLES.SYSTEM as any, content: systemPrompt },
+        { role: AI_ROLES.USER as any, content: userPrompt }
       ],
       response_format: { type: "json_object" },
       temperature: 0.3 // Lower temperature for more consistent analysis

@@ -27,6 +27,7 @@ import {
   LABELS,
   BUTTONS
 } from "@/constants/text";
+import { ROLES } from "@/constants/roles";
 
 interface AdminCompany {
   id: string;
@@ -54,7 +55,7 @@ const AdminCompanies = () => {
       setLoading(true);
       try {
         const { users: fetchedUsers, count } = await fetchUsersWithStats({
-          role: "company",
+          role: ROLES.COMPANY,
           searchTerm: search,
           page,
           limit
@@ -152,7 +153,9 @@ const AdminCompanies = () => {
                     key={user.id}
                     className="border-t border-slate-700 hover:bg-slate-800/60"
                   >
-                    <td className="p-4">{user.company_name || "N/A"}</td>
+                    <td className="p-4">
+                      {user.company_name || LABELS.NOT_AVAILABLE}
+                    </td>
                     <td className="p-4 text-slate-400">{user.email}</td>
                     <td className="p-4 text-center">{user.interviews_count}</td>
                     <td className="p-4 text-slate-400">

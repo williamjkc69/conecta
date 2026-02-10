@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { MESSAGES } from "@/constants/text";
 
 const CallToAction: React.FC = () => {
   return (
@@ -9,7 +10,7 @@ const CallToAction: React.FC = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5, delay: 0.8 }}
     >
-      Let's turn your ideas into reality.
+      {MESSAGES.CALL_TO_ACTION}
     </motion.p>
   );
 };

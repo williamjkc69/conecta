@@ -36,9 +36,13 @@ import {
   TABS,
   TAB_LABELS,
   LABELS,
-  PLACEHOLDERS
+  PLACEHOLDERS,
+  EMAILS
 } from "@/constants/text";
+import { HTTP_METHODS, HTTP_HEADERS } from "@/constants/common";
 import { ROUTES } from "@/constants/routes";
+import { JOB_STATUS, CANDIDATE_STATUS } from "@/constants/status";
+import { CURRENCIES } from "@/constants/options";
 
 const CompanyDashboard: React.FC = () => {
   const router = useRouter();
@@ -59,7 +63,7 @@ const CompanyDashboard: React.FC = () => {
   const [showAssignCandidate, setShowAssignCandidate] = useState(false);
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [jobToEdit, setJobToEdit] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState<string>(TABS.OVERVIEW);
   const [loadingData, setLoadingData] = useState(true);
   const [statsData, setStatsData] = useState({ interviews: 0, applicants: 0 });
 
@@ -158,7 +162,11 @@ const CompanyDashboard: React.FC = () => {
       setStatsData({
         applicants: appsData.length,
         interviews: appsData.filter((app: any) =>
-          ["completed", "approved", "rejected"].includes(app.status?.name || "")
+          [
+            CANDIDATE_STATUS.COMPLETED,
+            CANDIDATE_STATUS.APPROVED,
+            CANDIDATE_STATUS.REJECTED
+          ].includes(app.status?.name || "")
         ).length
       });
 
@@ -186,7 +194,7 @@ const CompanyDashboard: React.FC = () => {
 
           return {
             id: app.id,
-            status: app.status?.name || "pending",
+            status: app.status?.name || CANDIDATE_STATUS.PENDING,
             job_id: app.listing_id,
             jobTitle: relatedJob?.title || "Vacante",
             appliedAt: app.created_at,
@@ -238,7 +246,10 @@ const CompanyDashboard: React.FC = () => {
       if (updateError) throw updateError;
 
       // Send email notification for approved/rejected status
-      if (statusName === "approved" || statusName === "rejected") {
+      if (
+        statusName === CANDIDATE_STATUS.APPROVED ||
+        statusName === CANDIDATE_STATUS.REJECTED
+      ) {
         const candidate = candidates.find((c) => c.id === applicationId);
         if (candidate && candidate.candidateEmail) {
           console.log(
@@ -246,17 +257,18 @@ const CompanyDashboard: React.FC = () => {
           );
           // Fire and forget - don't block UI on email sending
           fetch("/api/send-email", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
+            method: HTTP_METHODS.POST,
+            headers: { "Content-Type": HTTP_HEADERS.CONTENT_TYPE_JSON },
             body: JSON.stringify({
               type:
-                statusName === "approved"
-                  ? "decision_approved"
-                  : "decision_rejected",
+                statusName === CANDIDATE_STATUS.APPROVED
+                  ? EMAILS.TYPES.DECISION_APPROVED
+                  : EMAILS.TYPES.DECISION_REJECTED,
               to: candidate.candidateEmail,
               payload: {
-                candidateName: candidate.candidateName || "Candidato",
-                jobTitle: candidate.jobTitle || "la vacante"
+                candidateName:
+                  candidate.candidateName || PLACEHOLDERS.GENERIC_CANDIDATE,
+                jobTitle: candidate.jobTitle || PLACEHOLDERS.GENERIC_VACANCY
               }
             })
           }).catch((err) => console.error("Failed to send email:", err));
@@ -272,7 +284,7 @@ const CompanyDashboard: React.FC = () => {
         title: TITLES.SUCCESS,
         description: successMessage,
         className:
-          statusName === "rejected"
+          statusName === CANDIDATE_STATUS.REJECTED
             ? "bg-red-900 border-red-800 text-white"
             : "bg-green-900 border-green-800 text-white"
       });
@@ -282,7 +294,7 @@ const CompanyDashboard: React.FC = () => {
       console.error(`Error updating status to ${statusName}:`, error);
       toast({
         title: TITLES.ERROR,
-        description: "No se pudo actualizar el estado del candidato.",
+        description: MESSAGES.ERROR_UPDATING_STATUS,
         variant: "destructive"
       });
     }
@@ -291,13 +303,17 @@ const CompanyDashboard: React.FC = () => {
   const handleApproveCandidate = async (appId: string) => {
     await updateCandidateStatus(
       appId,
-      "approved",
-      "Candidato aprobado correctamente."
+      CANDIDATE_STATUS.APPROVED,
+      MESSAGES.CANDIDATE_APPROVED
     );
   };
 
   const handleRejectCandidate = async (appId: string) => {
-    await updateCandidateStatus(appId, "rejected", "Candidato rechazado.");
+    await updateCandidateStatus(
+      appId,
+      CANDIDATE_STATUS.REJECTED,
+      MESSAGES.CANDIDATE_REJECTED
+    );
   };
 
   useEffect(() => {
@@ -338,9 +354,7 @@ const CompanyDashboard: React.FC = () => {
 
       if (
         !jobData.currency ||
-        !["USD", "EUR", "MXN", "COP", "ARS", "CLP", "PEN"].includes(
-          jobData.currency
-        )
+        !(CURRENCIES as readonly string[]).includes(jobData.currency)
       ) {
         throw new Error(MESSAGES.INVALID_CURRENCY);
       }
@@ -363,7 +377,7 @@ const CompanyDashboard: React.FC = () => {
           salary_range_min: jobData.salary_range_min,
           salary_range_max: jobData.salary_range_max,
           salary_currency: jobData.currency,
-          status: "active"
+          status: JOB_STATUS.ACTIVE
         })
         .select()
         .single();
@@ -560,8 +574,11 @@ const CompanyDashboard: React.FC = () => {
     } catch (error: any) {
       console.error("[handleUpdateJob] Error:", error);
       toast({
-        title: "Error",
-        description: `No se pudo actualizar la vacante: ${error.message}`,
+        title: TITLES.ERROR,
+        description: MESSAGES.ERROR_UPDATING_JOB_DESC.replace(
+          "{error}",
+          error.message
+        ),
         variant: "destructive"
       });
     } finally {
@@ -580,8 +597,11 @@ const CompanyDashboard: React.FC = () => {
 
       if (jobError) {
         toast({
-          title: "Error",
-          description: `No se pudo eliminar la vacante: ${jobError.message}`,
+          title: TITLES.ERROR,
+          description: MESSAGES.ERROR_DELETING_JOB_DESC.replace(
+            "{error}",
+            jobError.message
+          ),
           variant: "destructive"
         });
       } else {
@@ -599,14 +619,18 @@ const CompanyDashboard: React.FC = () => {
   };
 
   const pendingInterviewsCount = candidates.filter((c) =>
-    ["invited", "interviewing", "pending"].includes(c.status)
+    [
+      CANDIDATE_STATUS.INVITED,
+      CANDIDATE_STATUS.INTERVIEWING,
+      CANDIDATE_STATUS.PENDING
+    ].includes(c.status)
   ).length;
 
   const stats = [
     {
       icon: <Briefcase className="w-6 h-6" />,
       label: LABELS.ACTIVE_JOBS,
-      value: jobs.filter((j) => j.status === "active").length,
+      value: jobs.filter((j) => j.status === JOB_STATUS.ACTIVE).length,
       color: "from-blue-600 to-cyan-600"
     },
     {
@@ -748,7 +772,7 @@ const CompanyDashboard: React.FC = () => {
               </div>
             ) : (
               <>
-                {activeTab === "overview" && (
+                {activeTab === TABS.OVERVIEW && (
                   <div className="space-y-6">
                     <div>
                       <h3 className="text-xl font-bold mb-4 text-slate-100">
@@ -783,15 +807,15 @@ const CompanyDashboard: React.FC = () => {
                             >
                               <div>
                                 <p className="font-semibold text-slate-200">
-                                  {activity.candidateName} aplicó para{" "}
+                                  {activity.candidateName} {MESSAGES.APPLIED_TO}{" "}
                                   {jobs.find((j) => j.id === activity.job_id)
-                                    ?.title || "N/A"}
+                                    ?.title || LABELS.NOT_AVAILABLE}
                                 </p>
                               </div>
                               <span className="text-sm text-slate-500">
                                 {new Date(
                                   activity.appliedAt
-                                ).toLocaleDateString()}
+                                ).toLocaleDateString(LABELS.LOCALE_ES)}
                               </span>
                             </div>
                           ))}
@@ -804,7 +828,7 @@ const CompanyDashboard: React.FC = () => {
                     </div>
                   </div>
                 )}
-                {activeTab === "jobs" && (
+                {activeTab === TABS.JOBS && (
                   <div>
                     {jobs.length === 0 ? (
                       <div className="text-center py-12">
@@ -832,14 +856,14 @@ const CompanyDashboard: React.FC = () => {
                     )}
                   </div>
                 )}
-                {activeTab === "candidates" && (
+                {activeTab === TABS.CANDIDATES && (
                   <CandidateList
                     candidates={candidates}
                     jobs={jobs}
                     onViewCandidate={setSelectedCandidate}
                   />
                 )}
-                {activeTab === "analytics" && (
+                {activeTab === TABS.ANALYTICS && (
                   <div className="flex flex-col items-center justify-center text-center h-64">
                     <BarChart3 className="w-16 h-16 text-slate-600 mb-4" />
                     <h3 className="text-xl font-bold text-slate-300">
@@ -864,13 +888,13 @@ const CompanyDashboard: React.FC = () => {
         isOpen={showInviteCandidate}
         onClose={() => setShowInviteCandidate(false)}
         onInviteSent={fetchCompanyData}
-        jobs={jobs.filter((j) => j.status === "active")}
+        jobs={jobs.filter((j) => j.status === JOB_STATUS.ACTIVE)}
       />
       <AssignCandidateModal
         isOpen={showAssignCandidate}
         onClose={() => setShowAssignCandidate(false)}
         onAssignmentSuccess={fetchCompanyData}
-        jobs={jobs.filter((j) => j.status === "active")}
+        jobs={jobs.filter((j) => j.status === JOB_STATUS.ACTIVE)}
       />
 
       {/* Details Modal (Read-only) */}

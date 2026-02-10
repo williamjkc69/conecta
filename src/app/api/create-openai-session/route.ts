@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { OPENAI_API } from "@/constants/api";
+import { HTTP_METHODS, HTTP_HEADERS } from "@/constants/common";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
@@ -24,16 +26,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const response = await fetch(
-      "https://api.openai.com/v1/realtime/sessions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${OPENAI_API_KEY}`
-        }
+    const response = await fetch(OPENAI_API.SESSION_URL, {
+      method: HTTP_METHODS.POST,
+      headers: {
+        "Content-Type": HTTP_HEADERS.CONTENT_TYPE_JSON,
+        Authorization: `Bearer ${OPENAI_API_KEY}`
       }
-    );
+    });
 
     if (!response.ok) {
       const errorText = await response.text();

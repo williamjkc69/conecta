@@ -35,8 +35,15 @@ import CandidateJobDetailModal from "@/components/features/CandidateJobDetailMod
 import { useCandidateApplications } from "@/hooks/useCandidateApplications";
 import ApplicationCard from "@/components/features/ApplicationCard";
 import CandidateOnboardingModal from "@/components/features/CandidateOnboardingModal";
-import { BUTTONS, TITLES, MESSAGES, LABELS } from "@/constants/text";
+import {
+  BUTTONS,
+  TITLES,
+  MESSAGES,
+  LABELS,
+  PLACEHOLDERS
+} from "@/constants/text";
 import { CANDIDATE_STATUS_LABELS } from "@/constants/options";
+import { CANDIDATE_STATUS, INTERVIEW_STATUS } from "@/constants/status";
 
 /*
   TEST CHECKLIST:
@@ -54,31 +61,31 @@ const StatusTimeline = ({ status }: { status: string }) => {
   // Contratado/Rechazado = approved/rejected
 
   const steps = [
-    { id: "invited", label: "Postulado" },
-    { id: "interviewing", label: "En Entrevista" },
-    { id: "completed", label: "En Revisión" },
-    { id: "decision", label: "Respuesta" } // Will display Contratado/Rechazado dynamically
+    { id: CANDIDATE_STATUS.INVITED, label: LABELS.POSTULATED },
+    { id: CANDIDATE_STATUS.INTERVIEWING, label: LABELS.IN_INTERVIEW },
+    { id: CANDIDATE_STATUS.COMPLETED, label: LABELS.IN_REVIEW },
+    { id: "decision", label: LABELS.ANSWER } // Will display Contratado/Rechazado dynamically
   ];
 
   let currentStepIndex = 0;
-  let decisionLabel = "Respuesta";
+  let decisionLabel: string = LABELS.ANSWER;
   let decisionColor = "bg-slate-700"; // Default gray
 
-  if (status === "invited") {
+  if (status === CANDIDATE_STATUS.INVITED) {
     currentStepIndex = 0;
-  } else if (status === "interviewing") {
+  } else if (status === CANDIDATE_STATUS.INTERVIEWING) {
     currentStepIndex = 1;
-  } else if (status === "completed") {
+  } else if (status === CANDIDATE_STATUS.COMPLETED) {
     currentStepIndex = 2;
-  } else if (status === "approved") {
+  } else if (status === CANDIDATE_STATUS.APPROVED) {
     currentStepIndex = 3;
-    decisionLabel = "Contratado";
+    decisionLabel = LABELS.HIRED;
     decisionColor = "bg-green-500";
-  } else if (status === "rejected") {
+  } else if (status === CANDIDATE_STATUS.REJECTED) {
     currentStepIndex = 3;
-    decisionLabel = "No Seleccionado";
+    decisionLabel = LABELS.NOT_SELECTED;
     decisionColor = "bg-red-500";
-  } else if (status === "pending") {
+  } else if (status === CANDIDATE_STATUS.PENDING) {
     // Treat 'pending' as equivalent to invited or just applied for now
     currentStepIndex = 0;
   }
@@ -92,16 +99,20 @@ const StatusTimeline = ({ status }: { status: string }) => {
         let circleColor = "bg-slate-700";
         if (isCompleted) circleColor = "bg-cyan-500";
         else if (isCurrent) {
-          if (step.id === "decision" && status === "rejected")
+          if (step.id === "decision" && status === CANDIDATE_STATUS.REJECTED)
             circleColor = "bg-red-500";
-          else if (step.id === "decision" && status === "approved")
+          else if (
+            step.id === "decision" &&
+            status === CANDIDATE_STATUS.APPROVED
+          )
             circleColor = "bg-green-500";
           else circleColor = "bg-cyan-500";
         }
 
         const label =
           step.id === "decision" &&
-          (status === "approved" || status === "rejected")
+          (status === CANDIDATE_STATUS.APPROVED ||
+            status === CANDIDATE_STATUS.REJECTED)
             ? decisionLabel
             : step.label;
 
@@ -155,7 +166,7 @@ const InterviewSchedule = ({
     return () => clearInterval(timer);
   }, []);
 
-  if (interviewStatus === "completed") {
+  if (interviewStatus === INTERVIEW_STATUS.COMPLETED) {
     return (
       <div className="flex items-center gap-3 text-slate-400">
         <Check className="w-5 h-5 text-green-500" />
@@ -196,7 +207,7 @@ const InterviewSchedule = ({
         <Calendar className="w-5 h-5 text-cyan-400" />
         <div>
           <p className="font-semibold text-slate-100">
-            {scheduledDate.toLocaleString("es-ES", {
+            {scheduledDate.toLocaleString(LABELS.LOCALE_ES, {
               dateStyle: "full",
               timeStyle: "short"
             })}
@@ -378,14 +389,17 @@ const CandidateDashboard = () => {
                     className="text-[10px] border-slate-600 text-slate-400"
                   >
                     {app.created_at
-                      ? new Date(app.created_at).toLocaleDateString("es-ES", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric"
-                        })
-                      : "N/A"}
+                      ? new Date(app.created_at).toLocaleDateString(
+                          LABELS.LOCALE_ES,
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric"
+                          }
+                        )
+                      : LABELS.NOT_AVAILABLE}
                   </Badge>
-                  {app.interview_status === "invited" && (
+                  {app.interview_status === INTERVIEW_STATUS.INVITED && (
                     <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></span>
                   )}
                 </div>
@@ -433,7 +447,8 @@ const CandidateDashboard = () => {
                       >
                         {selectedApplication.type}
                       </Badge>
-                      {selectedApplication.interview_status === "invited" && (
+                      {selectedApplication.interview_status ===
+                        INTERVIEW_STATUS.INVITED && (
                         <Badge className="bg-cyan-500 text-black hover:bg-cyan-400">
                           {LABELS.ACTION_REQUIRED}
                         </Badge>
@@ -498,7 +513,7 @@ const CandidateDashboard = () => {
                           <FileText className="w-4 h-4 text-cyan-400" />
                           <p className="text-slate-300">
                             {LABELS.DOC_SHORT}:{" "}
-                            {profile?.document_number || "N/A"}
+                            {profile?.document_number || LABELS.NOT_AVAILABLE}
                           </p>
                         </div>
                         <div className="flex items-center gap-3">
@@ -508,12 +523,12 @@ const CandidateDashboard = () => {
                             {selectedApplication.created_at
                               ? new Date(
                                   selectedApplication.created_at
-                                ).toLocaleDateString("es-ES", {
+                                ).toLocaleDateString(LABELS.LOCALE_ES, {
                                   year: "numeric",
                                   month: "long",
                                   day: "numeric"
                                 })
-                              : "N/A"}
+                              : LABELS.NOT_AVAILABLE}
                           </p>
                         </div>
                       </CardContent>
@@ -572,7 +587,9 @@ const CandidateDashboard = () => {
       {needsOnboarding && profile && (
         <CandidateOnboardingModal
           userId={profile.id}
-          userName={profile.full_name || profile.name || "Usuario"}
+          userName={
+            profile.full_name || profile.name || PLACEHOLDERS.GENERIC_CANDIDATE
+          }
           onSuccess={() => {
             if (user?.id) {
               fetchProfile(user.id); // Refresh profile after onboarding

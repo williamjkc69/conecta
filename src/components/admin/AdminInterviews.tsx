@@ -13,6 +13,7 @@ import {
   LABELS,
   BUTTONS
 } from "@/constants/text";
+import { CANDIDATE_STATUS_LABELS } from "@/constants/options";
 
 interface Interview {
   id: string;
@@ -135,18 +136,22 @@ const AdminInterviews = () => {
                     className="border-t border-slate-700 hover:bg-slate-800/60"
                   >
                     <td className="p-4">
-                      {interview.candidate?.full_name || "N/A"}
+                      {interview.candidate?.full_name || LABELS.NOT_AVAILABLE}
                     </td>
                     <td className="p-4 text-slate-400">
-                      {interview.company?.company_name || "N/A"}
+                      {interview.company?.company_name || LABELS.NOT_AVAILABLE}
                     </td>
                     <td className="p-4 text-slate-400">
-                      {interview.job?.title || "N/A"}
+                      {interview.job?.title || LABELS.NOT_AVAILABLE}
                     </td>
                     <td className="p-4 text-slate-400">
                       {new Date(interview.created_at).toLocaleString()}
                     </td>
-                    <td className="p-4 capitalize">{interview.status}</td>
+                    <td className="p-4 capitalize">
+                      {CANDIDATE_STATUS_LABELS[
+                        interview.status as keyof typeof CANDIDATE_STATUS_LABELS
+                      ] || interview.status}
+                    </td>
                   </tr>
                 ))
               )}

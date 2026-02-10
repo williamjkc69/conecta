@@ -13,6 +13,7 @@ import { motion } from "framer-motion";
 import AudioSetup from "./AudioSetup";
 import { useRouter } from "next/navigation";
 import { TITLES, MESSAGES, BUTTONS, LABELS } from "@/constants/text";
+import { INTERVIEW_STATUS, CANDIDATE_STATUS } from "@/constants/status";
 
 interface InterviewControlsProps {
   callState: "idle" | "connecting" | "connected" | "ended" | "error";
@@ -77,7 +78,7 @@ const InterviewControls: React.FC<InterviewControlsProps> = ({
           className="text-center p-6 bg-slate-800/50 rounded-lg border border-slate-700"
         >
           <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
-          <h3 className="text-xl font-semibold text-white mb-2">
+          <h3 className="text-xl font-semibold text-white">
             {TITLES.INTERVIEW_COMPLETED}
           </h3>
           <p className="text-slate-400 text-sm mb-4">
@@ -99,7 +100,10 @@ const InterviewControls: React.FC<InterviewControlsProps> = ({
   if (isIdle || isError) {
     if (!canInterview) {
       // If cannot interview, show status message instead of button
-      if (interviewStatus === "completed" || interviewStatus === "reviewed") {
+      if (
+        interviewStatus === INTERVIEW_STATUS.COMPLETED ||
+        interviewStatus === CANDIDATE_STATUS.REVIEWED
+      ) {
         return (
           <div className="text-center p-6 bg-slate-800/50 rounded-lg border border-slate-700">
             <CheckCircle className="w-10 h-10 text-green-500 mx-auto mb-3" />
@@ -178,7 +182,7 @@ const InterviewControls: React.FC<InterviewControlsProps> = ({
           ) : (
             <>
               <Mic className="mr-2 h-4 w-4" />
-              {interviewStatus === "in_progress"
+              {interviewStatus === INTERVIEW_STATUS.IN_PROGRESS
                 ? BUTTONS.CONTINUE_INTERVIEW
                 : BUTTONS.START_INTERVIEW}
             </>

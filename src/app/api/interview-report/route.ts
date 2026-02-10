@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { INTERVIEW_STATUS, CANDIDATE_STATUS } from "@/constants/status";
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,8 +47,8 @@ export async function POST(request: NextRequest) {
       .from("applications")
       .update({
         interview_report: finalReport,
-        interview_status: "completed",
-        status: "reviewed",
+        interview_status: INTERVIEW_STATUS.COMPLETED,
+        status: CANDIDATE_STATUS.REVIEWED,
         updated_at: new Date().toISOString()
       })
       .eq("id", applicationId);

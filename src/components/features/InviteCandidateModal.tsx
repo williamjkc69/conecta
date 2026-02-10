@@ -27,6 +27,9 @@ import {
   LABELS,
   PLACEHOLDERS
 } from "@/constants/text";
+import { HTTP_METHODS, HTTP_HEADERS } from "@/constants/common";
+import { ROLES } from "@/constants/roles";
+import { JOB_STATUS, CANDIDATE_STATUS } from "@/constants/status";
 
 interface InviteCandidateModalProps {
   isOpen: boolean;
@@ -107,7 +110,7 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
       const { data, error } = await supabase
         .from("listings")
         .select("id, title, company_id, company:companies(name)")
-        .eq("status", "active")
+        .eq("status", JOB_STATUS.ACTIVE)
         .eq("company_id", userData.company_id);
 
       if (error) throw error;
@@ -131,7 +134,7 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
       const { data: roleData } = await supabase
         .from("roles")
         .select("id")
-        .eq("name", "candidate")
+        .eq("name", ROLES.CANDIDATE)
         .single();
 
       if (!roleData) {
@@ -280,7 +283,7 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
           const { data: statusData } = await supabase
             .from("application_statuses")
             .select("id")
-            .eq("name", "invited")
+            .eq("name", CANDIDATE_STATUS.INVITED)
             .single();
           const invitedStatusId = statusData?.id;
 
@@ -341,12 +344,12 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
           .from("invitations")
           .insert({
             email: emailToInvite,
-            role: "candidate",
+            role: ROLES.CANDIDATE,
             listing_id: selectedJobId,
             company_id: selectedJob.company_id,
             token: token,
             expires_at: expiresAt.toISOString(),
-            status: "pending"
+            status: CANDIDATE_STATUS.PENDING
           });
 
         if (inviteError) {
@@ -355,13 +358,13 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
         }
 
         await fetch("/api/send-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: HTTP_METHODS.POST,
+          headers: { "Content-Type": HTTP_HEADERS.CONTENT_TYPE_JSON },
           body: JSON.stringify({
             type: "invitation_new",
             to: emailToInvite,
             payload: {
-              role: "candidate",
+              role: ROLES.CANDIDATE,
               link: `${window.location.origin}/register?email=${encodeURIComponent(
                 emailToInvite
               )}&listingId=${selectedJobId}&token=${token}`

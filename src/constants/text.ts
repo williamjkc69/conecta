@@ -129,7 +129,25 @@ export const TITLES = {
   COMPARATIVE_ANALYSIS: "Análisis Comparativo",
   METRIC_COMPARISON: "Comparación de Métricas",
   LIVE_TRANSCRIPTION: "Transcripción en Vivo",
-  CONNECTION_DETAILS: "Detalles de la Conexión"
+  CONNECTION_DETAILS: "Detalles de la Conexión",
+  FEEDBACK_GENERAL: "Feedback General",
+  QUESTIONS_BREAKDOWN: "Desglose de Preguntas",
+  STRENGTHS: "Fortalezas",
+  AREAS_FOR_IMPROVEMENT: "Áreas de Mejora",
+  COMMUNICATION_QUALITY: "Calidad de Comunicación",
+  SUGGESTED_NEXT_STEPS: "Siguientes Pasos Sugeridos",
+  FULL_TRANSCRIPT: "Transcripción Completa",
+  INTERVIEWER_AI: "Entrevistador (IA)",
+  CANDIDATE: "Candidato",
+  INTERVIEWER_NAME: "Jennifer",
+  APPROVE_CANDIDATE_CONFIRM: "¿Aprobar candidato?",
+  REJECT_CANDIDATE_CONFIRM: "¿Rechazar candidato?",
+  INTERVIEW_RECORDING: "Grabación de Entrevista",
+  PLATFORM_VERSION: "v1.1",
+  YOU: "Tú",
+  AI_ADVISOR: "Jennifer",
+  CONGRATULATIONS: "¡Felicidades!",
+  PLATFORM_NAME: "Conecta"
 } as const;
 
 export const MESSAGES = {
@@ -200,6 +218,9 @@ export const MESSAGES = {
   WELCOME: "Bienvenido,",
   CHECKING_PROFILE: "Verificando perfil de empresa...",
   INTERVIEW_COMPLETED: "Entrevista completada.",
+  CANDIDATE_APPROVED: "Candidato aprobado correctamente.",
+  CANDIDATE_REJECTED: "Candidato rechazado.",
+  ERROR_UPDATING_STATUS: "No se pudo actualizar el estado del candidato.",
   INTERVIEW_FLEXIBLE: "Entrevista flexible, sin fecha agendada.",
   INTERVIEW_PAST: "La hora de la entrevista ha pasado",
   STARTS_PREFIX: "Comienza en",
@@ -256,6 +277,7 @@ export const MESSAGES = {
   WAITING_DESC:
     "Tu solicitud ha sido enviada. Si tu perfil coincide, recibirás una invitación.",
   NO_TRANSCRIPT: "No hay transcripción disponible.",
+  NO_TRANSCRIPT_AVAILABLE: "No hay transcripción disponible aún.",
   PDF_COMING_SOON: "La descarga de PDF estará disponible próximamente.",
   REPORT_ERROR: "No se pudo generar el informe de rendimiento.",
   REPORT_DESC: "Análisis detallado de la sesión de entrevista.",
@@ -353,6 +375,20 @@ export const MESSAGES = {
     "La gestión de plantillas de email aún no está implementada.",
   EMAIL_TEMPLATES_DESC:
     "Aquí podrás editar el contenido de los correos de bienvenida, recuperación de contraseña, invitaciones a vacantes, y más.",
+  CALL_TO_ACTION: "Convirtamos tus ideas en realidad.",
+  INTERVIEW_START_WARNING:
+    "⚠️ AVISO IMPORTANTE:\n\nUna vez que inicies la entrevista, no podrás pausarla ni reanudarla.\nSi sales de la página o finalizas la llamada antes de tiempo, tu postulación se marcará automáticamente como completada/finalizada.\n\n¿Estás listo para comenzar?",
+  ERROR_UPDATING_JOB_DESC: "No se pudo actualizar la vacante: {error}",
+  ERROR_DELETING_JOB_DESC: "No se pudo eliminar la vacante: {error}",
+  APPLIED_TO: "aplicó para",
+  STATUS_IN_REVIEW_DESC:
+    "Tu entrevista ha finalizado. Estamos revisando tus resultados.",
+  STATUS_IN_REVIEW_ALT_DESC:
+    "Tu entrevista ha finalizado. El equipo está revisando tu perfil.",
+  STATUS_APPROVED_DESC:
+    "Has sido seleccionado para esta posición. Nos pondremos en contacto contigo pronto.",
+  STATUS_REJECTED_DESC:
+    "Gracias por tu interés, pero hemos decidido avanzar con otros candidatos.",
   PASSWORD_EMPTY_ERROR: "La contraseña no puede estar vacía.",
   CHANGE_PASSWORD_DESC: "Estás cambiando la contraseña para el usuario",
   CANDIDATE_FOUND_MSG: "está disponible para invitación.",
@@ -374,7 +410,24 @@ export const MESSAGES = {
   GO_TO_LOGIN: "Ir al inicio",
   WELCOME_AI: "¡Hola! Soy",
   WELCOME_AI_SUBTITLE:
-    "tu asistente de IA. Estoy aquí para ayudarte en tu proceso de selección."
+    "tu asistente de IA. Estoy aquí para ayudarte en tu proceso de selección.",
+  APPROVE_CANDIDATE_WARNING:
+    "Estás a punto de marcar a {name} como aprobado. Esto notificará al candidato.",
+  REJECT_CANDIDATE_WARNING:
+    "Estás a punto de rechazar la aplicación de {name}. Esta acción no se puede deshacer.",
+  CONFIRM_APPROVE: "Confirmar Aprobación",
+  CONFIRM_REJECT: "Confirmar Rechazo",
+  NOT_LOGGED: "No registradas",
+  PLAYBACK_SPEED: "Velocidad:",
+  RESPONSES_COUNT: "{count} respuestas",
+  MESSAGES_COUNT: "{count} mensajes",
+  POSTULATED: "Postulado",
+  IN_INTERVIEW: "En Entrevista",
+  ANSWER: "Respuesta",
+  APPLIED: "Aplicó",
+  SEARCH_JOBS: "Buscar vacantes",
+  STUB_COMPONENT_DESC: "Este componente no está en uso actualmente.",
+  NOT_IMPLEMENTED_FEATURE: "Funcionalidad no implementada."
 } as const;
 
 export const TABS = {
@@ -417,7 +470,9 @@ export const PLACEHOLDERS = {
   ADMIN_SEARCH_USERS: "Buscar por nombre, email o empresa...",
   FILTER_BY_STATUS: "Filtrar por estado (ej: completed)...",
   QUESTION_EXAMPLE: "ej: ¿Cuál es tu experiencia con TypeScript?",
-  ENTER_NEW_PASSWORD_PH: "Ingresa la nueva contraseña"
+  ENTER_NEW_PASSWORD_PH: "Ingresa la nueva contraseña",
+  GENERIC_CANDIDATE: "Candidato",
+  GENERIC_VACANCY: "la vacante"
 } as const;
 
 export const LABELS = {
@@ -523,7 +578,25 @@ export const LABELS = {
   INTERVIEW_FINISHED: "Entrevista finalizada",
   CONNECTION_ERROR: "Error en la conexión",
   SPEAKING: "Hablando...",
-  WAITING: "Esperando..."
+  WAITING: "Esperando...",
+  LOCALE_ES: "es-ES",
+  NOT_AVAILABLE: "N/A",
+  IN_REVIEW: "En Revisión",
+  HIRED: "Contratado",
+  NOT_SELECTED: "No Seleccionado",
+  DURATION: "Duración",
+  INTERACTION: "Interacción",
+  TECH_SCORE: "Puntaje Técnico",
+  AI_DECISION: "Decisión IA",
+  PENDING: "Pendiente",
+  VACANCY: "Vacante",
+  REJECT: "Rechazar",
+  APPROVE_HIRE: "Aprobar Contratación",
+  POSTULATED: "Postulado",
+  IN_INTERVIEW: "En Entrevista",
+  ANSWER: "Respuesta",
+  APPLIED: "Aplicó",
+  COMPLETED: "Completada"
 } as const;
 
 export const DEBUG = {
@@ -543,4 +616,82 @@ export const DEBUG = {
 
 export const LINKS = {
   FORGOT_PASSWORD: "¿Olvidaste tu contraseña?"
+} as const;
+
+export const EMAILS = {
+  TYPES: {
+    VERIFICATION: "verification",
+    INVITATION_NEW: "invitation_new",
+    INVITATION_EXISTING: "invitation_existing",
+    RESET_PASSWORD: "reset_password",
+    INTERVIEW_COMPLETED: "notification_completed",
+    INVITATION_ACCEPTED: "notification_invite_accepted",
+    DECISION_APPROVED: "decision_approved",
+    DECISION_REJECTED: "decision_rejected"
+  },
+  SUBJECTS: {
+    VERIFICATION: "Verifica tu correo - Conecta",
+    INVITATION_NEW: "Invitación a unirse a Conecta",
+    INVITATION_EXISTING: "Nueva invitación en Conecta",
+    RESET_PASSWORD: "Restablecer contraseña",
+    INTERVIEW_COMPLETED: "Entrevista Completada",
+    INVITATION_ACCEPTED: "¡Candidato ha aceptado la invitación!",
+    DECISION_APPROVED: "¡Felicidades! Has sido seleccionado para {jobTitle}",
+    DECISION_REJECTED: "Actualización sobre tu aplicación para {jobTitle}"
+  },
+  TEMPLATES: {
+    HELLO: "Hola {name},",
+    THANKS_PARTICIPATION:
+      "Gracias por tu interés en la posición de <strong>{jobTitle}</strong> y por tomarte el tiempo para completar nuestro proceso de entrevista con IA.",
+    SELECT_SUCCESS:
+      "Nos complace informarte que has sido seleccionado para avanzar a la siguiente etapa o ser contratado para la posición de <strong>{jobTitle}</strong> en Conecta.",
+    REJECTION_REASON:
+      "Después de revisar tu perfil y los resultados de la entrevista, hemos decidido no avanzar contigo en este proceso de selección por el momento.",
+    FUTURE_OPPORTUNITIES:
+      "Te agradecemos mucho tu participación y mantendremos tu perfil en nuestra base de talento para futuras oportunidades que se alineen mejor con tus habilidades.",
+    GOOD_LUCK: "Te deseamos mucho éxito en tu búsqueda laboral.",
+    TEAM_SIGNATURE: "El equipo de Conecta",
+    BEST_REGARDS: "Atentamente,",
+    WELCOME_TITLE: "¡Buenas noticias, {name}!",
+    HR_CONTACT:
+      "Nuestro equipo de Recursos Humanos se pondrá en contacto contigo muy pronto para discutir los siguientes pasos y detalles de tu incorporación.",
+    WELCOME_ABOARD: "¡Bienvenido a bordo!",
+    UPDATE_TITLE: "Actualización sobre tu aplicación",
+    WELCOME_TO_CONECTA: "Bienvenido a Conecta",
+    THANKS_SIGNUP:
+      "Gracias por registrarte. Para completar tu cuenta y acceder a la plataforma, por favor verifica tu correo electrónico haciendo clic en el siguiente botón:",
+    VERIFY_BUTTON: "Verificar mi correo",
+    IGNORE_IF_NOT_YOU:
+      "Si no solicitaste esta cuenta, puedes ignorar este correo.",
+    HAS_BEEN_INVITED: "Has sido invitado a Conecta",
+    INVITE_ROLE:
+      "Se te ha invitado a unirte a Conecta como <strong>{role}</strong>.",
+    ACCEPT_INVITE:
+      "Para aceptar la invitación y crear tu cuenta, haz clic en el siguiente botón:",
+    JOIN_BUTTON: "Unirme a Conecta",
+    EXPIRATION_NOTICE: "El enlace expirará en 7 días.",
+    NEW_INVITE_CONECTA: "Nueva invitación en Conecta",
+    EXISTING_USER_INVITE:
+      "Te han invitado a una nueva posición en Conecta. Como ya tienes una cuenta, puedes acceder directamente para ver los detalles.",
+    GO_TO_DASHBOARD: "Ir a mi Dashboard",
+    RESET_PW_TITLE: "Restablecer Contraseña",
+    RESET_PW_DESC:
+      "Recibimos una solicitud para restablecer tu contraseña en Conecta.",
+    RESET_BUTTON: "Restablecer Contraseña",
+    RESET_IGNORE:
+      "Si no solicitaste esto, ignora este correo. Tu contraseña permanecerá segura.",
+    INTERVIEW_COMPLETED_TITLE: "Entrevista Completada",
+    INTERVIEW_COMPLETED_DESC:
+      "La entrevista con <strong>{name}</strong> ha sido completada exitosamente.",
+    DATE: "Fecha: {date}",
+    REVIEW_RESULTS:
+      "Puedes revisar los resultados y la transcripción en tu panel de control.",
+    VIEW_RESULTS_BUTTON: "Ver Resultados",
+    INVITE_ACCEPTED_TITLE: "¡Invitación Aceptada!",
+    INVITE_ACCEPTED_DESC:
+      "El candidato <strong>{email}</strong> ha aceptado tu invitación para la posición de <strong>{jobTitle}</strong> en <strong>{companyName}</strong>.",
+    READY_TO_CONTINUE:
+      "El candidato ha sido añadido a tu lista de aplicaciones y está listo para continuar con el proceso de selección.",
+    VIEW_CANDIDATE_BUTTON: "Ver Candidato"
+  }
 } as const;

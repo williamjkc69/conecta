@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { MESSAGES } from "@/constants/text";
+import { TITLES, MESSAGES } from "@/constants/text";
 
 const WelcomeMessage: React.FC = () => {
   return (
@@ -11,8 +11,8 @@ const WelcomeMessage: React.FC = () => {
       transition={{ duration: 0.5, delay: 0.5 }}
     >
       {MESSAGES.WELCOME_AI}{" "}
-      <span className="font-semibold text-purple-300">Jennifer</span>,{" "}
-      {MESSAGES.WELCOME_AI_SUBTITLE}
+      <span className="font-semibold text-purple-300">{TITLES.AI_ADVISOR}</span>
+      , {MESSAGES.WELCOME_AI_SUBTITLE}
     </motion.p>
   );
 };

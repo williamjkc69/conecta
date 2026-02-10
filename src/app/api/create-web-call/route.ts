@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Retell API Configuration
-const RETELL_API_BASE_URL = "https://api.retellai.com/v2";
+import { RETELL_API } from "@/constants/api";
+import { HTTP_METHODS, HTTP_HEADERS } from "@/constants/common";
+
 const RETELL_API_KEY = process.env.RETELL_API_KEY;
 const RETELL_AGENT_ID = process.env.RETELL_AGENT_ID;
 
@@ -71,7 +72,7 @@ export async function POST(req: NextRequest) {
     );
 
     // Build Retell API v2 URL - correct format
-    const retellUrl = `${RETELL_API_BASE_URL}/create-web-call`;
+    const retellUrl = `${RETELL_API.BASE_URL}${RETELL_API.ENDPOINTS.CREATE_WEB_CALL}`;
     console.log(`[create-web-call] Retell API v2 URL: ${retellUrl}`);
 
     // Prepare request body with agent_id and metadata
@@ -107,9 +108,9 @@ export async function POST(req: NextRequest) {
 
     // Call Retell API v2
     const response = await fetch(retellUrl, {
-      method: "POST",
+      method: HTTP_METHODS.POST,
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": HTTP_HEADERS.CONTENT_TYPE_JSON,
         Authorization: `Bearer ${RETELL_API_KEY}`
       },
       body: JSON.stringify(requestBody)

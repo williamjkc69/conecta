@@ -38,6 +38,7 @@ import {
   LABELS,
   BUTTONS
 } from "@/constants/text";
+import { CANDIDATE_STATUS } from "@/constants/status";
 
 interface StatusConfigItem {
   icon: ReactNode;
@@ -46,39 +47,39 @@ interface StatusConfigItem {
 }
 
 const statusConfig: Record<string, StatusConfigItem> = {
-  invited: {
+  [CANDIDATE_STATUS.INVITED]: {
     icon: <Send className="w-4 h-4" />,
-    text: "Invitado",
+    text: LABELS.POSTULATED,
     color: "bg-blue-500/20 text-blue-300"
   },
-  applied: {
+  [CANDIDATE_STATUS.APPLIED]: {
     icon: <Briefcase className="w-4 h-4" />,
-    text: "Aplicó",
+    text: LABELS.APPLIED,
     color: "bg-cyan-500/20 text-cyan-300"
   },
-  interviewing: {
+  [CANDIDATE_STATUS.INTERVIEWING]: {
     icon: <ClockIcon className="w-4 h-4" />,
-    text: "En Entrevista",
+    text: LABELS.IN_INTERVIEW,
     color: "bg-purple-500/20 text-purple-300"
   },
-  reviewed: {
+  [CANDIDATE_STATUS.REVIEWED]: {
     icon: <Check className="w-4 h-4" />,
-    text: "Completada",
+    text: LABELS.COMPLETED,
     color: "bg-green-500/20 text-green-400"
   },
-  rejected: {
+  [CANDIDATE_STATUS.REJECTED]: {
     icon: <X className="w-4 h-4" />,
-    text: "Rechazado",
+    text: LABELS.NOT_SELECTED,
     color: "bg-red-500/20 text-red-400"
   },
-  hired: {
+  [CANDIDATE_STATUS.HIRED]: {
     icon: <Check className="w-4 h-4" />,
-    text: "Contratado",
+    text: LABELS.HIRED,
     color: "bg-emerald-500/20 text-emerald-400"
   },
   default: {
     icon: <User className="w-4 h-4" />,
-    text: "N/A",
+    text: LABELS.NOT_AVAILABLE,
     color: "bg-gray-500/20 text-gray-400"
   }
 };
@@ -219,7 +220,9 @@ const AdminCandidates = () => {
                       key={user.id}
                       className="border-t border-slate-700 hover:bg-slate-800/60"
                     >
-                      <td className="p-4">{user.full_name || "N/A"}</td>
+                      <td className="p-4">
+                        {user.full_name || LABELS.NOT_AVAILABLE}
+                      </td>
                       <td className="p-4 text-slate-400">{user.email}</td>
                       <td className="p-4 text-center">
                         {user.interviews_count}

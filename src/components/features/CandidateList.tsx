@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { BUTTONS, TITLES, MESSAGES, LABELS } from "@/constants/text";
 import { CANDIDATE_STATUS_LABELS } from "@/constants/options";
+import { CANDIDATE_STATUS } from "@/constants/status";
 
 interface StatusConfigItem {
   icon: ReactNode;
@@ -24,39 +25,39 @@ interface StatusConfigItem {
 }
 
 const statusConfig: Record<string, StatusConfigItem> = {
-  applied: {
+  [CANDIDATE_STATUS.APPLIED]: {
     icon: <Clock className="w-4 h-4" />,
     text: CANDIDATE_STATUS_LABELS.applied,
     color: "bg-yellow-500/20 text-yellow-400"
   },
-  invited: {
+  [CANDIDATE_STATUS.INVITED]: {
     icon: <Send className="w-4 h-4" />,
     text: CANDIDATE_STATUS_LABELS.invited,
     color: "bg-blue-500/20 text-blue-300"
   },
-  interviewing: {
+  [CANDIDATE_STATUS.INTERVIEWING]: {
     icon: <Briefcase className="w-4 h-4" />,
     text: CANDIDATE_STATUS_LABELS.interviewing,
     color: "bg-purple-500/20 text-purple-300"
   },
-  completed: {
+  [CANDIDATE_STATUS.COMPLETED]: {
     icon: <Clock className="w-4 h-4" />,
-    text: "En Revisión",
+    text: LABELS.IN_REVIEW,
     color: "bg-orange-500/20 text-orange-400"
   },
-  approved: {
+  [CANDIDATE_STATUS.APPROVED]: {
     icon: <Check className="w-4 h-4" />,
-    text: "Aprobado",
+    text: CANDIDATE_STATUS_LABELS.hired,
     color: "bg-green-500/20 text-green-400"
   },
-  rejected: {
+  [CANDIDATE_STATUS.REJECTED]: {
     icon: <X className="w-4 h-4" />,
-    text: "Rechazado",
+    text: CANDIDATE_STATUS_LABELS.rejected,
     color: "bg-red-500/20 text-red-400"
   },
-  pending: {
+  [CANDIDATE_STATUS.PENDING]: {
     icon: <Clock className="w-4 h-4" />,
-    text: "Pendiente",
+    text: LABELS.PENDING_BADGE,
     color: "bg-gray-500/20 text-gray-400"
   }
 };
@@ -113,9 +114,13 @@ const CandidateList: React.FC<CandidateListProps> = ({
         };
 
         // Show view button for completed, approved, rejected
-        const showViewButton = ["completed", "approved", "rejected"].includes(
-          candidate.status
-        );
+        const showViewButton = (
+          [
+            CANDIDATE_STATUS.COMPLETED,
+            CANDIDATE_STATUS.APPROVED,
+            CANDIDATE_STATUS.REJECTED
+          ] as string[]
+        ).includes(candidate.status);
 
         return (
           <motion.div
@@ -147,7 +152,7 @@ const CandidateList: React.FC<CandidateListProps> = ({
                       <span className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
                         {new Date(candidate.appliedAt).toLocaleDateString(
-                          "es-ES"
+                          LABELS.LOCALE_ES
                         )}
                       </span>
                     </div>
@@ -169,7 +174,7 @@ const CandidateList: React.FC<CandidateListProps> = ({
               </div>
 
               <div className="flex gap-2">
-                {candidate.status === "invited" && (
+                {candidate.status === CANDIDATE_STATUS.INVITED && (
                   <Button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -194,7 +199,7 @@ const CandidateList: React.FC<CandidateListProps> = ({
                     className="border-green-500/50 text-green-400 hover:bg-green-500/10"
                   >
                     <Eye className="w-4 h-4 mr-2" />
-                    {"Ver Entrevista"}
+                    {BUTTONS.VIEW_DETAILS}
                   </Button>
                 )}
               </div>

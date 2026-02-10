@@ -7,9 +7,10 @@ import {
   AUDIO_CONFIG,
   TIMEOUTS,
   ERROR_MESSAGES,
-  TABLES,
-  APPLICATION_STATUS,
-} from '@/constants';
+} from '@/constants/retell';
+import { TABLES } from '@/constants/supabase';
+import { CANDIDATE_STATUS, CANDIDATE_STATUS_IDS } from '@/constants/status';
+import { HTTP_METHODS, HTTP_HEADERS } from '@/constants/common';
 
 // 👇 AGREGAMOS "job" AQUÍ
 export const useRetellConnection = ({ onInterviewCompleted, application, user, job }) => {
@@ -110,9 +111,9 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
          // Send Beacon to mark as completed (ID 2)
          const payload = JSON.stringify({ 
              applicationId: application?.id, 
-             status: 2 // Send ID directly
+             status: CANDIDATE_STATUS_IDS.COMPLETED // Send ID directly
          });
-         const blob = new Blob([payload], { type: 'application/json' });
+         const blob = new Blob([payload], { type: HTTP_HEADERS.CONTENT_TYPE_JSON });
          navigator.sendBeacon('/api/set-application-status', blob);
       }
     };
@@ -176,7 +177,7 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
       
       const { error: updateError } = await supabase
         .from(TABLES.APPLICATIONS)
-        .update({ status_id: 6 }) // Hardcoded ID 6
+        .update({ status_id: CANDIDATE_STATUS_IDS.INTERVIEWING }) // Use ID constant
         .eq('id', application.id);
 
       if (updateError) {
@@ -298,7 +299,7 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
       const response = await fetch('/api/create-web-call', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': HTTP_HEADERS.CONTENT_TYPE_JSON,
         },
         body: JSON.stringify({
           metadata: {
@@ -424,7 +425,7 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
 
     // Always try to set status to completed (2) when stopping, unless it was just a connection error
     if (application?.id) {
-       const completedStatusId = 2;
+       const completedStatusId = CANDIDATE_STATUS_IDS.COMPLETED;
        
        const hasValidCallData = callDetails && (callDetails.call_id || callDetails.transcript);
        
@@ -446,7 +447,7 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
           // But "Finalizar" calls stopInterview.
           const response = await fetch('/api/set-application-status', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': HTTP_HEADERS.CONTENT_TYPE_JSON },
               body: JSON.stringify(payload)
           });
           

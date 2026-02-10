@@ -1,5 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { CANDIDATE_STATUS, CANDIDATE_STATUS_IDS } from "@/constants/status";
+import { HTTP_METHODS, HTTP_HEADERS } from "@/constants/common";
+import { TABLES } from "@/constants/supabase";
 
 export async function POST(request: Request) {
   try {
@@ -20,11 +23,11 @@ export async function POST(request: Request) {
 
     // 1. Verify invitation
     const { data: inviteData, error: inviteError } = await supabaseAdmin
-      .from("invitations")
+      .from(TABLES.INVITATIONS)
       .select("*")
       .eq("token", token)
       .eq("email", email)
-      .eq("status", "pending")
+      .eq("status", CANDIDATE_STATUS.PENDING)
       .single();
 
     if (inviteError || !inviteData) {
@@ -36,7 +39,7 @@ export async function POST(request: Request) {
 
     // 2. Update invitation status
     const { error: updateError } = await supabaseAdmin
-      .from("invitations")
+      .from(TABLES.INVITATIONS)
       .update({ status: "accepted" })
       .eq("id", inviteData.id);
 
@@ -45,19 +48,14 @@ export async function POST(request: Request) {
     }
 
     // 3. Create Application
-    // Get the 'invited' status ID
-    const { data: statusData } = await supabaseAdmin
-      .from("application_statuses")
-      .select("id")
-      .eq("name", "invited")
-      .single();
+    // We use the ID constant directly below
 
     const { error: appError } = await supabaseAdmin
-      .from("applications")
+      .from(TABLES.APPLICATIONS)
       .insert({
         user_id: userId,
         listing_id: jobId, // In the request jobId is the listing_id
-        status_id: statusData?.id
+        status_id: CANDIDATE_STATUS_IDS.INVITED
       });
 
     if (appError) {
@@ -91,8 +89,8 @@ export async function POST(request: Request) {
       if (companyUser && companyUser.email) {
         // Send email
         await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/send-email`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: HTTP_METHODS.POST,
+          headers: { "Content-Type": HTTP_HEADERS.CONTENT_TYPE_JSON },
           body: JSON.stringify({
             type: "notification_invite_accepted",
             to: companyUser.email,

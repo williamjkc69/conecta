@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { analyzeInterviewTranscript } from "@/lib/openai-interview-analyzer";
+import { CANDIDATE_STATUS, CANDIDATE_STATUS_IDS } from "@/constants/status";
 
 export async function POST(request: NextRequest) {
   try {
@@ -119,10 +120,10 @@ export async function POST(request: NextRequest) {
     const { data: statusData } = await supabase
       .from("application_statuses")
       .select("id")
-      .eq("name", "completed")
+      .eq("name", CANDIDATE_STATUS.COMPLETED)
       .single();
 
-    const completedStatusId = statusData?.id || 2; // Default to 2 if not found
+    const completedStatusId = statusData?.id || CANDIDATE_STATUS_IDS.COMPLETED;
 
     // 5. Update Application with Score and Decision
     const techScore = analysis.overall_assessment?.technical_competency_score;

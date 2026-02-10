@@ -30,12 +30,18 @@ import {
   Mail,
   Award,
   MessageSquare,
-  Play,
-  Pause,
   ChevronDown,
   ChevronUp
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import {
+  BUTTONS,
+  TITLES,
+  MESSAGES,
+  LABELS,
+  PLACEHOLDERS
+} from "@/constants/text";
+import { CANDIDATE_STATUS } from "@/constants/status";
 
 interface CompanyCandidateModalProps {
   isOpen: boolean;
@@ -174,11 +180,11 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
   };
 
   const statusLabels: any = {
-    invited: "Invitado",
-    interviewing: "En Entrevista",
-    completed: "En Revisión",
-    approved: "Aprobado",
-    rejected: "Rechazado"
+    invited: LABELS.PENDING,
+    interviewing: LABELS.IN_COURSE_BADGE,
+    completed: LABELS.IN_REVIEW,
+    approved: LABELS.HIRED,
+    rejected: LABELS.NOT_SELECTED
   };
 
   return (
@@ -190,7 +196,7 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
             <div className="flex justify-between items-start">
               <div>
                 <DialogTitle className="text-2xl font-bold flex items-center gap-3">
-                  {candidate.candidateName || "Candidato"}
+                  {candidate.candidateName || PLACEHOLDERS.GENERIC_CANDIDATE}
                   <Badge
                     variant="outline"
                     className={statusColors[candidate.status] || ""}
@@ -203,9 +209,11 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
                 </DialogDescription>
               </div>
               <div className="text-right">
-                <p className="text-sm font-semibold text-slate-300">Vacante</p>
+                <p className="text-sm font-semibold text-slate-300">
+                  {LABELS.VACANCY}
+                </p>
                 <p className="text-cyan-400 font-medium">
-                  {candidate.jobTitle || "Desconocido"}
+                  {candidate.jobTitle || LABELS.UNKNOWN}
                 </p>
               </div>
             </div>
@@ -225,7 +233,7 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
                     <div className="flex items-center gap-2 text-slate-400 mb-2">
                       <Clock className="w-4 h-4" />
                       <span className="text-xs uppercase font-semibold">
-                        Duración
+                        {LABELS.DURATION}
                       </span>
                     </div>
                     <p className="text-lg font-mono text-white">
@@ -238,39 +246,47 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
                     <div className="flex items-center gap-2 text-slate-400 mb-2">
                       <MessageSquare className="w-4 h-4" />
                       <span className="text-xs uppercase font-semibold">
-                        Interacción
+                        {LABELS.INTERACTION}
                       </span>
                     </div>
                     <p className="text-lg text-white">
                       {candidate.messages_count || responses.length > 0
                         ? responses.length > 0
-                          ? `${responses.length} respuestas`
-                          : `${candidate.messages_count} mensajes`
-                        : "N/A"}
+                          ? MESSAGES.RESPONSES_COUNT.replace(
+                              "{count}",
+                              responses.length.toString()
+                            )
+                          : MESSAGES.MESSAGES_COUNT.replace(
+                              "{count}",
+                              candidate.messages_count.toString()
+                            )
+                        : LABELS.NOT_AVAILABLE}
                     </p>
                   </div>
                   <div className="bg-slate-800 p-4 rounded-lg border border-slate-700">
                     <div className="flex items-center gap-2 text-slate-400 mb-2">
                       <Award className="w-4 h-4" />
                       <span className="text-xs uppercase font-semibold">
-                        Puntaje Técnico
+                        {LABELS.TECH_SCORE}
                       </span>
                     </div>
                     <p
                       className={`text-lg font-bold ${score >= 7 ? "text-green-400" : score >= 5 ? "text-yellow-400" : "text-red-400"}`}
                     >
-                      {typeof score === "number" ? `${score}/10` : "Pendiente"}
+                      {typeof score === "number"
+                        ? `${score}/10`
+                        : LABELS.PENDING}
                     </p>
                   </div>
                   <div className="bg-slate-800 p-4 rounded-lg border border-slate-700">
                     <div className="flex items-center gap-2 text-slate-400 mb-2">
                       <CheckCircle className="w-4 h-4" />
                       <span className="text-xs uppercase font-semibold">
-                        Decisión IA
+                        {LABELS.AI_DECISION}
                       </span>
                     </div>
                     <p className="text-lg text-white capitalize">
-                      {decision || "Pendiente"}
+                      {decision || LABELS.PENDING}
                     </p>
                   </div>
                 </div>
@@ -279,7 +295,7 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
                 {recordingUrl && (
                   <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700">
                     <h3 className="text-sm font-semibold text-slate-300 mb-3 uppercase tracking-wider">
-                      Grabación de Entrevista
+                      {TITLES.INTERVIEW_RECORDING}
                     </h3>
                     <div className="flex flex-col gap-4">
                       {/* Native Audio Player with Controls */}
@@ -294,7 +310,7 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
                       />
                       <div className="flex gap-2 justify-end items-center">
                         <span className="text-xs text-slate-400">
-                          Velocidad:
+                          {MESSAGES.PLAYBACK_SPEED}
                         </span>
                         {[1.0, 1.25, 1.5, 2.0].map((rate) => (
                           <Button
@@ -319,7 +335,7 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
                   <div className="bg-slate-800/30 p-5 rounded-lg border border-slate-700">
                     <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
                       <FileText className="w-5 h-5 text-cyan-500" />
-                      Feedback General
+                      {TITLES.FEEDBACK_GENERAL}
                     </h3>
                     <p className="text-slate-300 leading-relaxed text-sm">
                       {summary}
@@ -332,7 +348,7 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
                       <MessageSquare className="w-5 h-5 text-purple-400" />
-                      Desglose de Preguntas
+                      {TITLES.QUESTIONS_BREAKDOWN}
                     </h3>
                     <div className="grid gap-4">
                       {responses.map((resp: any, i: number) => (
@@ -352,7 +368,7 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
                                                 ${resp.quality === "Poor" ? "border-red-500/30 text-red-400 bg-red-500/10" : ""}
                                             `}
                             >
-                              {resp.quality || "N/A"}
+                              {resp.quality || LABELS.NOT_AVAILABLE}
                             </Badge>
                           </div>
                           <p className="text-slate-400 text-sm bg-slate-900/50 p-3 rounded">
@@ -370,7 +386,7 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
                     {/* Strengths */}
                     <div className="bg-slate-800/30 p-4 rounded-lg border border-slate-700">
                       <h4 className="font-semibold text-green-400 mb-2 flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4" /> Fortalezas
+                        <CheckCircle className="w-4 h-4" /> {TITLES.STRENGTHS}
                       </h4>
                       <ul className="list-disc list-inside text-sm text-slate-300 space-y-1">
                         {report.overall_assessment.strengths?.map(
@@ -379,7 +395,7 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
                           )
                         ) || (
                           <li className="italic text-slate-500">
-                            No registradas
+                            {MESSAGES.NOT_LOGGED}
                           </li>
                         )}
                       </ul>
@@ -388,7 +404,8 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
                     {/* Weaknesses */}
                     <div className="bg-slate-800/30 p-4 rounded-lg border border-slate-700">
                       <h4 className="font-semibold text-red-400 mb-2 flex items-center gap-2">
-                        <XCircle className="w-4 h-4" /> Áreas de Mejora
+                        <XCircle className="w-4 h-4" />{" "}
+                        {TITLES.AREAS_FOR_IMPROVEMENT}
                       </h4>
                       <ul className="list-disc list-inside text-sm text-slate-300 space-y-1">
                         {report.overall_assessment.weaknesses?.map(
@@ -397,7 +414,7 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
                           )
                         ) || (
                           <li className="italic text-slate-500">
-                            No registradas
+                            {MESSAGES.NOT_LOGGED}
                           </li>
                         )}
                       </ul>
@@ -410,19 +427,20 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-slate-800/30 p-4 rounded-lg border border-slate-700">
                       <h4 className="font-semibold text-slate-200 mb-2 text-sm">
-                        Calidad de Comunicación
+                        {TITLES.COMMUNICATION_QUALITY}
                       </h4>
                       <p className="text-slate-400 text-sm">
                         {report.overall_assessment?.communication_quality ||
-                          "N/A"}
+                          LABELS.NOT_AVAILABLE}
                       </p>
                     </div>
                     <div className="bg-slate-800/30 p-4 rounded-lg border border-slate-700">
                       <h4 className="font-semibold text-slate-200 mb-2 text-sm">
-                        Siguientes Pasos Sugeridos
+                        {TITLES.SUGGESTED_NEXT_STEPS}
                       </h4>
                       <p className="text-slate-400 text-sm">
-                        {report.recommendation?.suggested_next_steps || "N/A"}
+                        {report.recommendation?.suggested_next_steps ||
+                          LABELS.NOT_AVAILABLE}
                       </p>
                     </div>
                   </div>
@@ -435,7 +453,7 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
                     className="w-full flex items-center justify-between p-5 hover:bg-slate-800/50 transition-colors"
                   >
                     <h3 className="font-semibold text-lg">
-                      Transcripción Completa
+                      {TITLES.FULL_TRANSCRIPT}
                     </h3>
                     {showTranscript ? (
                       <ChevronUp className="w-5 h-5 text-slate-400" />
@@ -460,8 +478,8 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
                                   >
                                     <span className="text-[10px] font-bold opacity-60 uppercase mb-1 block tracking-wider">
                                       {turn.role === "agent"
-                                        ? "Entrevistador (IA)"
-                                        : "Candidato"}
+                                        ? TITLES.INTERVIEWER_AI
+                                        : TITLES.CANDIDATE}
                                     </span>
                                     {turn.content}
                                   </div>
@@ -476,7 +494,7 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
                         </div>
                       ) : (
                         <div className="text-center py-8 text-slate-500 italic">
-                          No hay transcripción disponible aún.
+                          {MESSAGES.NO_TRANSCRIPT_AVAILABLE}
                         </div>
                       )}
                     </div>
@@ -489,12 +507,12 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
           {/* Footer */}
           <DialogFooter className="p-6 bg-slate-900 border-t border-slate-800 gap-3 flex-shrink-0">
             <Button variant="outline" onClick={onClose}>
-              Cerrar
+              {BUTTONS.CLOSE}
             </Button>
 
             {/* Only show decision buttons if status is 'completed' (waiting for review) */}
-            {(candidate.status === "completed" ||
-              candidate.status === "reviewed") && (
+            {(candidate.status === CANDIDATE_STATUS.COMPLETED ||
+              candidate.status === CANDIDATE_STATUS.REVIEWED) && (
               <>
                 <Button
                   variant="destructive"
@@ -502,14 +520,14 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
                   className="bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/50"
                   disabled={processing}
                 >
-                  Rechazar
+                  {LABELS.REJECT}
                 </Button>
                 <Button
                   onClick={() => setShowConfirmApprove(true)}
                   className="bg-green-600 hover:bg-green-500 text-white"
                   disabled={processing}
                 >
-                  Aprobar Contratación
+                  {LABELS.APPROVE_HIRE}
                 </Button>
               </>
             )}
@@ -524,16 +542,19 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
       >
         <AlertDialogContent className="bg-slate-800 border-slate-700 text-slate-100">
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Aprobar candidato?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {TITLES.APPROVE_CANDIDATE_CONFIRM}
+            </AlertDialogTitle>
             <AlertDialogDescription className="text-slate-400">
-              Estás a punto de marcar a{" "}
-              <strong>{candidate.candidateName}</strong> como aprobado. Esto
-              notificará al candidato.
+              {MESSAGES.APPROVE_CANDIDATE_WARNING.replace(
+                "{name}",
+                candidate.candidateName || PLACEHOLDERS.GENERIC_CANDIDATE
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="bg-transparent border-slate-600 text-slate-300 hover:bg-slate-700">
-              Cancelar
+              {BUTTONS.CANCEL}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleApprove}
@@ -543,7 +564,7 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
               {processing ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : null}
-              Confirmar Aprobación
+              {MESSAGES.CONFIRM_APPROVE}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -554,17 +575,18 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
         <AlertDialogContent className="bg-slate-800 border-slate-700 text-slate-100">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-red-400">
-              ¿Rechazar candidato?
+              {TITLES.REJECT_CANDIDATE_CONFIRM}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-slate-400">
-              Estás a punto de rechazar la aplicación de{" "}
-              <strong>{candidate.candidateName}</strong>. Esta acción no se
-              puede deshacer.
+              {MESSAGES.REJECT_CANDIDATE_WARNING.replace(
+                "{name}",
+                candidate.candidateName || PLACEHOLDERS.GENERIC_CANDIDATE
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="bg-transparent border-slate-600 text-slate-300 hover:bg-slate-700">
-              Cancelar
+              {BUTTONS.CANCEL}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleReject}
@@ -574,7 +596,7 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
               {processing ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : null}
-              Confirmar Rechazo
+              {MESSAGES.CONFIRM_REJECT}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

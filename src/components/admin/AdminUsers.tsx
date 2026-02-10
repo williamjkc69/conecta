@@ -215,7 +215,9 @@ const AdminUsers = () => {
                     className="border-t border-slate-700 hover:bg-slate-800/60"
                   >
                     <td className="p-4">
-                      {user.full_name || user.company_name || "N/A"}
+                      {user.full_name ||
+                        user.company_name ||
+                        LABELS.NOT_AVAILABLE}
                     </td>
                     <td className="p-4 text-slate-400">{user.email}</td>
                     <td className="p-4 capitalize">

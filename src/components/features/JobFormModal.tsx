@@ -16,6 +16,8 @@ import {
   JOB_STATUS_LABELS,
   LISTING_TYPE_PLACEHOLDER
 } from "@/constants/options";
+import { JOB_STATUS } from "@/constants/status";
+import { UI_MODES, UIMode } from "@/constants/common";
 
 interface JobFormModalProps {
   isOpen: boolean;
@@ -23,7 +25,7 @@ interface JobFormModalProps {
   onSubmit: (data: any) => void;
   onDelete?: (id: string) => void;
   job?: any; // If provided, we're editing; otherwise creating
-  mode?: "create" | "edit";
+  mode?: UIMode;
   isLoading?: boolean; // Loading state for submit button
   isDeleting?: boolean; // Loading state for delete button
 }
@@ -81,7 +83,7 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
     currency: "USD",
     requirements: [],
     questions: [""],
-    status: "active"
+    status: JOB_STATUS.ACTIVE
   });
 
   useEffect(() => {
@@ -106,7 +108,7 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
 
   // Populate form when editing
   useEffect(() => {
-    if (job && mode === "edit") {
+    if (job && mode === UI_MODES.EDIT) {
       setFormData({
         id: job.id,
         title: job.title || "",
@@ -115,12 +117,12 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
         listing_type_id: job.listing_type_id || job.listing_type?.id || null,
         salary_range_min: job.salary_range_min?.toString() || "",
         salary_range_max: job.salary_range_max?.toString() || "",
-        currency: job.salary_currency || job.currency || "USD",
+        currency: job.salary_currency || job.currency || CURRENCIES[0],
         requirements: job.requirements || [],
         questions: job.questions || [""],
-        status: job.status || "active"
+        status: job.status || JOB_STATUS.ACTIVE
       });
-    } else if (mode === "create") {
+    } else if (mode === UI_MODES.CREATE) {
       // Reset form for create mode
       setFormData({
         title: "",
@@ -129,10 +131,10 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
         listing_type_id: listingTypes[0]?.id || null,
         salary_range_min: "",
         salary_range_max: "",
-        currency: "USD",
+        currency: CURRENCIES[0],
         requirements: [],
         questions: [""],
-        status: "active"
+        status: JOB_STATUS.ACTIVE
       });
       setSkillInput("");
     }
@@ -323,7 +325,7 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
     }
 
     const cleanedData = {
-      ...(mode === "edit" && { id: formData.id }),
+      ...(mode === UI_MODES.EDIT && { id: formData.id }),
       title: formData.title.trim(),
       description: formData.description.trim(),
       location: formData.location?.trim() || null,
@@ -341,7 +343,7 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
     onSubmit(cleanedData);
 
     // Reset form only in create mode
-    if (mode === "create") {
+    if (mode === UI_MODES.CREATE) {
       setSkillInput("");
       setFormData({
         title: "",
@@ -392,7 +394,9 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                 </button>
 
                 <h2 className="text-2xl sm:text-3xl font-bold gradient-text pr-8">
-                  {mode === "create" ? TITLES.CREATE_JOB : TITLES.EDIT_JOB}
+                  {mode === UI_MODES.CREATE
+                    ? TITLES.CREATE_JOB
+                    : TITLES.EDIT_JOB}
                 </h2>
               </div>
 
@@ -454,7 +458,7 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                       </select>
                     </div>
 
-                    {mode === "edit" && (
+                    {mode === UI_MODES.EDIT && (
                       <div>
                         <label className="block text-sm font-medium mb-2 text-slate-300">
                           {LABELS.STATUS} *
@@ -465,10 +469,10 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                           onChange={handleChange}
                           className="w-full px-4 py-3 rounded-lg bg-blue-950/20 border border-blue-400/20 text-slate-100 focus:outline-none focus:border-blue-500 text-sm"
                         >
-                          <option value="active">
+                          <option value={JOB_STATUS.ACTIVE}>
                             {JOB_STATUS_LABELS.ACTIVE}
                           </option>
-                          <option value="inactive">
+                          <option value={JOB_STATUS.INACTIVE}>
                             {JOB_STATUS_LABELS.INACTIVE}
                           </option>
                         </select>
@@ -670,7 +674,7 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                   >
                     {BUTTONS.CANCEL}
                   </Button>
-                  {mode === "edit" && onDelete && (
+                  {mode === UI_MODES.EDIT && onDelete && (
                     <Button
                       type="button"
                       variant="destructive"
@@ -699,9 +703,11 @@ const JobFormModal: React.FC<JobFormModalProps> = ({
                     {isLoading ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        {mode === "create" ? BUTTONS.CREATING : BUTTONS.SAVING}
+                        {mode === UI_MODES.CREATE
+                          ? BUTTONS.CREATING
+                          : BUTTONS.SAVING}
                       </>
-                    ) : mode === "create" ? (
+                    ) : mode === UI_MODES.CREATE ? (
                       BUTTONS.CREATE_JOB
                     ) : (
                       BUTTONS.SAVE_CHANGES

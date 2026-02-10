@@ -16,6 +16,8 @@ import { supabase } from "@/lib/supabase";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useAuthStore } from "@/store/authStore";
 import { BUTTONS, TITLES, MESSAGES, LABELS } from "@/constants/text";
+import { CANDIDATE_STATUS } from "@/constants/status";
+import { ROLES } from "@/constants/roles";
 
 interface AssignCandidateModalProps {
   isOpen: boolean;
@@ -57,7 +59,7 @@ const AssignCandidateModal: React.FC<AssignCandidateModalProps> = ({
             role:roles!inner(name)
           `
           )
-          .eq("role.name", "candidate")
+          .eq("role.name", ROLES.CANDIDATE)
           .eq("document_number", docNumber)
           .single();
 
@@ -126,7 +128,7 @@ const AssignCandidateModal: React.FC<AssignCandidateModalProps> = ({
       const { data: statusData } = await supabase
         .from("application_statuses")
         .select("id")
-        .eq("name", "invited")
+        .eq("name", CANDIDATE_STATUS.INVITED)
         .single();
       const statusId = statusData?.id;
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { INTERVIEW_STATUS, CANDIDATE_STATUS } from "@/constants/status";
 
 export async function POST(req: NextRequest) {
   try {
@@ -51,8 +52,8 @@ async function handleCallStarted(call: any) {
     await supabase
       .from("applications")
       .update({
-        interview_status: "in_progress",
-        status: "interviewing",
+        interview_status: INTERVIEW_STATUS.IN_PROGRESS,
+        status: CANDIDATE_STATUS.INTERVIEWING,
         retell_call_id: call_id
       })
       .eq("id", metadata.applicationId);
@@ -70,8 +71,8 @@ async function handleCallEnded(call: any) {
 
   if (metadata?.applicationId) {
     const updateData: any = {
-      interview_status: "completed",
-      status: "reviewed",
+      interview_status: INTERVIEW_STATUS.COMPLETED,
+      status: CANDIDATE_STATUS.REVIEWED,
       retell_call_ended_at: end_timestamp
     };
 

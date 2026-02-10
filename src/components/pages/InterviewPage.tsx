@@ -19,8 +19,17 @@ import InterviewControls from "@/components/interview/InterviewControls";
 import AudioLevelDisplay from "@/components/interview/AudioLevelDisplay";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { INTERVIEW_STATUS, CALL_STATES, APPLICATION_STATUS } from "@/constants";
-import { TITLES, MESSAGES, BUTTONS, LABELS, DEBUG } from "@/constants/text";
+import { INTERVIEW_STATUS, CANDIDATE_STATUS } from "@/constants/status";
+import { RETELL_EVENTS, CALL_STATES } from "@/constants/retell";
+import { AI_ROLES } from "@/constants/common";
+import {
+  TITLES,
+  MESSAGES,
+  BUTTONS,
+  LABELS,
+  DEBUG,
+  PLACEHOLDERS
+} from "@/constants/text";
 import { CANDIDATE_STATUS_LABELS } from "@/constants/options";
 
 // Visual Debug Panel for Integration Testing
@@ -64,7 +73,9 @@ const DebugPanel = ({
     <div className="fixed bottom-4 right-4 p-4 bg-slate-950/90 text-xs text-slate-200 font-mono rounded-lg border border-slate-800 shadow-2xl z-50 max-w-xs backdrop-blur-md hidden md:block">
       <h3 className="font-bold mb-3 border-b border-slate-800 pb-2 text-cyan-400 flex justify-between items-center">
         <span>{DEBUG.INTEGRATION_TEST}</span>
-        <span className="text-[10px] bg-slate-800 px-1 rounded">v1.1</span>
+        <span className="text-[10px] bg-slate-800 px-1 rounded">
+          {TITLES.PLATFORM_VERSION}
+        </span>
       </h3>
 
       <div className="space-y-2 mb-4">
@@ -86,7 +97,7 @@ const DebugPanel = ({
         <div className="flex justify-between">
           <span>{DEBUG.STATUS}:</span>{" "}
           <span className="text-white">
-            {application?.interview_status || "N/A"}
+            {application?.interview_status || LABELS.NOT_AVAILABLE}
           </span>
         </div>
         <div className="flex justify-between">
@@ -150,9 +161,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
   const isCallActive = callState === "connecting" || callState === "connected";
 
   const handleStartInterview = async (deviceId?: string) => {
-    const confirmed = window.confirm(
-      "⚠️ AVISO IMPORTANTE:\n\nUna vez que inicies la entrevista, no podrás pausarla ni reanudarla.\nSi sales de la página o finalizas la llamada antes de tiempo, tu postulación se marcará automáticamente como completada/finalizada.\n\n¿Estás listo para comenzar?"
-    );
+    const confirmed = window.confirm(MESSAGES.INTERVIEW_START_WARNING);
 
     if (confirmed) {
       await startInterview(deviceId);
@@ -200,8 +209,9 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
     }
   }, [application, callState, canInterview, applicationId, loading, router]);
 
-  const candidateName = user?.user_metadata?.full_name || "Candidato";
-  const interviewDate = new Date().toLocaleDateString("es-ES", {
+  const candidateName =
+    user?.user_metadata?.full_name || PLACEHOLDERS.GENERIC_CANDIDATE;
+  const interviewDate = new Date().toLocaleDateString(LABELS.LOCALE_ES, {
     day: "numeric",
     month: "long",
     year: "numeric"
@@ -245,7 +255,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
             {CANDIDATE_STATUS_LABELS.invited}
           </Badge>
         );
-      case APPLICATION_STATUS.APPLIED:
+      case CANDIDATE_STATUS.APPLIED:
         return (
           <Badge
             variant="secondary"
@@ -254,7 +264,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
             {LABELS.READY}
           </Badge>
         );
-      case APPLICATION_STATUS.INTERVIEWING:
+      case CANDIDATE_STATUS.INTERVIEWING:
       case INTERVIEW_STATUS.IN_PROGRESS:
         return (
           <Badge
@@ -264,7 +274,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
             {LABELS.INTERVIEW_IN_PROGRESS}
           </Badge>
         );
-      case APPLICATION_STATUS.REVIEWED:
+      case CANDIDATE_STATUS.REVIEWED:
       case INTERVIEW_STATUS.COMPLETED:
         return (
           <Badge
@@ -398,19 +408,19 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
                 {mergedTranscript.map((entry: any, index: number) => (
                   <div
                     key={index}
-                    className={`flex items-start gap-2 mb-2 ${entry.role === "user" ? "justify-end" : "justify-start"}`}
+                    className={`flex items-start gap-2 mb-2 ${entry.role === AI_ROLES.USER ? "justify-end" : "justify-start"}`}
                   >
-                    {entry.role === "assistant" && (
+                    {entry.role === AI_ROLES.ASSISTANT && (
                       <span className="text-cyan-400 font-bold text-sm">
                         Jennifer:
                       </span>
                     )}
                     <p
-                      className={`text-sm ${entry.role === "user" ? "text-slate-300 text-right" : "text-slate-100"}`}
+                      className={`text-sm ${entry.role === AI_ROLES.USER ? "text-slate-300 text-right" : "text-slate-100"}`}
                     >
                       {entry.content}
                     </p>
-                    {entry.role === "user" && (
+                    {entry.role === AI_ROLES.USER && (
                       <span className="text-blue-400 font-bold text-sm">
                         Tú:
                       </span>
