@@ -6,6 +6,7 @@ import { AI_ROLES, HTTP_METHODS, HTTP_HEADERS } from "@/constants/common";
 
 import { CANDIDATE_STATUS_IDS, CANDIDATE_STATUS } from "@/constants/status";
 import { CALL_STATES } from "@/constants/retell";
+import { createOpenaiSession } from "@/lib/api/createOpenaiSession";
 
 export const useOpenAIRealtimeInterview = ({
   onInterviewEnd,
@@ -260,20 +261,8 @@ export const useOpenAIRealtimeInterview = ({
 
       log('AUTH', 'Creating OpenAI session');
       
-      // Call Next.js API route instead of Supabase Edge Function
-      const response = await fetch('/api/create-openai-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create OpenAI session');
-      }
-
-      const data = await response.json();
+      // Call Server Action
+      const data = await createOpenaiSession();
       
       if (!data || !data.client_secret || !data.client_secret.value) {
         throw new Error("No se pudo obtener el token de sesión.");

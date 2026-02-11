@@ -11,6 +11,8 @@ import {
 import { TABLES } from '@/constants/supabase';
 import { CANDIDATE_STATUS, CANDIDATE_STATUS_IDS } from '@/constants/status';
 import { HTTP_METHODS, HTTP_HEADERS } from '@/constants/common';
+import { createWebCall } from '@/lib/api/createWebCall';
+import { setApplicationStatusAction } from '@/lib/api/setApplicationStatus';
 
 // 👇 AGREGAMOS "job" AQUÍ
 export const useRetellConnection = ({ onInterviewCompleted, application, user, job }) => {
@@ -284,7 +286,7 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
         }
       });
 
-      console.log("[Retell] Requesting access token from create-web-call API...");
+      console.log("[Retell] calling createWebCall Server Action...");
 
       const candidateName =
         user?.user_metadata?.full_name ||
@@ -295,40 +297,22 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
       const jobRequirements = job?.skills || [];
       const jobQuestions = job?.questions || [];
 
-      // Call Next.js API route
-      const response = await fetch('/api/create-web-call', {
-        method: 'POST',
-        headers: {
-          'Content-Type': HTTP_HEADERS.CONTENT_TYPE_JSON,
-        },
-        body: JSON.stringify({
-          metadata: {
-            userId: user?.id,
-            applicationId: application?.id,
-            candidateName,
-            jobTitle,
-            language: application?.language || "es",
-            jobRequirements: jobRequirements?.join(", "),
-            jobQuestions: jobQuestions?.map((q, i) => `Question ${i + 1}: ${q}`).join(", ")
-          }
-        })
+      // Call Server Action
+      const { access_token, call_id } = await createWebCall({
+        userId: user?.id,
+        applicationId: application?.id,
+        candidateName,
+        jobTitle,
+        language: application?.language || "es",
+        jobRequirements,
+        jobQuestions: jobQuestions?.map((q, i) => `Question ${i + 1}: ${q}`).join(", ")
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("[Retell] API Error Response:", errorData);
-        throw new Error(`[Retell] API Error: ${errorData.error || response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log("[Retell] API route response:", data);
-      console.log("[Retell] Response keys:", Object.keys(data));
-
-      const { access_token, call_id } = data;
+      
       if (!access_token) {
-        console.error("[Retell] Did not receive access_token from server. Full response:", data);
         throw new Error(ERROR_MESSAGES.NO_ACCESS_TOKEN);
       }
+
+      console.log("[Retell] Server Action response:", { access_token_length: access_token.length, call_id });
 
       // Store call ID for later use
       setCallId(call_id);
@@ -445,15 +429,11 @@ export const useRetellConnection = ({ onInterviewCompleted, application, user, j
           // prefer fetch to handle response/errors if we are still on page.
           // IF the page is about to close, stopInterview usually isn't the trigger (handleUnload is).
           // But "Finalizar" calls stopInterview.
-          const response = await fetch('/api/set-application-status', {
-              method: 'POST',
-              headers: { 'Content-Type': HTTP_HEADERS.CONTENT_TYPE_JSON },
-              body: JSON.stringify(payload)
-          });
+          // Use Server Action
+          const response = await setApplicationStatusAction(payload);
           
-          if (!response.ok) {
-             const resJson = await response.json();
-             throw new Error(resJson.error || "API failed");
+          if (!response.success) {
+             throw new Error("API failed");
           }
           
           if (hasValidCallData) {

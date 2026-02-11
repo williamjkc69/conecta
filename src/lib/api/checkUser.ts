@@ -1,5 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+"use server";
+
 import { createClient } from "@supabase/supabase-js";
+import { verifyUserSession } from "@/lib/server-auth";
+import { cookies } from "next/headers";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -10,30 +13,31 @@ if (!supabaseServiceKey) {
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey || "");
 
-export async function POST(req: NextRequest) {
+export async function checkUser(email: string) {
   try {
-    const { email } = await req.json();
+    const session = await verifyUserSession();
+    if (!session) {
+      throw new Error("Unauthorized");
+    }
 
     if (!email) {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+      throw new Error("Email is required");
     }
 
     const { data, error } = await supabaseAdmin
       .from("profiles")
       .select("id")
       .eq("email", email)
-      .single();
+      .maybeSingle();
 
-    if (error && error.code !== "PGRST116") {
+    if (error) {
       console.error("Error checking user:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      throw new Error(error.message);
     }
-    return NextResponse.json({ exists: !!data });
+
+    return { exists: !!data };
   } catch (error) {
     console.error("Unexpected error:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    throw error;
   }
 }

@@ -10,7 +10,8 @@ export const ROUTES = {
 } as const;
 
 export const API_ROUTES = {
-  SEND_EMAIL: "/api/send-email",
-  CHECK_USER: "/api/check-user",
-  ACCEPT_INVITE: "/api/accept-invite"
+  // Routes moved to Server Actions:
+  // SEND_EMAIL: "/api/send-email",
+  // CHECK_USER: "/api/check-user",
+  // ACCEPT_INVITE: "/api/accept-invite"
 } as const;

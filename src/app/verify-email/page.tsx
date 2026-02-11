@@ -7,7 +7,8 @@ import { Loader2, CheckCircle, XCircle, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { BUTTONS, TITLES, MESSAGES } from "@/constants/text";
-import { ROUTES, API_ROUTES } from "@/constants/routes";
+import { ROUTES } from "@/constants/routes";
+import { sendEmailAction } from "@/lib/api/sendEmail";
 import { ROLES } from "@/constants/roles";
 
 function VerifyEmailContent() {
@@ -219,17 +220,13 @@ function VerifyEmailContent() {
 
       const link = `${window.location.origin}${ROUTES.VERIFY_EMAIL}?token=${tokenToSend}`;
 
-      const emailResponse = await fetch(API_ROUTES.SEND_EMAIL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "verification",
-          to: emailToUse,
-          payload: { link }
-        })
+      const emailResponse = await sendEmailAction({
+        type: "verification",
+        to: emailToUse as string,
+        payload: { link }
       });
 
-      if (!emailResponse.ok) {
+      if (!emailResponse.success) {
         throw new Error(MESSAGES.RESEND_ERROR);
       }
 

@@ -41,8 +41,13 @@ import {
 } from "@/constants/text";
 import { HTTP_METHODS, HTTP_HEADERS } from "@/constants/common";
 import { ROUTES } from "@/constants/routes";
-import { JOB_STATUS, CANDIDATE_STATUS } from "@/constants/status";
+import {
+  JOB_STATUS,
+  CANDIDATE_STATUS,
+  CANDIDATE_STATUS_IDS
+} from "@/constants/status";
 import { CURRENCIES } from "@/constants/options";
+import { sendEmailAction } from "@/lib/api/sendEmail";
 
 const CompanyDashboard: React.FC = () => {
   const router = useRouter();
@@ -122,17 +127,8 @@ const CompanyDashboard: React.FC = () => {
       }));
 
       const listingIds = transformedListings.map((j: any) => j.id);
+      // Removed redundant fetch here, we do it with join below
       let appsData: any[] = [];
-
-      if (listingIds.length > 0) {
-        const { data: fetchedApps, error: appsError } = await supabase
-          .from("applications")
-          .select("*")
-          .in("listing_id", listingIds)
-          .order("created_at", { ascending: false });
-        if (appsError) throw appsError;
-        appsData = fetchedApps || [];
-      }
 
       const listingsWithCounts = transformedListings.map((listing: any) => ({
         ...listing,
@@ -142,20 +138,26 @@ const CompanyDashboard: React.FC = () => {
 
       setJobs(listingsWithCounts);
 
-      // Status names might differ. Map if necessary or use status_id.
-      // Assuming 'status' (joined?) or we need to fetch status name.
-      // For now, assume status_id logic:
-      // If we don't have joined status name, we might be blind.
-      // Fetching applications with status name joined: select('*, status:application_statuses(name)')
+      // Map IDs to internal status strings for consistency
+      const STATUS_ID_MAP: Record<number, string> = {
+        [CANDIDATE_STATUS_IDS.INVITED]: CANDIDATE_STATUS.INVITED,
+        [CANDIDATE_STATUS_IDS.COMPLETED]: CANDIDATE_STATUS.COMPLETED,
+        [CANDIDATE_STATUS_IDS.REJECTED]: CANDIDATE_STATUS.REJECTED,
+        [CANDIDATE_STATUS_IDS.APPROVED]: CANDIDATE_STATUS.APPROVED,
+        [CANDIDATE_STATUS_IDS.PENDING]: CANDIDATE_STATUS.PENDING,
+        [CANDIDATE_STATUS_IDS.INTERVIEWING]: CANDIDATE_STATUS.INTERVIEWING,
+        [CANDIDATE_STATUS_IDS.EXPIRED]: CANDIDATE_STATUS.EXPIRED
+      };
 
-      // We will refetch applications with joins to be safe
       if (listingIds.length > 0) {
-        const { data: fetchedAppsJoined } = await supabase
+        // Fetch applications with joined status name
+        const { data: fetchedAppsJoined, error: appsError } = await supabase
           .from("applications")
           .select("*, status:application_statuses(name)")
           .in("listing_id", listingIds)
           .order("created_at", { ascending: false });
 
+        if (appsError) throw appsError;
         appsData = fetchedAppsJoined || [];
       }
 
@@ -192,7 +194,14 @@ const CompanyDashboard: React.FC = () => {
             (j: any) => j.id === app.listing_id
           );
 
-          let status = app.status?.name || CANDIDATE_STATUS.PENDING;
+          // Prioritize mapping by ID, then fallback to name, then pending
+          let status =
+            STATUS_ID_MAP[app.status_id] ||
+            app.status?.name ||
+            CANDIDATE_STATUS.PENDING;
+
+          // Ensure lowercase for comparisons
+          status = status.toLowerCase();
           const isExpired = app.expiration_date
             ? new Date(app.expiration_date) < new Date()
             : false;
@@ -247,18 +256,30 @@ const CompanyDashboard: React.FC = () => {
     successMessage: string
   ) => {
     try {
-      const { data: statusData, error: statusError } = await supabase
-        .from("application_statuses")
-        .select("id")
-        .eq("name", statusName)
-        .single();
+      // Use hardcoded IDs to avoid DB lookup errors
+      let statusId: number;
 
-      if (statusError || !statusData)
-        throw new Error(`Status '${statusName}' not found`);
+      if (statusName === CANDIDATE_STATUS.APPROVED) {
+        statusId = CANDIDATE_STATUS_IDS.APPROVED;
+      } else if (statusName === CANDIDATE_STATUS.REJECTED) {
+        statusId = CANDIDATE_STATUS_IDS.REJECTED;
+      } else {
+        // Fallback for other statuses if needed, though approve/reject are main ones here
+        const { data: statusData, error: statusError } = await supabase
+          .from("application_statuses")
+          .select("id")
+          .eq("name", statusName)
+          .maybeSingle(); // prevent throwing on 0 rows
+
+        if (statusError || !statusData)
+          throw new Error(`Status '${statusName}' not found`);
+
+        statusId = statusData.id;
+      }
 
       const { error: updateError } = await supabase
         .from("applications")
-        .update({ status_id: statusData.id })
+        .update({ status_id: statusId })
         .eq("id", applicationId);
 
       if (updateError) throw updateError;
@@ -274,21 +295,18 @@ const CompanyDashboard: React.FC = () => {
             `Sending ${statusName} email to ${candidate.candidateEmail}`
           );
           // Fire and forget - don't block UI on email sending
-          fetch("/api/send-email", {
-            method: HTTP_METHODS.POST,
-            headers: { "Content-Type": HTTP_HEADERS.CONTENT_TYPE_JSON },
-            body: JSON.stringify({
-              type:
-                statusName === CANDIDATE_STATUS.APPROVED
-                  ? EMAILS.TYPES.DECISION_APPROVED
-                  : EMAILS.TYPES.DECISION_REJECTED,
-              to: candidate.candidateEmail,
-              payload: {
-                candidateName:
-                  candidate.candidateName || PLACEHOLDERS.GENERIC_CANDIDATE,
-                jobTitle: candidate.jobTitle || PLACEHOLDERS.GENERIC_VACANCY
-              }
-            })
+          // Fire and forget - don't block UI on email sending
+          sendEmailAction({
+            type:
+              statusName === CANDIDATE_STATUS.APPROVED
+                ? EMAILS.TYPES.DECISION_APPROVED
+                : EMAILS.TYPES.DECISION_REJECTED,
+            to: candidate.candidateEmail,
+            payload: {
+              candidateName:
+                candidate.candidateName || PLACEHOLDERS.GENERIC_CANDIDATE,
+              jobTitle: candidate.jobTitle || PLACEHOLDERS.GENERIC_VACANCY
+            }
           }).catch((err) => console.error("Failed to send email:", err));
         } else {
           console.warn(

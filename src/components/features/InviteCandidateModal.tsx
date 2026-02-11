@@ -28,6 +28,8 @@ import {
   PLACEHOLDERS
 } from "@/constants/text";
 import { HTTP_METHODS, HTTP_HEADERS } from "@/constants/common";
+import { checkUser } from "@/lib/api/checkUser";
+import { sendEmailAction } from "@/lib/api/sendEmail";
 import { ROLES } from "@/constants/roles";
 import { JOB_STATUS, CANDIDATE_STATUS } from "@/constants/status";
 import { DB_SETTINGS } from "@/constants/settings";
@@ -204,13 +206,8 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
 
   const checkUserExists = async (email: string) => {
     try {
-      const response = await fetch("/api/check-user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email })
-      });
-      const data = await response.json();
-      return data.exists;
+      const result = await checkUser(email);
+      return result.exists;
     } catch (error) {
       console.error("Error checking user:", error);
       return false; // Assume false or handle error
@@ -309,17 +306,13 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
           if (error) throw error;
 
           // Send Notification Email
-          await fetch("/api/send-email", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              type: "invitation_existing",
-              to: foundCandidate.email,
-              payload: {
-                link: `${window.location.origin}/candidate-dashboard`,
-                dashboardUrl: `${window.location.origin}/candidate-dashboard`
-              }
-            })
+          await sendEmailAction({
+            type: "invitation_existing",
+            to: foundCandidate.email,
+            payload: {
+              link: `${window.location.origin}/candidate-dashboard`,
+              dashboardUrl: `${window.location.origin}/candidate-dashboard`
+            }
           });
 
           toast({
@@ -328,17 +321,13 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
           });
         } else {
           // Exists but we don't have object. Just notify.
-          await fetch("/api/send-email", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              type: "invitation_existing",
-              to: emailToInvite,
-              payload: {
-                link: `${window.location.origin}/login`,
-                dashboardUrl: `${window.location.origin}/candidate-dashboard`
-              }
-            })
+          await sendEmailAction({
+            type: "invitation_existing",
+            to: emailToInvite,
+            payload: {
+              link: `${window.location.origin}/login`,
+              dashboardUrl: `${window.location.origin}/candidate-dashboard`
+            }
           });
           toast({
             title: MESSAGES.NOTICE_SENT_TITLE,
@@ -377,19 +366,15 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
           throw new Error(MESSAGES.INVITATION_SAVE_ERROR);
         }
 
-        await fetch("/api/send-email", {
-          method: HTTP_METHODS.POST,
-          headers: { "Content-Type": HTTP_HEADERS.CONTENT_TYPE_JSON },
-          body: JSON.stringify({
-            type: "invitation_new",
-            to: emailToInvite,
-            payload: {
-              role: ROLES.CANDIDATE,
-              link: `${window.location.origin}/register?email=${encodeURIComponent(
-                emailToInvite
-              )}&listingId=${selectedJobId}&token=${token}`
-            }
-          })
+        await sendEmailAction({
+          type: "invitation_new",
+          to: emailToInvite,
+          payload: {
+            role: ROLES.CANDIDATE,
+            link: `${window.location.origin}/register?email=${encodeURIComponent(
+              emailToInvite
+            )}&listingId=${selectedJobId}&token=${token}`
+          }
         });
 
         toast({

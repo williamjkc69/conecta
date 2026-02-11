@@ -9,6 +9,7 @@ import { Loader2 } from "lucide-react";
 import React from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { BUTTONS, TITLES, MESSAGES, LABELS } from "@/constants/text";
+import { sendEmailAction } from "@/lib/api/sendEmail";
 
 export default function InterviewPageWrapper({
   applicationId
@@ -25,20 +26,16 @@ export default function InterviewPageWrapper({
 
     if (user?.email) {
       try {
-        await fetch("/api/send-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "interview_completed",
-            to: user.email,
-            payload: {
-              candidateName:
-                user.user_metadata?.full_name ||
-                user.app_metadata?.full_name ||
-                "Candidato",
-              dashboardUrl: `${window.location.origin}/candidate-dashboard`
-            }
-          })
+        await sendEmailAction({
+          type: "interview_completed",
+          to: user.email,
+          payload: {
+            candidateName:
+              user.user_metadata?.full_name ||
+              user.app_metadata?.full_name ||
+              "Candidato",
+            dashboardUrl: `${window.location.origin}/candidate-dashboard`
+          }
         });
         toast({
           title: TITLES.INTERVIEW_COMPLETED,

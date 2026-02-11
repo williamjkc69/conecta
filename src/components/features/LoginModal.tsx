@@ -29,6 +29,8 @@ import {
 import { ROUTES, API_ROUTES } from "@/constants/routes";
 import { ROLES } from "@/constants/roles";
 import { HTTP_METHODS, HTTP_HEADERS } from "@/constants/common";
+import { acceptInvite } from "@/lib/api/acceptInvite";
+import { sendEmailAction } from "@/lib/api/sendEmail";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -194,15 +196,11 @@ const LoginModal: React.FC<LoginModalProps> = ({
       // Logic to accept invitation if token is present
       if (token && jobId && type === ROLES.CANDIDATE) {
         try {
-          await fetch(API_ROUTES.ACCEPT_INVITE, {
-            method: HTTP_METHODS.POST,
-            headers: { "Content-Type": HTTP_HEADERS.CONTENT_TYPE_JSON },
-            body: JSON.stringify({
-              email: formData.email,
-              token,
-              jobId,
-              userId: user.id
-            })
+          await acceptInvite({
+            email: formData.email,
+            token,
+            jobId,
+            userId: user.id
           });
         } catch (inviteProcessError) {
           console.error("Error processing invitation:", inviteProcessError);
@@ -211,19 +209,15 @@ const LoginModal: React.FC<LoginModalProps> = ({
 
       // Send verification email
       try {
-        const emailResponse = await fetch(API_ROUTES.SEND_EMAIL, {
-          method: HTTP_METHODS.POST,
-          headers: { "Content-Type": HTTP_HEADERS.CONTENT_TYPE_JSON },
-          body: JSON.stringify({
-            type: "verification",
-            to: formData.email,
-            payload: {
-              link: `${window.location.origin}${ROUTES.VERIFY_EMAIL}?token=${verificationToken || ""}`
-            }
-          })
+        const emailResponse = await sendEmailAction({
+          type: "verification",
+          to: formData.email,
+          payload: {
+            link: `${window.location.origin}${ROUTES.VERIFY_EMAIL}?token=${verificationToken || ""}`
+          }
         });
 
-        if (!emailResponse.ok) {
+        if (!emailResponse.success) {
           throw new Error("Failed to send verification email");
         }
       } catch (emailErr) {
