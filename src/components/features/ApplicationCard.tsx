@@ -164,7 +164,35 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
     );
   }
 
-  // 4. Pending (Default) -> "A la espera de invitación"
+  // 4. Expired -> Show "Application Expired"
+  if (interviewStatus === INTERVIEW_STATUS.EXPIRED) {
+    console.log(
+      `[${new Date().toISOString()}] [ApplicationCard] Rendering EXPIRED branch`
+    );
+    return (
+      <Card className="glass-effect border-red-700/80 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-2">
+          <Badge
+            variant="outline"
+            className="border-red-500/50 text-red-400 bg-red-900/10"
+          >
+            {LABELS.EXPIRED}
+          </Badge>
+        </div>
+        <CardHeader>
+          <CardTitle className="text-slate-400 flex items-center gap-2">
+            <Clock className="w-6 h-6 text-red-500" />
+            {TITLES.PROCESS_FINISHED}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-slate-500">{MESSAGES.APPLICATION_EXPIRED_DESC}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // 5. Pending (Default) -> "A la espera de invitación"
   console.log(
     `[${new Date().toISOString()}] [ApplicationCard] Rendering PENDING branch`
   );

@@ -74,8 +74,16 @@ export const useCandidateApplications = (userId?: number) => {
 
             // Derive interview_status from status and interview fields
             let interviewStatus: string = INTERVIEW_STATUS.PENDING;
+            const isExpired = app.expiration_date
+              ? new Date(app.expiration_date) < new Date()
+              : false;
+
             if (statusName === CANDIDATE_STATUS.COMPLETED) {
               interviewStatus = INTERVIEW_STATUS.COMPLETED;
+            } else if (statusName === CANDIDATE_STATUS.EXPIRED) {
+              interviewStatus = INTERVIEW_STATUS.EXPIRED;
+            } else if (isExpired) {
+              interviewStatus = INTERVIEW_STATUS.EXPIRED;
             } else if (statusName === CANDIDATE_STATUS.INVITED) {
               interviewStatus = INTERVIEW_STATUS.INVITED;
             } else if (statusName === CANDIDATE_STATUS.INTERVIEWING) {
@@ -90,6 +98,7 @@ export const useCandidateApplications = (userId?: number) => {
               id: app.id,
               status: statusName || CANDIDATE_STATUS.PENDING,
               interview_status: interviewStatus,
+              isExpired,
               // Job/Listing info
               jobTitle: listing?.title,
               companyName: company?.name || "Unknown Company",

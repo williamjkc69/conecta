@@ -176,7 +176,8 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
     interviewing: "bg-purple-500/10 text-purple-400 border-purple-500/20",
     completed: "bg-orange-500/10 text-orange-400 border-orange-500/20",
     approved: "bg-green-500/10 text-green-400 border-green-500/20",
-    rejected: "bg-red-500/10 text-red-400 border-red-500/20"
+    rejected: "bg-red-500/10 text-red-400 border-red-500/20",
+    expired: "bg-red-500/10 text-red-400 border-red-500/20"
   };
 
   const statusLabels: any = {
@@ -184,7 +185,8 @@ const CompanyCandidateModal: React.FC<CompanyCandidateModalProps> = ({
     interviewing: LABELS.IN_COURSE_BADGE,
     completed: LABELS.IN_REVIEW,
     approved: LABELS.HIRED,
-    rejected: LABELS.NOT_SELECTED
+    rejected: LABELS.NOT_SELECTED,
+    expired: LABELS.EXPIRED
   };
 
   return (

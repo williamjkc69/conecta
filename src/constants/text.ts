@@ -427,7 +427,8 @@ export const MESSAGES = {
   APPLIED: "Aplicó",
   SEARCH_JOBS: "Buscar vacantes",
   STUB_COMPONENT_DESC: "Este componente no está en uso actualmente.",
-  NOT_IMPLEMENTED_FEATURE: "Funcionalidad no implementada."
+  NOT_IMPLEMENTED_FEATURE: "Funcionalidad no implementada.",
+  APPLICATION_EXPIRED_DESC: "El plazo para realizar esta entrevista ha vencido."
 } as const;
 
 export const TABS = {
@@ -596,7 +597,8 @@ export const LABELS = {
   IN_INTERVIEW: "En Entrevista",
   ANSWER: "Respuesta",
   APPLIED: "Aplicó",
-  COMPLETED: "Completada"
+  COMPLETED: "Completada",
+  EXPIRED: "Expirado"
 } as const;
 
 export const DEBUG = {

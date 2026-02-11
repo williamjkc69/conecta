@@ -30,6 +30,7 @@ import {
 import { HTTP_METHODS, HTTP_HEADERS } from "@/constants/common";
 import { ROLES } from "@/constants/roles";
 import { JOB_STATUS, CANDIDATE_STATUS } from "@/constants/status";
+import { DB_SETTINGS } from "@/constants/settings";
 
 interface InviteCandidateModalProps {
   isOpen: boolean;
@@ -287,11 +288,22 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
             .single();
           const invitedStatusId = statusData?.id;
 
+          // Fetch Expiration Setting
+          const { data: settingsData } = await supabase
+            .from("settings")
+            .select("value")
+            .eq("key", DB_SETTINGS.APPLICATION_EXPIRATION_DAYS)
+            .single();
+
+          const days = settingsData?.value ? Number(settingsData.value) : 7;
+          const expirationDate = new Date();
+          expirationDate.setDate(expirationDate.getDate() + days);
+
           const { error } = await supabase.from("applications").insert({
             user_id: candidateId,
             listing_id: selectedJobId,
-            status_id: invitedStatusId
-            // created_at defaults to now
+            status_id: invitedStatusId,
+            expiration_date: expirationDate.toISOString()
           });
 
           if (error) throw error;
@@ -336,8 +348,16 @@ const InviteCandidateModal: React.FC<InviteCandidateModalProps> = ({
       } else {
         // --- NEW USER FLOW ---
         const token = crypto.randomUUID();
+        // Fetch Expiration Setting
+        const { data: settingsData } = await supabase
+          .from("settings")
+          .select("value")
+          .eq("key", DB_SETTINGS.APPLICATION_EXPIRATION_DAYS)
+          .single();
+
+        const days = settingsData?.value ? Number(settingsData.value) : 7;
         const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 7);
+        expiresAt.setDate(expiresAt.getDate() + days);
 
         // Create invitation record in DB
         const { error: inviteError } = await supabase

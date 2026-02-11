@@ -11,7 +11,8 @@ export const CANDIDATE_STATUS = {
   REJECTED: "rejected",
   PENDING: "pending",
   REVIEWED: "reviewed",
-  HIRED: "hired"
+  HIRED: "hired",
+  EXPIRED: "expired"
 } as const;
 
 /**
@@ -20,7 +21,11 @@ export const CANDIDATE_STATUS = {
 export const CANDIDATE_STATUS_IDS = {
   COMPLETED: 2,
   INTERVIEWING: 6,
-  INVITED: 1 // Assumptions based on common patterns, but 2 and 6 are confirmed
+  INVITED: 1, // Assumptions based on common patterns, but 2 and 6 are confirmed
+  EXPIRED: 7,
+  REJECTED: 3,
+  APPROVED: 4,
+  PENDING: 5
 } as const;
 
 export const JOB_STATUS = {
@@ -35,7 +40,8 @@ export const INTERVIEW_STATUS = {
   FAILED: "failed",
   REGISTERED: "registered",
   ONGOING: "ongoing",
-  PENDING: "pending"
+  PENDING: "pending",
+  EXPIRED: "expired"
 } as const;
 
 /**

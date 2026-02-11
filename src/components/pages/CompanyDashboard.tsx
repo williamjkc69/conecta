@@ -192,9 +192,27 @@ const CompanyDashboard: React.FC = () => {
             (j: any) => j.id === app.listing_id
           );
 
+          let status = app.status?.name || CANDIDATE_STATUS.PENDING;
+          const isExpired = app.expiration_date
+            ? new Date(app.expiration_date) < new Date()
+            : false;
+
+          if (
+            isExpired &&
+            ![
+              CANDIDATE_STATUS.COMPLETED,
+              CANDIDATE_STATUS.APPROVED,
+              CANDIDATE_STATUS.REJECTED,
+              CANDIDATE_STATUS.HIRED,
+              CANDIDATE_STATUS.REVIEWED
+            ].includes(status)
+          ) {
+            status = CANDIDATE_STATUS.EXPIRED;
+          }
+
           return {
             id: app.id,
-            status: app.status?.name || CANDIDATE_STATUS.PENDING,
+            status,
             job_id: app.listing_id,
             jobTitle: relatedJob?.title || "Vacante",
             appliedAt: app.created_at,

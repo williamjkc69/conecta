@@ -40,8 +40,9 @@ export const useApplicationRealtime = (applicationId) => {
           .in('status_id', [
             CANDIDATE_STATUS_IDS.INVITED,
             CANDIDATE_STATUS_IDS.INTERVIEWING,
-            CANDIDATE_STATUS_IDS.COMPLETED
-          ]) // Allow Invited, Interviewing, Completed
+            CANDIDATE_STATUS_IDS.COMPLETED,
+            CANDIDATE_STATUS_IDS.EXPIRED
+          ]) // Allow Invited, Interviewing, Completed, Expired
           .single();
 
         if (error) {
@@ -54,14 +55,28 @@ export const useApplicationRealtime = (applicationId) => {
         
         if (isMounted) {
           // Helper to derive status strings from ID
-          const deriveStatus = (statusId) => {
+          const deriveStatus = (statusId, expirationDate) => {
+             const isExpired = expirationDate ? new Date(expirationDate) < new Date() : false;
+
+             if (statusId === CANDIDATE_STATUS_IDS.COMPLETED) {
+                return { status: CANDIDATE_STATUS.COMPLETED, interview_status: INTERVIEW_STATUS.COMPLETED };
+             }
+
+             if (statusId === CANDIDATE_STATUS_IDS.EXPIRED) {
+                return { status: CANDIDATE_STATUS.EXPIRED, interview_status: INTERVIEW_STATUS.EXPIRED };
+             }
+
+             if (isExpired) {
+                return { status: CANDIDATE_STATUS.EXPIRED, interview_status: INTERVIEW_STATUS.EXPIRED };
+             }
+
              if (statusId === CANDIDATE_STATUS_IDS.INVITED) return { status: CANDIDATE_STATUS.INVITED, interview_status: INTERVIEW_STATUS.INVITED };
              if (statusId === CANDIDATE_STATUS_IDS.INTERVIEWING) return { status: CANDIDATE_STATUS.INTERVIEWING, interview_status: INTERVIEW_STATUS.IN_PROGRESS };
-             if (statusId === CANDIDATE_STATUS_IDS.COMPLETED) return { status: CANDIDATE_STATUS.COMPLETED, interview_status: INTERVIEW_STATUS.COMPLETED };
+             
              return { status: CANDIDATE_STATUS.PENDING, interview_status: INTERVIEW_STATUS.PENDING };
           };
 
-          const { status, interview_status } = deriveStatus(data.status_id);
+          const { status, interview_status } = deriveStatus(data.status_id, data.expiration_date);
           
           // Map skills from relations or fallback to column
           const skills = data.listing?.listing_skills?.map(ls => ls.skill?.name).filter(Boolean) 
@@ -122,14 +137,29 @@ export const useApplicationRealtime = (applicationId) => {
             setApplication((prev) => {
               if (!prev) return null;
               
-              const deriveStatus = (statusId) => {
+              const deriveStatus = (statusId, expirationDate) => {
+                 const isExpired = expirationDate ? new Date(expirationDate) < new Date() : false;
+
+                 if (statusId === CANDIDATE_STATUS_IDS.COMPLETED) {
+                    return { status: CANDIDATE_STATUS.COMPLETED, interview_status: INTERVIEW_STATUS.COMPLETED };
+                 }
+
+                 if (statusId === CANDIDATE_STATUS_IDS.EXPIRED) {
+                    return { status: CANDIDATE_STATUS.EXPIRED, interview_status: INTERVIEW_STATUS.EXPIRED };
+                 }
+
+                 if (isExpired) {
+                    return { status: CANDIDATE_STATUS.EXPIRED, interview_status: INTERVIEW_STATUS.EXPIRED };
+                 }
+
                  if (statusId === CANDIDATE_STATUS_IDS.INVITED) return { status: CANDIDATE_STATUS.INVITED, interview_status: INTERVIEW_STATUS.INVITED };
                  if (statusId === CANDIDATE_STATUS_IDS.INTERVIEWING) return { status: CANDIDATE_STATUS.INTERVIEWING, interview_status: INTERVIEW_STATUS.IN_PROGRESS };
-                 if (statusId === CANDIDATE_STATUS_IDS.COMPLETED) return { status: CANDIDATE_STATUS.COMPLETED, interview_status: INTERVIEW_STATUS.COMPLETED };
+                 
                  return { status: CANDIDATE_STATUS.PENDING, interview_status: INTERVIEW_STATUS.PENDING };
               };
 
-              const { status, interview_status } = deriveStatus(payload.new.status_id);
+              const expirationDate = payload.new.expiration_date !== undefined ? payload.new.expiration_date : prev.expiration_date;
+              const { status, interview_status } = deriveStatus(payload.new.status_id, expirationDate);
 
               return { 
                 ...prev, 

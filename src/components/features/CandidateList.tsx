@@ -59,6 +59,11 @@ const statusConfig: Record<string, StatusConfigItem> = {
     icon: <Clock className="w-4 h-4" />,
     text: LABELS.PENDING_BADGE,
     color: "bg-gray-500/20 text-gray-400"
+  },
+  [CANDIDATE_STATUS.EXPIRED]: {
+    icon: <Clock className="w-4 h-4" />,
+    text: LABELS.EXPIRED,
+    color: "bg-red-500/20 text-red-400"
   }
 };
 

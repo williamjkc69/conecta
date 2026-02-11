@@ -158,7 +158,9 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
     onInterviewCompleted
   });
 
-  const isCallActive = callState === "connecting" || callState === "connected";
+  const isCallActive =
+    (callState as any) === CALL_STATES.CONNECTING ||
+    (callState as any) === CALL_STATES.CONNECTED;
 
   const handleStartInterview = async (deviceId?: string) => {
     const confirmed = window.confirm(MESSAGES.INTERVIEW_START_WARNING);
@@ -199,7 +201,11 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
       // Be careful: when starting, status might update before callState?
       // Typically callState updates to connecting immediately on button click.
       // But if we load page and status IS in_progress (from DB), callState IS idle. Redirect. Correct.
-      if (isInProgress && !isCallActive && callState !== "ended") {
+      if (
+        isInProgress &&
+        !isCallActive &&
+        (callState as any) !== CALL_STATES.ENDED
+      ) {
         console.warn(
           "[InterviewPage] In progress but call idle (refresh detected). Redirecting."
         );
@@ -369,7 +375,7 @@ const InterviewPage: React.FC<InterviewPageProps> = ({
         <ConnectionStatus state={callState as any} />
 
         {/* Show audio level during call */}
-        {callState === "connected" && (
+        {(callState as any) === CALL_STATES.CONNECTED && (
           <AudioLevelDisplay audioLevel={audioLevel || 0} />
         )}
 

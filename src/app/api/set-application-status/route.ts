@@ -8,13 +8,21 @@ export async function POST(req: NextRequest) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+    const apiSecret = process.env.API_SECRET; // Optional: for webhooks/scripts
 
     let supabase;
-    const isServiceKey = !!serviceRoleKey;
 
-    if (isServiceKey) {
+    // Check for API Secret Header to allow Admin bypass (e.g. from Webhooks)
+    const authHeader = req.headers.get("x-api-secret");
+    const isAdminRequest = !!(
+      apiSecret &&
+      authHeader === apiSecret &&
+      serviceRoleKey
+    );
+
+    if (isAdminRequest) {
       console.log(
-        "[set-application-status] Using Service Role Key (Admin Mode)"
+        "[set-application-status] Using Service Role Key (Admin Mode - Verified Secret)"
       );
       supabase = createClient(supabaseUrl, serviceRoleKey!, {
         auth: { persistSession: false, autoRefreshToken: false }
@@ -39,6 +47,18 @@ export async function POST(req: NextRequest) {
           }
         }
       });
+
+      // Verify user is authenticated
+      const {
+        data: { user },
+        error: authError
+      } = await supabase.auth.getUser();
+      if (authError || !user) {
+        return NextResponse.json(
+          { error: "Unauthorized. Please log in." },
+          { status: 401 }
+        );
+      }
     }
 
     let body;
@@ -96,6 +116,26 @@ export async function POST(req: NextRequest) {
       `[set-application-status] Updating app ${applicationId} to statusId ${statusId}`
     );
 
+    // Check for expiration
+    const { data: currentApp } = await supabase
+      .from("applications")
+      .select("expiration_date")
+      .eq("id", applicationId)
+      .single();
+
+    if (currentApp && currentApp.expiration_date) {
+      const isExpired = new Date(currentApp.expiration_date) < new Date();
+      if (isExpired) {
+        console.warn(
+          `[set-application-status] Blocked update for expired application ${applicationId}`
+        );
+        return NextResponse.json(
+          { error: "Application execution period has expired." },
+          { status: 403 }
+        );
+      }
+    }
+
     const updatePayload: any = {
       status_id: statusId,
       updated_at: new Date().toISOString()
@@ -131,8 +171,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error: "Update failed (No rows affected). check permissions/ID.",
-          details: isServiceKey
-            ? "Service Mode"
+          details: isAdminRequest
+            ? "Service Mode (Admin)"
             : "User Session Mode (Check RLS)"
         },
         { status: 404 }

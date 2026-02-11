@@ -3,7 +3,9 @@ import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
 import { OPENAI_API } from "@/constants/api";
 import { AI_ROLES, HTTP_METHODS, HTTP_HEADERS } from "@/constants/common";
-import { CALL_STATES, CANDIDATE_STATUS_IDS, CANDIDATE_STATUS } from "@/constants/status";
+
+import { CANDIDATE_STATUS_IDS, CANDIDATE_STATUS } from "@/constants/status";
+import { CALL_STATES } from "@/constants/retell";
 
 export const useOpenAIRealtimeInterview = ({
   onInterviewEnd,
