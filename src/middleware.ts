@@ -30,10 +30,6 @@ export async function middleware(request: NextRequest) {
     }
   });
 
-  const {
-    data: { session }
-  } = await supabase.auth.getSession();
-
   const requestUrl = new URL(request.url);
   const path = requestUrl.pathname;
 
@@ -48,30 +44,60 @@ export async function middleware(request: NextRequest) {
     path.startsWith("/auth") ||
     path.startsWith("/api/"); // Allow API routes to handle their own auth or be public
 
-  // If public path, allow access
+  // If public path, allow access without auth check
   if (isPublicPath) {
     return response;
   }
 
-  // If no session, redirect to login (home)
+  // For protected routes, first check session (fast, no API call)
+  const {
+    data: { session }
+  } = await supabase.auth.getSession();
+
+  // If no session at all, redirect to login
   if (!session) {
     const redirectUrl = new URL("/", request.url);
     redirectUrl.searchParams.set("login", "true");
     return NextResponse.redirect(redirectUrl);
   }
 
-  // Check verification status from database
-  let isVerified = false;
+  // For protected routes, verify the session is valid (API call to Supabase Auth)
+  // This prevents using stale/invalid tokens
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser();
 
-  if (session) {
-    // Check if user has verified_at timestamp in public.users table
+  // If getUser fails or returns no user, session is invalid
+  if (userError || !user) {
+    const redirectUrl = new URL("/", request.url);
+    redirectUrl.searchParams.set("login", "true");
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  // Check verification status and role from database
+  let isVerified = false;
+  let userRole = null;
+
+  if (user) {
+    // Check if user has verified_at timestamp and role in public.users table
     const { data: userData } = await supabase
       .from("users")
-      .select("verified_at")
-      .eq("auth_user_id", session.user.id)
+      .select("verified_at, role:roles(name)")
+      .eq("auth_user_id", user.id)
       .single();
 
     isVerified = !!userData?.verified_at;
+    const roleData = userData?.role as any;
+    userRole = Array.isArray(roleData) ? roleData[0]?.name : roleData?.name;
+  }
+
+  // Check if user is trying to access admin routes
+  if (path.startsWith("/admin-dashboard")) {
+    if (userRole !== "admin") {
+      // Non-admin trying to access admin area - redirect to home
+      return NextResponse.redirect(new URL("/", request.url));
+    }
   }
 
   if (!isVerified) {

@@ -12,6 +12,7 @@ import {
   Building,
   Shield
 } from "lucide-react";
+import { deleteUserAction } from "@/lib/actions/user-actions";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
   AlertDialog,
@@ -133,24 +134,28 @@ const AdminUsers = () => {
   ) => {
     setDeletingId(String(userId));
 
-    // Supabase Admin client is needed for this. This requires an edge function.
-    // Ensure the edge function expects "userId" to be the Auth UUID.
-    const { error } = await supabase.functions.invoke("delete-user", {
-      body: { userId: authId }
-    });
+    // Replacing edge function with local API route to avoid CORS issues and simplify deployment.
+    // Replacing fetch with direct Server Action call as requested.
+    const result = await deleteUserAction(authId);
 
-    if (error) {
+    if (!result.success) {
       toast({
         title: TITLES.ERROR,
-        description: MESSAGES.ERROR_DELETING_USER,
+        description: result.error || MESSAGES.ERROR_DELETING_USER,
         variant: "destructive"
       });
+      setDeletingId(null);
+      return;
     } else {
       toast({ title: TITLES.SUCCESS, description: MESSAGES.USER_DELETED });
       setUsers(users.filter((u) => u.id !== userId));
     }
     setDeletingId(null);
   };
+  // Removed redundant success toast logic since it's handled above
+  /*
+  if (error) { ... } else { ... }
+  */
 
   const handleResetPassword = async (email: string) => {
     setResettingId(email);

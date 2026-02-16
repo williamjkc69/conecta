@@ -27,7 +27,7 @@ import {
   AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
 // @ts-ignore
-import { fetchUsersWithStats } from "@/lib/adminStats";
+import { fetchAdminCandidates } from "@/lib/services/adminCandidateService";
 import { supabase } from "@/lib/supabase";
 import ChangePasswordModal from "./ChangePasswordModal";
 import Pagination from "./Pagination";
@@ -110,8 +110,7 @@ const AdminCandidates = () => {
     async (search: string, page: number) => {
       setLoading(true);
       try {
-        const { users: fetchedUsers, count } = await fetchUsersWithStats({
-          role: "candidate",
+        const { users: fetchedUsers, count } = await fetchAdminCandidates({
           searchTerm: search,
           page,
           limit

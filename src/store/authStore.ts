@@ -70,8 +70,8 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
         const appUser: AppUser = {
           ...data,
           full_name: `${data.name || ""} ${data.lastname || ""}`.trim(),
-          role: data.role, // {name: string}
-          company: data.company
+          role: Array.isArray(data.role) ? data.role[0] : data.role,
+          company: Array.isArray(data.company) ? data.company[0] : data.company
         };
 
         set((state) => {

@@ -16,7 +16,7 @@ import {
   AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
 // @ts-ignore
-import { fetchUsersWithStats } from "@/lib/adminStats";
+import { fetchAdminCompanies } from "@/lib/services/adminCompanyService";
 import { supabase } from "@/lib/supabase";
 import ChangePasswordModal from "./ChangePasswordModal";
 import Pagination from "./Pagination";
@@ -54,8 +54,7 @@ const AdminCompanies = () => {
     async (search: string, page: number) => {
       setLoading(true);
       try {
-        const { users: fetchedUsers, count } = await fetchUsersWithStats({
-          role: ROLES.COMPANY,
+        const { users: fetchedUsers, count } = await fetchAdminCompanies({
           searchTerm: search,
           page,
           limit

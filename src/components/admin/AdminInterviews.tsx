@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
+import { fetchAdminInterviews } from "@/lib/services/adminInterviewService";
 import { useToast } from "@/components/ui/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -37,34 +38,20 @@ const AdminInterviews = () => {
   const fetchInterviews = useCallback(
     async (search: string, page: number) => {
       setLoading(true);
-      const offset = (page - 1) * limit;
-
-      let query = supabase
-        .from("applications")
-        .select(
-          "*, company:company_id(company_name), candidate:candidate_id(full_name), job:job_id(title)",
-          { count: "exact" }
+      try {
+        const { interviews: data, count } = await fetchAdminInterviews(
+          search,
+          page,
+          limit
         );
-
-      if (search) {
-        query = query.or(`status.ilike.%${search}%`); // Simple search on status for now
-      }
-
-      query = query
-        .order("created_at", { ascending: false })
-        .range(offset, offset + limit - 1);
-
-      const { data, error, count } = await query;
-
-      if (error) {
+        setInterviews(data);
+        setTotalPages(Math.ceil((count || 0) / limit));
+      } catch (err) {
         toast({
           title: TITLES.ERROR,
           description: MESSAGES.ERROR_LOADING_INTERVIEWS,
           variant: "destructive"
         });
-      } else {
-        setInterviews(data);
-        setTotalPages(Math.ceil((count || 0) / limit));
       }
       setLoading(false);
     },
