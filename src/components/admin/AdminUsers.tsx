@@ -10,9 +10,12 @@ import {
   Send,
   User,
   Building,
-  Shield
+  Shield,
+  Power,
+  Ban,
+  CheckCircle
 } from "lucide-react";
-import { deleteUserAction } from "@/lib/actions/user-actions";
+import { toggleUserStatusAction } from "@/lib/actions/user-actions";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
   AlertDialog,
@@ -51,6 +54,7 @@ interface AdminUser {
   company_name?: string;
   role: string;
   created_at: string;
+  disabled: boolean;
 }
 
 const AdminUsers = () => {
@@ -76,6 +80,7 @@ const AdminUsers = () => {
           name,
           lastname,
           created_at,
+          disabled,
           role:roles!inner(name),
           company:companies(name)
         `
@@ -108,6 +113,7 @@ const AdminUsers = () => {
           full_name: `${u.name || ""} ${u.lastname || ""}`.trim(),
           company_name: u.company?.name,
           role: u.role?.name,
+          disabled: u.disabled || false,
           created_at: u.created_at
         }));
         setUsers(mappedUsers);
@@ -127,28 +133,31 @@ const AdminUsers = () => {
     fetchUsers();
   }, [fetchUsers]);
 
-  const handleDeleteUser = async (
-    userId: number,
-    authId: string,
-    userEmail: string
-  ) => {
+  const handleToggleStatus = async (userId: number, currentStatus: boolean) => {
     setDeletingId(String(userId));
 
-    // Replacing edge function with local API route to avoid CORS issues and simplify deployment.
-    // Replacing fetch with direct Server Action call as requested.
-    const result = await deleteUserAction(authId);
+    // Toggle: if currentStatus is true (disabled), we enable it (false).
+    const newStatus = !currentStatus;
+
+    const result = await toggleUserStatusAction(userId, newStatus);
 
     if (!result.success) {
       toast({
         title: TITLES.ERROR,
-        description: result.error || MESSAGES.ERROR_DELETING_USER,
+        description: result.error || "Failed to update user status",
         variant: "destructive"
       });
-      setDeletingId(null);
-      return;
     } else {
-      toast({ title: TITLES.SUCCESS, description: MESSAGES.USER_DELETED });
-      setUsers(users.filter((u) => u.id !== userId));
+      toast({
+        title: TITLES.SUCCESS,
+        description: newStatus
+          ? "User disabled successfully"
+          : "User activated successfully"
+      });
+      // Optimistic update
+      setUsers(
+        users.map((u) => (u.id === userId ? { ...u, disabled: newStatus } : u))
+      );
     }
     setDeletingId(null);
   };
@@ -248,52 +257,61 @@ const AdminUsers = () => {
                           <Send className="w-4 h-4" />
                         )}
                       </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-red-500 text-red-400 hover:bg-red-500/10 hover:text-red-300"
-                            disabled={
-                              deletingId === String(user.id) ||
-                              user.role === "admin"
-                            }
-                          >
-                            {deletingId === String(user.id) ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="w-4 h-4" />
-                            )}
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              {TITLES.CONFIRM_DELETE_USER}
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              {MESSAGES.DELETE_USER_WARNING}
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>
-                              {BUTTONS.CANCEL}
-                            </AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() =>
-                                handleDeleteUser(
-                                  user.id,
-                                  user.auth_user_id,
-                                  user.email
-                                )
+                      {user.disabled ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-green-500 text-green-300 hover:bg-green-500/10 hover:text-green-200"
+                          onClick={() => handleToggleStatus(user.id, true)}
+                          disabled={deletingId === String(user.id)}
+                        >
+                          {deletingId === String(user.id) ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <CheckCircle className="w-4 h-4" />
+                          )}
+                        </Button>
+                      ) : (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-red-500 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                              disabled={
+                                deletingId === String(user.id) ||
+                                user.role === "admin"
                               }
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
-                              {MESSAGES.CONFIRM_DELETE_USER_BTN}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                              {deletingId === String(user.id) ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Ban className="w-4 h-4" />
+                              )}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Disable User</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to disable this user? They
+                                will not be able to log in.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() =>
+                                  handleToggleStatus(user.id, false)
+                                }
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Disable User
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
                     </td>
                   </tr>
                 ))

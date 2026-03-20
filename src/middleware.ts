@@ -83,13 +83,26 @@ export async function middleware(request: NextRequest) {
     // Check if user has verified_at timestamp and role in public.users table
     const { data: userData } = await supabase
       .from("users")
-      .select("verified_at, role:roles(name)")
+      .select("verified_at, disabled, role:roles(name)")
       .eq("auth_user_id", user.id)
       .single();
 
     isVerified = !!userData?.verified_at;
     const roleData = userData?.role as any;
     userRole = Array.isArray(roleData) ? roleData[0]?.name : roleData?.name;
+
+    // Check if user is disabled
+    if (userData?.disabled) {
+      const redirectUrl = new URL("/", request.url);
+      redirectUrl.searchParams.set("login", "true");
+      redirectUrl.searchParams.set(
+        "error",
+        "Your account has been disabled. Please contact support."
+      );
+      // Ideally we should sign out, but middleware can only clear cookies if we modify response.
+      // Redirecting to login with error is good UX.
+      return NextResponse.redirect(redirectUrl);
+    }
   }
 
   // Check if user is trying to access admin routes
